@@ -7,6 +7,7 @@ import {
   Flame,
   Key,
   Layers,
+  Mic,
   RefreshCw,
   Server,
   ShieldAlert,
@@ -20,13 +21,14 @@ import {
   loginUser,
 } from './services/api';
 import type { SystemHealth, SystemConfig, AuthResponse } from './types';
+import { VoiceAssistant } from './components/VoiceAssistant';
 
 export function App() {
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [config, setConfig] = useState<SystemConfig | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'system' | 'auth' | 'roadmap'>('system');
+  const [activeTab, setActiveTab] = useState<'voice' | 'system' | 'auth' | 'roadmap'>('voice');
 
   // Auth test state
   const [authEmail, setAuthEmail] = useState<string>('agent.user@nexus.ai');
@@ -218,6 +220,20 @@ export function App() {
           }}
         >
           <button
+            onClick={() => setActiveTab('voice')}
+            style={{
+              background: activeTab === 'voice' ? 'linear-gradient(135deg, rgba(79, 70, 229, 0.4) 0%, rgba(6, 182, 212, 0.4) 100%)' : 'transparent',
+              color: activeTab === 'voice' ? '#38bdf8' : '#94a3b8',
+              borderColor: activeTab === 'voice' ? '#38bdf8' : 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: 700,
+            }}
+          >
+            <Mic size={16} /> Phase 2 Voice Engine (Live)
+          </button>
+          <button
             onClick={() => setActiveTab('system')}
             style={{
               background: activeTab === 'system' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
@@ -228,7 +244,7 @@ export function App() {
               gap: '8px',
             }}
           >
-            <Server size={16} /> Phase 1 Foundation & System Health
+            <Server size={16} /> Phase 1 Foundation & System
           </button>
           <button
             onClick={() => setActiveTab('auth')}
@@ -278,6 +294,9 @@ export function App() {
             </div>
           </div>
         )}
+
+        {/* TAB 0: VOICE ASSISTANT (PHASE 2) */}
+        {activeTab === 'voice' && <VoiceAssistant />}
 
         {/* TAB 1: SYSTEM HEALTH & FOUNDATION */}
         {activeTab === 'system' && (
@@ -596,17 +615,17 @@ export function App() {
                   phase: 2,
                   title: 'Voice Engine',
                   days: 'Days 4–8',
-                  status: 'NEXT UP',
+                  status: 'COMPLETE',
                   desc: 'Audio capture, OpenAI Realtime API speech-to-speech, interchangeable STT/TTS adapters, VAD, and interruption handling.',
-                  color: '#6366f1',
+                  color: '#10b981',
                 },
                 {
                   phase: 3,
                   title: 'LLM & LangGraph Agentic Core',
                   days: 'Days 9–14',
-                  status: 'PLANNED',
+                  status: 'NEXT UP',
                   desc: 'Intent classification, planner, tool selection router, approval gate checkpoints, and recovery.',
-                  color: '#64748b',
+                  color: '#6366f1',
                 },
                 {
                   phase: 4,

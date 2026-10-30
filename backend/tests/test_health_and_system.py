@@ -1,5 +1,6 @@
 """Integration tests for Phase 1 Foundation: Health, System Config, and Auth."""
 
+import uuid
 import pytest
 from httpx import ASGITransport, AsyncClient
 from app.main import app
@@ -57,8 +58,8 @@ async def test_auth_workflow():
     """Test user registration, login, and profile fetching."""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        # 1. Register new user
-        test_email = "testuser@nexus.ai"
+        # 1. Register new user with unique email
+        test_email = f"testuser_{uuid.uuid4().hex[:8]}@nexus.ai"
         test_password = "securePassword123!"
         reg_response = await client.post(
             "/api/v1/auth/register",
@@ -92,3 +93,4 @@ async def test_auth_workflow():
         assert me_response.status_code == 200
         assert me_response.json()["email"] == test_email
         assert me_response.json()["full_name"] == "Nexus Tester"
+

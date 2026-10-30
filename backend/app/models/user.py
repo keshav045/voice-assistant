@@ -163,3 +163,4 @@ class OAuthAccount(Base):
 
     def __repr__(self) -> str:
         return f"<OAuthAccount(id={self.id}, provider={self.provider}, user_id={self.user_id})>"
+

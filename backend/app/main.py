@@ -3,7 +3,7 @@
 import logging
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Dict
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.api import api_router
 from app.core.config import settings
@@ -74,7 +74,17 @@ async def root_health() -> Dict[str, Any]:
 # Include API v1 router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
+# Direct root WebSocket route for voice streaming matching /ws/voice/{session_id}
+from app.api.v1.endpoints.voice import voice_websocket_channel
+import uuid
+
+@app.websocket("/ws/voice/{session_id}")
+async def direct_voice_websocket(websocket: WebSocket, session_id: uuid.UUID):
+    """Direct root voice streaming channel."""
+    await voice_websocket_channel(websocket, session_id)
+
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+

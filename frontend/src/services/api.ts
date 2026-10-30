@@ -75,3 +75,26 @@ export async function fetchCurrentUser(token: string): Promise<User> {
   }
   return res.json();
 }
+
+export interface VoiceSessionDto {
+  session_id: string;
+  status: string;
+  provider_mode: string;
+  ws_url: string;
+  started_at: string;
+  metrics: Record<string, any>;
+}
+
+export async function createVoiceSession(
+  providerMode: 'modular' | 'realtime' = 'modular'
+): Promise<VoiceSessionDto> {
+  const res = await fetch(`${API_BASE}/api/v1/voice/session`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ provider_mode: providerMode }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to create voice session: ${res.statusText}`);
+  }
+  return res.json();
+}

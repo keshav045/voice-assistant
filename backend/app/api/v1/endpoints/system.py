@@ -34,3 +34,4 @@ async def get_system_config() -> Dict[str, Any]:
             "approval_gates",
         ],
     }
+

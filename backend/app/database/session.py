@@ -77,3 +77,4 @@ async def init_db() -> None:
         import app.models  # noqa: F401
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database initialized successfully.")
+

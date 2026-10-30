@@ -107,3 +107,4 @@ cd backend
 - [ ] **Phase 8 — Semantic Memory** (pgvector embeddings, preference retrieval)
 - [ ] **Phase 9 — Dashboard & Voice UI** (Wave visualizer, kanban, approvals modal)
 - [ ] **Phase 10 — Hardening & Production** (Rate limiting, audit logging, packaging)
+
