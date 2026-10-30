@@ -130,3 +130,4 @@ def test_voice_websocket_full_interaction():
         ws.send_json({"type": "interrupt"})
         int_msg = ws.receive_json()
         assert int_msg["type"] == "interrupted"
+

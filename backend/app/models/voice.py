@@ -67,3 +67,4 @@ class VoiceSession(Base):
 
     def __repr__(self) -> str:
         return f"<VoiceSession(id={self.id}, status='{self.status}', mode='{self.provider_mode}')>"
+

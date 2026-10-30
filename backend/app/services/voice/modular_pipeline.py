@@ -131,3 +131,4 @@ class ModularVoicePipeline:
             audio_format=synthesis.format,
             metrics=metrics,
         )
+

@@ -299,3 +299,4 @@ async def voice_websocket_channel(
         logger.info(f"WebSocket client disconnected for session {session_id}")
     except Exception as e:
         logger.error(f"WebSocket unexpected error: {e}")
+

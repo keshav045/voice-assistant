@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Activity,
+  Bot,
   CheckCircle2,
   Database,
   ExternalLink,
@@ -22,13 +23,14 @@ import {
 } from './services/api';
 import type { SystemHealth, SystemConfig, AuthResponse } from './types';
 import { VoiceAssistant } from './components/VoiceAssistant';
+import { AgentOrchestrator } from './components/AgentOrchestrator';
 
 export function App() {
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [config, setConfig] = useState<SystemConfig | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'voice' | 'system' | 'auth' | 'roadmap'>('voice');
+  const [activeTab, setActiveTab] = useState<'voice' | 'agent' | 'system' | 'auth' | 'roadmap'>('agent');
 
   // Auth test state
   const [authEmail, setAuthEmail] = useState<string>('agent.user@nexus.ai');
@@ -220,6 +222,20 @@ export function App() {
           }}
         >
           <button
+            onClick={() => setActiveTab('agent')}
+            style={{
+              background: activeTab === 'agent' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.4) 0%, rgba(168, 85, 247, 0.4) 100%)' : 'transparent',
+              color: activeTab === 'agent' ? '#c084fc' : '#94a3b8',
+              borderColor: activeTab === 'agent' ? '#a855f7' : 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: 700,
+            }}
+          >
+            <Bot size={16} /> Phase 3 Agentic Core & Approvals
+          </button>
+          <button
             onClick={() => setActiveTab('voice')}
             style={{
               background: activeTab === 'voice' ? 'linear-gradient(135deg, rgba(79, 70, 229, 0.4) 0%, rgba(6, 182, 212, 0.4) 100%)' : 'transparent',
@@ -295,7 +311,10 @@ export function App() {
           </div>
         )}
 
-        {/* TAB 0: VOICE ASSISTANT (PHASE 2) */}
+        {/* TAB 0: AGENTIC CORE (PHASE 3) */}
+        {activeTab === 'agent' && <AgentOrchestrator />}
+
+        {/* TAB 1: VOICE ASSISTANT (PHASE 2) */}
         {activeTab === 'voice' && <VoiceAssistant />}
 
         {/* TAB 1: SYSTEM HEALTH & FOUNDATION */}
@@ -623,17 +642,17 @@ export function App() {
                   phase: 3,
                   title: 'LLM & LangGraph Agentic Core',
                   days: 'Days 9–14',
-                  status: 'NEXT UP',
+                  status: 'COMPLETE',
                   desc: 'Intent classification, planner, tool selection router, approval gate checkpoints, and recovery.',
-                  color: '#6366f1',
+                  color: '#10b981',
                 },
                 {
                   phase: 4,
                   title: 'Tasks & Reminders Engine',
                   days: 'Days 15–18',
-                  status: 'PLANNED',
+                  status: 'NEXT UP',
                   desc: 'Task CRUD, priority scoring, deadlines, Celery/Redis background worker, and scheduled notifications.',
-                  color: '#64748b',
+                  color: '#6366f1',
                 },
                 {
                   phase: 5,

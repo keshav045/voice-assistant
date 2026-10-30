@@ -86,3 +86,4 @@ class BaseLLMVoiceService(ABC):
     ) -> str:
         """Generate conversational assistant response."""
         pass
+

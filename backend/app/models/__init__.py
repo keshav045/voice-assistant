@@ -4,6 +4,7 @@ from app.database.base import Base
 from app.models.user import User, OAuthAccount, GUID
 from app.models.conversation import Conversation, Message
 from app.models.voice import VoiceSession
+from app.models.agent import AgentRun, ToolExecution, ApprovalRequest
 
 __all__ = [
     "Base",
@@ -12,6 +13,9 @@ __all__ = [
     "Conversation",
     "Message",
     "VoiceSession",
+    "AgentRun",
+    "ToolExecution",
+    "ApprovalRequest",
     "GUID",
 ]
 

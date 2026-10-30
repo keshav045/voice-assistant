@@ -92,3 +92,4 @@ class RealtimeVoiceBridge:
         if self.openai_ws:
             await self.openai_ws.close()
             self.openai_ws = None
+

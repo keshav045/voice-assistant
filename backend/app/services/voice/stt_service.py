@@ -72,3 +72,4 @@ def get_stt_service() -> BaseSTTService:
     if settings.OPENAI_API_KEY:
         return OpenAIWhisperSTT()
     return MockSTTService()
+

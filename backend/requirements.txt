@@ -23,6 +23,8 @@ passlib[bcrypt]>=1.7.4
 
 # AI & Orchestration (Foundation & Future Phases)
 openai>=1.50.0
+langgraph>=0.2.0
+langchain-core>=0.3.0
 
 # Testing
 pytest>=8.3.0
