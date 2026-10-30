@@ -1,0 +1,80 @@
+"""Nexus Agentic AI Assistant - FastAPI Application Entrypoint."""
+
+import logging
+from contextlib import asynccontextmanager
+from typing import Any, AsyncGenerator, Dict
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.api.v1.api import api_router
+from app.core.config import settings
+from app.database.session import check_db_connection, init_db
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO if not settings.DEBUG else logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("nexus.main")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """Application startup and shutdown lifecycle management."""
+    logger.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}...")
+    # Initialize DB tables (for early prototype / local development)
+    try:
+        await init_db()
+        logger.info("Database schemas initialized.")
+    except Exception as e:
+        logger.warning(f"Database initialization warning: {e}")
+
+    yield
+
+    logger.info("Nexus backend shutting down.")
+
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description="Agentic AI Productivity Assistant with Voice, LangGraph, and Windows Companion Agent",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    lifespan=lifespan,
+)
+
+# Configure CORS
+origins = settings.BACKEND_CORS_ORIGINS
+if not origins:
+    origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins if isinstance(origins, list) else [origins],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# Root level /health endpoint (required by Phase 1 spec)
+@app.get("/health", tags=["system"], summary="System root health check")
+async def root_health() -> Dict[str, Any]:
+    """Root health check endpoint."""
+    db_status = await check_db_connection()
+    return {
+        "status": "healthy" if db_status.get("status") == "connected" else "degraded",
+        "project": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "environment": settings.ENVIRONMENT,
+        "database": db_status,
+    }
+
+
+# Include API v1 router
+app.include_router(api_router, prefix=settings.API_V1_STR)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
