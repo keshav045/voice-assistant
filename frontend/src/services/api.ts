@@ -549,5 +549,99 @@ export async function executeDesktopCommand(payload: DesktopCommandPayload): Pro
   return res.json();
 }
 
+// --- Phase 8 Semantic Memory DTOs & API Calls ---
+export interface MemoryItemDto {
+  id: string;
+  user_id?: string;
+  category: 'preference' | 'fact' | 'goal' | 'interaction' | 'system' | string;
+  content: string;
+  confidence: number;
+  source: string;
+  created_at: string;
+  updated_at: string;
+}
+
+
+export interface MemorySearchResultDto {
+  id: string;
+  category: string;
+  content: string;
+  similarity: number;
+  confidence: number;
+  source: string;
+  created_at?: string;
+}
+
+export interface MemoryCreatePayload {
+  content: string;
+  category?: string;
+  confidence?: number;
+  source?: string;
+}
+
+export async function fetchMemories(category?: string): Promise<MemoryItemDto[]> {
+  const query = category ? `?category=${category}` : '';
+  const res = await fetch(`${API_BASE}/api/v1/memory${query}`, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to fetch memories');
+  return res.json();
+}
+
+export async function storeMemory(payload: MemoryCreatePayload): Promise<MemoryItemDto> {
+  const res = await fetch(`${API_BASE}/api/v1/memory`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to store memory' }));
+    throw new Error(err.detail || 'Failed to store memory');
+  }
+  return res.json();
+}
+
+export async function searchMemories(
+  query: string,
+  topK: number = 5,
+  minSimilarity: number = 0.0,
+  category?: string
+): Promise<MemorySearchResultDto[]> {
+  const res = await fetch(`${API_BASE}/api/v1/memory/search`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query,
+      top_k: topK,
+      min_similarity: minSimilarity,
+      category,
+    }),
+  });
+  if (!res.ok) throw new Error('Semantic search failed');
+  return res.json();
+}
+
+export async function deleteMemory(memoryId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/v1/memory/${memoryId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to delete memory');
+}
+
+export async function wipeAllMemories(approvalGranted: boolean): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/memory/wipe/all`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ approval_granted: approvalGranted }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Wipe failed' }));
+    throw new Error(err.detail || 'Wipe failed');
+  }
+  return res.json();
+}
+
+
 
 

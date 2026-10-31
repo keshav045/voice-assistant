@@ -10,6 +10,7 @@ from app.api.v1.endpoints import (
     desktop,
     emails,
     health,
+    memory,
     reminders,
     system,
     tasks,
@@ -30,4 +31,5 @@ api_router.include_router(reminders.router, prefix="/reminders", tags=["reminder
 api_router.include_router(emails.router, prefix="/emails", tags=["emails"])
 api_router.include_router(calendar.router, prefix="/calendar", tags=["calendar"])
 api_router.include_router(desktop.router, prefix="/desktop", tags=["desktop"])
+api_router.include_router(memory.router, prefix="/memory", tags=["memory"])
 

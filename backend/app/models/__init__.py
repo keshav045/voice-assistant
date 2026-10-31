@@ -8,6 +8,7 @@ from app.models.agent import AgentRun, ToolExecution, ApprovalRequest
 from app.models.productivity import Task, Reminder
 from app.models.email import EmailDraft
 from app.models.calendar import CalendarEvent
+from app.models.memory import MemoryItem
 
 __all__ = [
     "Base",
@@ -23,6 +24,7 @@ __all__ = [
     "Reminder",
     "EmailDraft",
     "CalendarEvent",
+    "MemoryItem",
     "GUID",
 ]
 

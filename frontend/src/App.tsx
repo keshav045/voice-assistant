@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Activity,
   Bot,
+  Brain,
   Calendar,
   CheckCircle2,
   Database,
@@ -32,13 +33,14 @@ import { TaskManager } from './components/TaskManager';
 import { EmailAssistant } from './components/EmailAssistant';
 import { CalendarAssistant } from './components/CalendarAssistant';
 import { DesktopCompanion } from './components/DesktopCompanion';
+import { SemanticMemory } from './components/SemanticMemory';
 
 export function App() {
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [config, setConfig] = useState<SystemConfig | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'desktop' | 'calendar' | 'emails' | 'tasks' | 'agent' | 'voice' | 'system' | 'auth' | 'roadmap'>('desktop');
+  const [activeTab, setActiveTab] = useState<'memory' | 'desktop' | 'calendar' | 'emails' | 'tasks' | 'agent' | 'voice' | 'system' | 'auth' | 'roadmap'>('memory');
 
   // Auth test state
   const [authEmail, setAuthEmail] = useState<string>('agent.user@nexus.ai');
@@ -230,6 +232,20 @@ export function App() {
           }}
         >
           <button
+            onClick={() => setActiveTab('memory')}
+            style={{
+              background: activeTab === 'memory' ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(99, 102, 241, 0.4) 100%)' : 'transparent',
+              color: activeTab === 'memory' ? '#c4b5fd' : '#94a3b8',
+              borderColor: activeTab === 'memory' ? '#8b5cf6' : 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: 700,
+            }}
+          >
+            <Brain size={16} /> Phase 8 Semantic Memory
+          </button>
+          <button
             onClick={() => setActiveTab('desktop')}
             style={{
               background: activeTab === 'desktop' ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.4) 0%, rgba(59, 130, 246, 0.4) 100%)' : 'transparent',
@@ -374,6 +390,9 @@ export function App() {
             </div>
           </div>
         )}
+
+        {/* TAB: SEMANTIC MEMORY & PGVECTOR (PHASE 8) */}
+        {activeTab === 'memory' && <SemanticMemory />}
 
         {/* TAB: WINDOWS DESKTOP COMPANION (PHASE 7) */}
         {activeTab === 'desktop' && <DesktopCompanion />}
@@ -758,17 +777,17 @@ export function App() {
                   phase: 8,
                   title: 'Semantic Memory & pgvector',
                   days: 'Days 33–36',
-                  status: 'NEXT UP',
+                  status: 'COMPLETE',
                   desc: 'Embedding generation, vector search, preference storage, conversation history, user memory deletion controls.',
-                  color: '#6366f1',
+                  color: '#10b981',
                 },
                 {
                   phase: 9,
                   title: 'Frontend UI & Voice Controls',
                   days: 'Days 37–41',
-                  status: 'PLANNED',
+                  status: 'NEXT UP',
                   desc: 'Full-featured productivity dashboard: overview, live voice wave, email drafts, task kanban, calendar view, approvals modal.',
-                  color: '#64748b',
+                  color: '#6366f1',
                 },
                 {
                   phase: 10,

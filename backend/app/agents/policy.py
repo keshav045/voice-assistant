@@ -102,6 +102,8 @@ class PolicyEngine:
             return f"Create calendar event '{args.get('title')}' on {args.get('date')} at {args.get('time')}"
         elif tool_name == "delete_calendar_event":
             return f"Delete calendar meeting ID '{args.get('event_id')}'"
+        elif tool_name == "wipe_memory":
+            return "Wipe all semantic memories and preferences from database"
         elif tool_name == "desktop_run_command":
             return f"Execute Windows command: {args.get('command')}"
         return f"Perform sensitive operation: {tool_name}"
