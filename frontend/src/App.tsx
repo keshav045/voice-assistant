@@ -10,6 +10,7 @@ import {
   Flame,
   Key,
   Layers,
+  LayoutDashboard,
   ListTodo,
   Mail,
   Mic,
@@ -34,13 +35,14 @@ import { EmailAssistant } from './components/EmailAssistant';
 import { CalendarAssistant } from './components/CalendarAssistant';
 import { DesktopCompanion } from './components/DesktopCompanion';
 import { SemanticMemory } from './components/SemanticMemory';
+import { UnifiedDashboard } from './components/UnifiedDashboard';
 
 export function App() {
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [config, setConfig] = useState<SystemConfig | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'memory' | 'desktop' | 'calendar' | 'emails' | 'tasks' | 'agent' | 'voice' | 'system' | 'auth' | 'roadmap'>('memory');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'memory' | 'desktop' | 'calendar' | 'emails' | 'tasks' | 'agent' | 'voice' | 'system' | 'auth' | 'roadmap'>('dashboard');
 
   // Auth test state
   const [authEmail, setAuthEmail] = useState<string>('agent.user@nexus.ai');
@@ -232,6 +234,20 @@ export function App() {
           }}
         >
           <button
+            onClick={() => setActiveTab('dashboard')}
+            style={{
+              background: activeTab === 'dashboard' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.5) 0%, rgba(168, 85, 247, 0.5) 100%)' : 'transparent',
+              color: activeTab === 'dashboard' ? '#c084fc' : '#94a3b8',
+              borderColor: activeTab === 'dashboard' ? '#a855f7' : 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: 800,
+            }}
+          >
+            <LayoutDashboard size={16} /> Command Center
+          </button>
+          <button
             onClick={() => setActiveTab('memory')}
             style={{
               background: activeTab === 'memory' ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(99, 102, 241, 0.4) 100%)' : 'transparent',
@@ -390,6 +406,9 @@ export function App() {
             </div>
           </div>
         )}
+
+        {/* TAB: UNIFIED COMMAND CENTER (PHASE 9) */}
+        {activeTab === 'dashboard' && <UnifiedDashboard onNavigateTab={setActiveTab} />}
 
         {/* TAB: SEMANTIC MEMORY & PGVECTOR (PHASE 8) */}
         {activeTab === 'memory' && <SemanticMemory />}
@@ -785,17 +804,17 @@ export function App() {
                   phase: 9,
                   title: 'Frontend UI & Voice Controls',
                   days: 'Days 37–41',
-                  status: 'NEXT UP',
+                  status: 'COMPLETE',
                   desc: 'Full-featured productivity dashboard: overview, live voice wave, email drafts, task kanban, calendar view, approvals modal.',
-                  color: '#6366f1',
+                  color: '#10b981',
                 },
                 {
                   phase: 10,
                   title: 'Testing, Hardening & Deployment',
                   days: 'Days 42–46',
-                  status: 'PLANNED',
+                  status: 'NEXT UP',
                   desc: 'End-to-end evaluation suite, rate limiting, error tracking, Docker containerization, cloud deployment, and audit logging.',
-                  color: '#64748b',
+                  color: '#6366f1',
                 },
               ].map((m) => (
                 <div
