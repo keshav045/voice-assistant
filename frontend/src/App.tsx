@@ -26,6 +26,7 @@ import {
   fetchSystemConfig,
   registerUser,
   loginUser,
+  fetchReminders,
 } from './services/api';
 import type { SystemHealth, SystemConfig, AuthResponse } from './types';
 import { VoiceAssistant } from './components/VoiceAssistant';
@@ -73,7 +74,38 @@ export function App() {
   useEffect(() => {
     loadData();
     const interval = setInterval(loadData, 10000); // 10s auto refresh
-    return () => clearInterval(interval);
+
+    // Request desktop notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    // Check due reminders and notify
+    const remindedIds = new Set<string>();
+    const checkReminders = async () => {
+      try {
+        const triggered = await fetchReminders('triggered');
+        for (const rem of triggered) {
+          if (!remindedIds.has(rem.id)) {
+            remindedIds.add(rem.id);
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('🔔 Nexus Reminder Due', {
+                body: rem.title,
+                icon: '/vite.svg',
+              });
+            }
+          }
+        }
+      } catch (e) {
+        // Ignore background polling error
+      }
+    };
+    const remInterval = setInterval(checkReminders, 12000);
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(remInterval);
+    };
   }, []);
 
   const handleRegister = async (e: React.FormEvent) => {

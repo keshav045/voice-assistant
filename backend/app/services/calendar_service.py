@@ -1,12 +1,16 @@
-"""Google Calendar Integration and Availability Service."""
+"""Google Calendar Integration and Availability Service with live Google API sync."""
 
 import logging
 from datetime import datetime, time, timedelta, timezone
 from typing import Any, Dict, List, Optional
 import uuid
+import httpx
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.config import settings
+from app.core.security import decrypt_oauth_token, encrypt_oauth_token
 from app.models.calendar import CalendarEvent
+from app.models.user import OAuthAccount
 
 logger = logging.getLogger("nexus.calendar")
 
@@ -47,6 +51,115 @@ SAMPLE_CALENDAR_EVENTS: List[Dict[str, Any]] = [
 
 class CalendarService:
     """Manages calendar events, conflict detection, and availability slot calculation."""
+
+    @classmethod
+    async def get_valid_google_token(
+        cls,
+        db: AsyncSession,
+        user_id: Optional[uuid.UUID] = None,
+    ) -> Optional[str]:
+        """Retrieve and auto-refresh the Google OAuth access token if needed."""
+        stmt = select(OAuthAccount).where(OAuthAccount.provider == "google")
+        if user_id:
+            stmt = stmt.where(OAuthAccount.user_id == user_id)
+
+        result = await db.execute(stmt)
+        oa = result.scalars().first()
+        if not oa or not oa.encrypted_access_token:
+            return None
+
+        now = datetime.now(timezone.utc)
+        if oa.expires_at and oa.expires_at <= (now + timedelta(seconds=60)) and oa.encrypted_refresh_token:
+            refresh_token = decrypt_oauth_token(oa.encrypted_refresh_token)
+            if refresh_token and settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET:
+                try:
+                    async with httpx.AsyncClient(timeout=10.0) as client:
+                        resp = await client.post(
+                            "https://oauth2.googleapis.com/token",
+                            data={
+                                "client_id": settings.GOOGLE_CLIENT_ID,
+                                "client_secret": settings.GOOGLE_CLIENT_SECRET,
+                                "refresh_token": refresh_token,
+                                "grant_type": "refresh_token",
+                            },
+                        )
+                        if resp.status_code == 200:
+                            data = resp.json()
+                            new_access = data["access_token"]
+                            oa.encrypted_access_token = encrypt_oauth_token(new_access)
+                            oa.expires_at = now + timedelta(seconds=data.get("expires_in", 3600))
+                            await db.commit()
+                            return new_access
+                except Exception as e:
+                    logger.warning(f"Google Calendar OAuth token refresh failed: {e}")
+
+        return decrypt_oauth_token(oa.encrypted_access_token)
+
+    @classmethod
+    async def create_google_event(
+        cls,
+        db: AsyncSession,
+        title: str,
+        start_time: datetime,
+        end_time: datetime,
+        description: Optional[str] = None,
+        location: Optional[str] = None,
+        attendees: Optional[List[str]] = None,
+        user_id: Optional[uuid.UUID] = None,
+    ) -> Optional[str]:
+        """Create a live event in Google Calendar if account is connected."""
+        token = await cls.get_valid_google_token(db=db, user_id=user_id)
+        if not token:
+            return None
+
+        try:
+            event_body = {
+                "summary": title,
+                "description": description or "",
+                "location": location or "",
+                "start": {"dateTime": start_time.isoformat()},
+                "end": {"dateTime": end_time.isoformat()},
+            }
+            if attendees:
+                event_body["attendees"] = [{"email": a} for a in attendees]
+
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.post(
+                    "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+                    headers={"Authorization": f"Bearer {token}"},
+                    json=event_body,
+                )
+                if resp.status_code in (200, 201):
+                    res_json = resp.json()
+                    logger.info(f"Created live Google Calendar event: {res_json.get('id')}")
+                    return res_json.get("id")
+        except Exception as e:
+            logger.warning(f"Live Google Calendar event creation failed: {e}")
+
+        return None
+
+    @classmethod
+    async def delete_google_event(
+        cls,
+        db: AsyncSession,
+        google_event_id: str,
+        user_id: Optional[uuid.UUID] = None,
+    ) -> bool:
+        """Delete an event from Google Calendar by Google event ID."""
+        token = await cls.get_valid_google_token(db=db, user_id=user_id)
+        if not token or not google_event_id:
+            return False
+
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.delete(
+                    f"https://www.googleapis.com/calendar/v3/calendars/primary/events/{google_event_id}",
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+                return resp.status_code in (200, 204)
+        except Exception as e:
+            logger.warning(f"Live Google Calendar event deletion failed: {e}")
+            return False
 
     @staticmethod
     def check_interval_overlap(

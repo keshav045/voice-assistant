@@ -1,8 +1,11 @@
 """Security, password hashing, and JWT utilities."""
 
+import base64
+import hashlib
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional, Union
 import bcrypt
+from cryptography.fernet import Fernet
 from jose import JWTError, jwt
 from app.core.config import settings
 
@@ -53,4 +56,30 @@ def decode_access_token(token: str) -> Optional[dict]:
         return payload
     except JWTError:
         return None
+
+
+def get_encryption_cipher() -> Fernet:
+    """Derive a reproducible 32-byte Fernet key from the application secret key."""
+    key = base64.urlsafe_b64encode(hashlib.sha256(settings.SECRET_KEY.encode()).digest())
+    return Fernet(key)
+
+
+def encrypt_oauth_token(token: str) -> str:
+    """Encrypt OAuth access or refresh token before persisting to database."""
+    if not token:
+        return ""
+    cipher = get_encryption_cipher()
+    return cipher.encrypt(token.encode("utf-8")).decode("utf-8")
+
+
+def decrypt_oauth_token(encrypted_token: str) -> str:
+    """Decrypt OAuth token for live API requests."""
+    if not encrypted_token:
+        return ""
+    try:
+        cipher = get_encryption_cipher()
+        return cipher.decrypt(encrypted_token.encode("utf-8")).decode("utf-8")
+    except Exception:
+        # Fallback if raw or invalid token
+        return encrypted_token
 

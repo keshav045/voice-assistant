@@ -642,6 +642,42 @@ export async function wipeAllMemories(approvalGranted: boolean): Promise<any> {
   return res.json();
 }
 
+export interface GoogleAuthStatusDto {
+  configured: boolean;
+  connected: boolean;
+  email?: string | null;
+  expires_at?: string | null;
+  scopes?: string | null;
+}
+
+export interface GoogleAuthUrlDto {
+  configured: boolean;
+  url?: string | null;
+  redirect_uri: string;
+  message: string;
+}
+
+export async function fetchGoogleAuthUrl(): Promise<GoogleAuthUrlDto> {
+  const res = await fetch(`${API_BASE}/api/v1/auth/google/url`);
+  if (!res.ok) throw new Error('Failed to fetch Google OAuth URL');
+  return res.json();
+}
+
+export async function fetchGoogleAuthStatus(): Promise<GoogleAuthStatusDto> {
+  const res = await fetch(`${API_BASE}/api/v1/auth/google/status`);
+  if (!res.ok) throw new Error('Failed to fetch Google auth status');
+  return res.json();
+}
+
+export async function disconnectGoogleAuth(): Promise<{ success: boolean; message: string }> {
+  const res = await fetch(`${API_BASE}/api/v1/auth/google/disconnect`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to disconnect Google Workspace');
+  return res.json();
+}
+
 
 
 

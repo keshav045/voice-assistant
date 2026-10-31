@@ -83,12 +83,23 @@ class EmailAgent:
         """Send an email (Sensitive operation executing only upon approval)."""
         now = datetime.now(timezone.utc)
 
+        # Attempt live Gmail API dispatch if Google account is connected
+        live_msg_id = await self.gmail_service.send_live_email(
+            recipient=recipient,
+            subject=subject,
+            body=body,
+            db=db,
+            user_id=user_id,
+        )
+
         if draft_id:
             result = await db.execute(select(EmailDraft).where(EmailDraft.id == draft_id))
             draft = result.scalar_one_or_none()
             if draft:
                 draft.status = "sent"
                 draft.sent_at = now
+                if live_msg_id:
+                    draft.gmail_draft_id = live_msg_id
                 await db.commit()
         else:
             # Create completed record
@@ -99,14 +110,17 @@ class EmailAgent:
                 status="sent",
                 sent_at=now,
                 user_id=user_id,
+                gmail_draft_id=live_msg_id,
             )
             db.add(draft)
             await db.commit()
 
+        status_prefix = "Live Gmail sent" if live_msg_id else "Email successfully sent"
         return {
             "success": True,
-            "message": f"Email successfully sent to '{recipient}' with subject '{subject}'.",
+            "message": f"{status_prefix} to '{recipient}' with subject '{subject}'.",
             "sent_at": now.isoformat(),
             "recipient": recipient,
+            "gmail_message_id": live_msg_id,
         }
 

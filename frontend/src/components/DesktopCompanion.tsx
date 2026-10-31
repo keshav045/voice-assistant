@@ -12,6 +12,7 @@ export const DesktopCompanion: React.FC = () => {
   const [systemMetrics, setSystemMetrics] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [fileResults, setFileResults] = useState<any[]>([]);
+  const [latestScreenshot, setLatestScreenshot] = useState<{ path: string; fileName: string; thumbnail?: string; time: string } | null>(null);
   const [commandLogs, setCommandLogs] = useState<Array<{ time: string; action: string; message: string; success: boolean }>>([]);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -67,6 +68,30 @@ export const DesktopCompanion: React.FC = () => {
         setSystemMetrics(res);
         addLog('get_system_metrics', 'Retrieved host telemetry', true);
         showNotification('success', 'Host system metrics refreshed.');
+      }
+    } catch (err: any) {
+      showNotification('error', err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleTakeScreenshot = async () => {
+    setActionLoading('screenshot');
+    try {
+      const res = await executeDesktopCommand({ action: 'take_screenshot' });
+      if (res.success) {
+        setLatestScreenshot({
+          path: res.file_path || res.path || '',
+          fileName: res.file_name || 'screenshot.png',
+          thumbnail: res.thumbnail_base64,
+          time: new Date().toLocaleTimeString(),
+        });
+        addLog('take_screenshot', `Captured ${res.file_name || 'screen'}`, true);
+        showNotification('success', 'Desktop screenshot captured successfully.');
+      } else {
+        showNotification('error', res.error || 'Failed to capture screenshot');
+        addLog('take_screenshot', res.error || 'Failed', false);
       }
     } catch (err: any) {
       showNotification('error', err.message);
@@ -257,22 +282,53 @@ export const DesktopCompanion: React.FC = () => {
           </div>
 
           {/* Quick Reader Actions */}
-          <div className="pt-2 border-t border-slate-800 flex gap-2">
+          <div className="pt-2 border-t border-slate-800 flex flex-wrap gap-2">
             <button
               onClick={handleInspectActiveWindow}
               disabled={actionLoading === 'window'}
-              className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition"
+              className="flex-1 min-w-[120px] py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition"
             >
-              {actionLoading === 'window' ? 'Reading...' : '🔍 Inspect Active Window'}
+              {actionLoading === 'window' ? 'Reading...' : '🔍 Inspect Window'}
             </button>
             <button
               onClick={handleInspectMetrics}
               disabled={actionLoading === 'metrics'}
-              className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition"
+              className="flex-1 min-w-[120px] py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition"
             >
-              {actionLoading === 'metrics' ? 'Querying...' : '📊 System Telemetry'}
+              {actionLoading === 'metrics' ? 'Querying...' : '📊 Telemetry'}
+            </button>
+            <button
+              onClick={handleTakeScreenshot}
+              disabled={actionLoading === 'screenshot'}
+              className="flex-1 min-w-[120px] py-2 bg-cyan-600/30 hover:bg-cyan-600/40 border border-cyan-500/40 text-cyan-300 rounded-xl text-xs font-semibold transition"
+            >
+              {actionLoading === 'screenshot' ? 'Capturing...' : '📸 Screenshot'}
             </button>
           </div>
+
+          {/* Screenshot Preview Card if taken */}
+          {latestScreenshot && (
+            <div className="p-3 bg-slate-950/80 border border-cyan-500/30 rounded-xl mt-3 flex items-center gap-4">
+              {latestScreenshot.thumbnail ? (
+                <img
+                  src={`data:image/jpeg;base64,${latestScreenshot.thumbnail}`}
+                  alt="Desktop Preview"
+                  className="w-24 h-14 object-cover rounded-lg border border-slate-700 shadow"
+                />
+              ) : (
+                <div className="w-24 h-14 bg-slate-800 rounded-lg flex items-center justify-center text-xs text-slate-400">
+                  📸 PNG
+                </div>
+              )}
+              <div className="overflow-hidden">
+                <div className="text-xs font-semibold text-white truncate">{latestScreenshot.fileName}</div>
+                <div className="text-[11px] text-slate-400 font-mono truncate" title={latestScreenshot.path}>
+                  {latestScreenshot.path}
+                </div>
+                <div className="text-[10px] text-cyan-400 mt-0.5">Captured at {latestScreenshot.time}</div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Safe File Search Widget */}

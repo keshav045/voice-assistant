@@ -91,6 +91,18 @@ class CalendarAgent:
         if end_time.tzinfo is None:
             end_time = end_time.replace(tzinfo=timezone.utc)
 
+        # Check live Google Calendar integration
+        google_id = await self.service.create_google_event(
+            db=db,
+            title=title,
+            start_time=start_time,
+            end_time=end_time,
+            description=description,
+            location=location,
+            attendees=attendees,
+            user_id=user_id,
+        )
+
         event = CalendarEvent(
             title=title,
             description=description,
@@ -99,6 +111,7 @@ class CalendarAgent:
             end_time=end_time,
             attendees=attendees or [],
             status="confirmed",
+            google_event_id=google_id,
             user_id=user_id,
         )
         db.add(event)
@@ -156,6 +169,13 @@ class CalendarAgent:
         event = result.scalar_one_or_none()
         if not event:
             return False
+
+        if event.google_event_id:
+            await self.service.delete_google_event(
+                db=db,
+                google_event_id=event.google_event_id,
+                user_id=event.user_id,
+            )
 
         event.status = "cancelled"
         event.updated_at = datetime.now(timezone.utc)

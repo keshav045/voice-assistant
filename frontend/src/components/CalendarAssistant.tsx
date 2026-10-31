@@ -5,9 +5,13 @@ import {
   checkCalendarAvailability,
   fetchFreeSlots,
   deleteCalendarEvent,
+  fetchGoogleAuthUrl,
+  fetchGoogleAuthStatus,
+  disconnectGoogleAuth,
   type CalendarEventDto,
   type AvailabilityDto,
   type FreeSlotDto,
+  type GoogleAuthStatusDto,
 } from '../services/api';
 
 export const CalendarAssistant: React.FC = () => {
@@ -15,6 +19,7 @@ export const CalendarAssistant: React.FC = () => {
   const [freeSlots, setFreeSlots] = useState<FreeSlotDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [googleStatus, setGoogleStatus] = useState<GoogleAuthStatusDto | null>(null);
 
   // Availability checker state
   const [checkStart, setCheckStart] = useState(() => {
@@ -52,7 +57,52 @@ export const CalendarAssistant: React.FC = () => {
   useEffect(() => {
     loadEvents();
     loadFreeSlots();
+    checkGoogleStatus();
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'GOOGLE_CONNECTED') {
+        showNotification('success', `Google Calendar connected (${event.data.email})!`);
+        checkGoogleStatus();
+        loadEvents();
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
+
+  const checkGoogleStatus = async () => {
+    try {
+      const st = await fetchGoogleAuthStatus();
+      setGoogleStatus(st);
+    } catch (e) {
+      console.warn('Could not check Google status:', e);
+    }
+  };
+
+  const handleConnectGoogle = async () => {
+    try {
+      const authData = await fetchGoogleAuthUrl();
+      if (!authData.configured || !authData.url) {
+        alert(authData.message || 'Please configure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in backend/.env');
+        return;
+      }
+      window.open(authData.url, 'GoogleAuthPopup', 'width=600,height=700');
+    } catch (err: any) {
+      showNotification('error', err.message || 'Failed to start Google sign-in');
+    }
+  };
+
+  const handleDisconnectGoogle = async () => {
+    if (!window.confirm('Disconnect Google Calendar? Nexus will fall back to local offline mode.')) return;
+    try {
+      await disconnectGoogleAuth();
+      showNotification('success', 'Google Workspace disconnected.');
+      await checkGoogleStatus();
+      await loadEvents();
+    } catch (err: any) {
+      showNotification('error', err.message || 'Disconnect failed');
+    }
+  };
 
   const showNotification = (type: 'success' | 'error', text: string) => {
     setNotification({ type, text });
@@ -177,7 +227,29 @@ export const CalendarAssistant: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {googleStatus?.connected ? (
+            <div className="px-3 py-1.5 rounded-xl border text-xs font-medium flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Calendar Live ({googleStatus.email})</span>
+              <button
+                onClick={handleDisconnectGoogle}
+                className="text-slate-400 hover:text-rose-400 ml-1 text-xs"
+                title="Disconnect Google Account"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleConnectGoogle}
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 hover:border-slate-600 rounded-xl text-xs font-medium transition flex items-center gap-1.5"
+              title="Connect Google account for live Calendar sync"
+            >
+              <span>🌐</span> Connect Google
+            </button>
+          )}
+
           <button
             onClick={() => loadEvents()}
             disabled={loading}

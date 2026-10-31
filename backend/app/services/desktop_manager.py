@@ -18,7 +18,12 @@ ALLOWED_APPLICATIONS: Dict[str, str] = {
     "taskmgr": "taskmgr.exe",
     "terminal": "wt.exe",
     "browser": "msedge.exe",
+    "chrome": "chrome.exe",
+    "edge": "msedge.exe",
     "code": "code.cmd",
+    "spotify": "spotify.exe",
+    "slack": "slack.exe",
+    "teams": "teams.exe",
 }
 
 SAFE_FILE_EXTENSIONS = {".txt", ".md", ".json", ".csv", ".py", ".ts", ".tsx", ".html", ".css", ".pdf", ".png", ".jpg"}
@@ -35,7 +40,7 @@ class DesktopCompanionManager:
             "os": None,
             "connected_at": None,
             "last_heartbeat": None,
-            "capabilities": ["app_launcher", "active_window", "safe_file_search", "system_metrics"],
+            "capabilities": ["app_launcher", "active_window", "safe_file_search", "system_metrics", "take_screenshot"],
         }
         self._pending_commands: Dict[str, asyncio.Future] = {}
 
@@ -169,6 +174,14 @@ class DesktopCompanionManager:
                     {"name": "Nexus_Implementation_Plan.pdf", "path": "c:\\Users\\kesha\\OneDrive\\Desktop\\voice assistant\\Nexus_Implementation_Plan.pdf", "size_kb": 240},
                     {"name": "requirements.txt", "path": "c:\\Users\\kesha\\OneDrive\\Desktop\\voice assistant\\backend\\requirements.txt", "size_kb": 2},
                 ],
+                "simulated": True,
+            }
+        elif command_type == "take_screenshot":
+            return {
+                "success": True,
+                "message": "Screenshot captured successfully (simulated).",
+                "file_name": "screenshot_simulated.png",
+                "path": "desktop-companion/screenshots/screenshot_simulated.png",
                 "simulated": True,
             }
         return {

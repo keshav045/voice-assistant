@@ -30,9 +30,33 @@ export function VoiceAssistant() {
   const [lastMetrics, setLastMetrics] = useState<VoiceMetrics | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [speechOutputEnabled, setSpeechOutputEnabled] = useState(true);
 
   const clientRef = useRef<VoiceClient | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  const speakText = (text: string) => {
+    if (!speechOutputEnabled || !('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      // Remove markdown asterisks or code formatting for cleaner speech
+      const cleanText = text.replace(/[*#`_~]/g, '').trim();
+      if (!cleanText) return;
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(
+        (v) =>
+          v.lang.startsWith('en') &&
+          (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Jenny') || v.name.includes('David'))
+      );
+      if (preferred) utterance.voice = preferred;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn('Speech synthesis error:', e);
+    }
+  };
 
   // Initialize VoiceClient
   useEffect(() => {
@@ -60,6 +84,7 @@ export function VoiceAssistant() {
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
           },
         ]);
+        speakText(text);
       },
       onTurnComplete: (metrics) => {
         setLastMetrics(metrics);
@@ -72,6 +97,7 @@ export function VoiceAssistant() {
       },
       onInterrupted: () => {
         console.log('Voice turn interrupted by user.');
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       },
       onError: (err) => {
         setErrorMsg(err);
@@ -299,7 +325,7 @@ export function VoiceAssistant() {
             )}
           </div>
 
-          {/* Mode Selector */}
+          {/* Mode Selector & TTS Output */}
           <div
             style={{
               display: 'flex',
@@ -309,37 +335,64 @@ export function VoiceAssistant() {
               color: '#94a3b8',
               borderTop: '1px solid rgba(255, 255, 255, 0.08)',
               paddingTop: '12px',
+              flexWrap: 'wrap',
+              gap: '8px',
             }}
           >
-            <span>Provider Mode:</span>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>Mode:</span>
               <button
                 onClick={() => setProviderMode('modular')}
                 disabled={voiceState !== 'disconnected'}
                 style={{
-                  padding: '4px 8px',
-                  fontSize: '0.75rem',
+                  padding: '3px 8px',
+                  fontSize: '0.72rem',
                   background: providerMode === 'modular' ? '#4f46e5' : 'transparent',
                   color: providerMode === 'modular' ? '#ffffff' : '#94a3b8',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                 }}
               >
-                Modular (STT-LLM-TTS)
+                Modular
               </button>
               <button
                 onClick={() => setProviderMode('realtime')}
                 disabled={voiceState !== 'disconnected'}
                 style={{
-                  padding: '4px 8px',
-                  fontSize: '0.75rem',
+                  padding: '3px 8px',
+                  fontSize: '0.72rem',
                   background: providerMode === 'realtime' ? '#4f46e5' : 'transparent',
                   color: providerMode === 'realtime' ? '#ffffff' : '#94a3b8',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                 }}
               >
-                Realtime API
+                Realtime
               </button>
             </div>
+
+            <button
+              onClick={() => {
+                if (speechOutputEnabled && 'speechSynthesis' in window) {
+                  window.speechSynthesis.cancel();
+                }
+                setSpeechOutputEnabled(!speechOutputEnabled);
+              }}
+              style={{
+                padding: '4px 10px',
+                fontSize: '0.75rem',
+                background: speechOutputEnabled ? 'rgba(56, 189, 248, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                color: speechOutputEnabled ? '#38bdf8' : '#64748b',
+                border: speechOutputEnabled ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '6px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+              }}
+              title="Toggle speech synthesis voice output"
+            >
+              {speechOutputEnabled ? <Volume2 size={13} /> : <VolumeX size={13} />}
+              TTS Voice: {speechOutputEnabled ? 'ON' : 'MUTED'}
+            </button>
           </div>
         </div>
 

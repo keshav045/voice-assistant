@@ -26,6 +26,7 @@ SAFE_READ_TOOLS: Set[str] = {
     "get_active_window",
     "get_system_metrics",
     "search_files",
+    "take_screenshot",
 }
 
 

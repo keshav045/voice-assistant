@@ -28,6 +28,7 @@ class DesktopAgent:
             "get_active_window",
             "get_system_metrics",
             "search_files",
+            "take_screenshot",
         ] else "desktop_run_command"
         decision = PolicyEngine.evaluate(tool_name, {"action": action_name, **params})
 

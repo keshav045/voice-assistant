@@ -70,3 +70,6 @@ desktop.ini
 .coverage
 htmlcov/
 
+# Companion Screenshots
+desktop-companion/screenshots/
+
