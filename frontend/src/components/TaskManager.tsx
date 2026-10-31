@@ -257,36 +257,23 @@ export function TaskManager() {
       )}
 
       {/* Main Row: 3-Column Kanban Board + Reminders Sidebar */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Kanban Tasks Board */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="lg:col-span-8 flex flex-col gap-4">
           {/* Quick Add Task Form */}
-          <div className="card">
-            <form onSubmit={handleCreateTask} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div className="card !p-4">
+            <form onSubmit={handleCreateTask} className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
               <input
                 type="text"
                 placeholder="Add a new task (e.g. 'Deploy Nexus to Vercel')..."
                 value={taskTitle}
                 onChange={(e) => setTaskTitle(e.target.value)}
-                style={{
-                  flex: 1,
-                  padding: '10px 14px',
-                  borderRadius: '8px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: '#ffffff',
-                }}
+                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
               />
               <select
                 value={taskPriority}
                 onChange={(e) => setTaskPriority(e.target.value)}
-                style={{
-                  padding: '10px 12px',
-                  borderRadius: '8px',
-                  background: '#1a2234',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  color: '#ffffff',
-                }}
+                className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none"
               >
                 <option value="low">Low Priority</option>
                 <option value="medium">Medium</option>
@@ -296,21 +283,15 @@ export function TaskManager() {
               <button
                 type="submit"
                 disabled={!taskTitle.trim() || loading}
-                style={{
-                  background: '#4f46e5',
-                  color: '#ffffff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
+                className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl px-4 py-2 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow"
               >
-                <Plus size={16} /> Add Task
+                <Plus size={15} /> Add Task
               </button>
             </form>
           </div>
 
           {/* 3 Columns */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Column 1: Pending */}
             <div
               style={{
@@ -511,7 +492,7 @@ export function TaskManager() {
         </div>
 
         {/* Right: Reminders & Background Worker Widget */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="lg:col-span-4 flex flex-col gap-4">
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
               <div>

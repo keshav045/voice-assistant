@@ -1,6 +1,18 @@
 import type { AuthResponse, SystemConfig, SystemHealth, User } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+export const getApiBaseUrl = (): string => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '');
+  }
+  // When running on localhost, point to local backend port 8000
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://localhost:8000';
+  }
+  // If in production without explicit VITE_API_BASE_URL, default to same-origin reverse proxy
+  return typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000';
+};
+
+const API_BASE = getApiBaseUrl();
 
 export async function fetchHealth(): Promise<SystemHealth> {
   const res = await fetch(`${API_BASE}/health`, {

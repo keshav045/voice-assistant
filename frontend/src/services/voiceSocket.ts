@@ -47,9 +47,17 @@ export class VoiceClient {
     this.sessionId = sessionId;
     this.setState('connecting');
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.hostname === 'localhost' ? 'localhost:8000' : window.location.host;
-    const wsUrl = `${protocol}//${host}/ws/voice/${sessionId}`;
+    let wsUrl: string;
+    const apiBase = import.meta.env.VITE_API_BASE_URL;
+    if (apiBase) {
+      const wsProto = apiBase.startsWith('https') ? 'wss:' : 'ws:';
+      const cleanHost = apiBase.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      wsUrl = `${wsProto}//${cleanHost}/ws/voice/${sessionId}`;
+    } else {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.hostname === 'localhost' ? 'localhost:8000' : window.location.host;
+      wsUrl = `${protocol}//${host}/ws/voice/${sessionId}`;
+    }
 
     try {
       this.ws = new WebSocket(wsUrl);

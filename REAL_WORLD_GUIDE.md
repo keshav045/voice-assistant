@@ -143,3 +143,4 @@ Nexus follows an uncompromising **Safety First** philosophy:
 * **Zero Arbitrary Execution**: Nexus cannot run raw bash/powershell strings or destructive disk commands. All desktop actions are strictly restricted to an approved whitelist.
 * **Encrypted Credentials**: Stored OAuth tokens are symmetrically encrypted before persistence.
 * **Local-First Architecture**: Your tasks, notes, semantic memory, and logs reside on your local machine.
+

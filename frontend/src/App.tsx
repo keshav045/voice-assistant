@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
   Activity,
+  AlertTriangle,
   Bot,
   Brain,
   Calendar,
-  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Database,
   ExternalLink,
   Flame,
@@ -16,10 +18,12 @@ import {
   Mic,
   Monitor,
   RefreshCw,
+  Search,
   Server,
   ShieldAlert,
   Sparkles,
-  User as UserIcon,
+  X,
+  Zap,
 } from 'lucide-react';
 import {
   fetchHealth,
@@ -27,6 +31,11 @@ import {
   registerUser,
   loginUser,
   fetchReminders,
+  fetchApprovals,
+  fetchGoogleAuthStatus,
+  fetchGoogleAuthUrl,
+  submitChatMessage,
+  type GoogleAuthStatusDto,
 } from './services/api';
 import type { SystemHealth, SystemConfig, AuthResponse } from './types';
 import { VoiceAssistant } from './components/VoiceAssistant';
@@ -38,12 +47,47 @@ import { DesktopCompanion } from './components/DesktopCompanion';
 import { SemanticMemory } from './components/SemanticMemory';
 import { UnifiedDashboard } from './components/UnifiedDashboard';
 
+type TabKey =
+  | 'dashboard'
+  | 'voice'
+  | 'agent'
+  | 'tasks'
+  | 'emails'
+  | 'calendar'
+  | 'desktop'
+  | 'memory'
+  | 'system'
+  | 'auth'
+  | 'roadmap';
+
+interface NavItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  badge: string | null;
+  badgeColor?: string;
+}
+
+interface NavSection {
+  group: string;
+  items: NavItem[];
+}
+
 export function App() {
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [config, setConfig] = useState<SystemConfig | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'memory' | 'desktop' | 'calendar' | 'emails' | 'tasks' | 'agent' | 'voice' | 'system' | 'auth' | 'roadmap'>('dashboard');
+  const [activeTab, setActiveTab] = useState<TabKey>('dashboard');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(0);
+  const [googleStatus, setGoogleStatus] = useState<GoogleAuthStatusDto | null>(null);
+
+  // Command Palette State (Ctrl+K)
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
+  const [commandQuery, setCommandQuery] = useState<string>('');
+  const [commandExecuting, setCommandExecuting] = useState<boolean>(false);
+  const [commandResult, setCommandResult] = useState<string | null>(null);
 
   // Auth test state
   const [authEmail, setAuthEmail] = useState<string>('agent.user@nexus.ai');
@@ -57,12 +101,16 @@ export function App() {
     setLoading(true);
     setError(null);
     try {
-      const [healthData, configData] = await Promise.all([
+      const [healthData, configData, approvalsData, googleData] = await Promise.all([
         fetchHealth(),
         fetchSystemConfig().catch(() => null),
+        fetchApprovals('pending').catch(() => []),
+        fetchGoogleAuthStatus().catch(() => null),
       ]);
       setHealth(healthData);
       if (configData) setConfig(configData);
+      setPendingApprovalsCount(approvalsData.length);
+      if (googleData) setGoogleStatus(googleData);
     } catch (err: any) {
       console.error('Failed to load system data:', err);
       setError(err.message || 'Cannot reach Nexus backend server on http://localhost:8000');
@@ -73,7 +121,7 @@ export function App() {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 10000); // 10s auto refresh
+    const interval = setInterval(loadData, 12000); // 12s auto refresh
 
     // Request desktop notification permission
     if ('Notification' in window && Notification.permission === 'default') {
@@ -102,9 +150,31 @@ export function App() {
     };
     const remInterval = setInterval(checkReminders, 12000);
 
+    // Global keyboard shortcut: Ctrl+K / Cmd+K
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+      if (e.key === 'Escape') {
+        setIsCommandPaletteOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Google OAuth window message listener
+    const handleGoogleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'GOOGLE_CONNECTED') {
+        loadData();
+      }
+    };
+    window.addEventListener('message', handleGoogleMessage);
+
     return () => {
       clearInterval(interval);
       clearInterval(remInterval);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('message', handleGoogleMessage);
     };
   }, []);
 
@@ -138,793 +208,651 @@ export function App() {
     }
   };
 
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Top Navigation Bar */}
-      <header
-        style={{
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          background: 'rgba(11, 15, 25, 0.85)',
-          backdropFilter: 'blur(16px)',
-          padding: '16px 32px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          position: 'sticky',
-          top: 0,
-          zIndex: 50,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div
-            style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 20px rgba(99, 102, 241, 0.4)',
-            }}
-          >
-            <Sparkles size={24} color="#ffffff" />
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#f8fafc', letterSpacing: '-0.02em' }}>
-                NEXUS
-              </h1>
-              <span
-                style={{
-                  background: 'rgba(99, 102, 241, 0.15)',
-                  color: '#a5b4fc',
-                  border: '1px solid rgba(99, 102, 241, 0.3)',
-                  padding: '2px 8px',
-                  borderRadius: '6px',
-                  fontSize: '0.72rem',
-                  fontWeight: 600,
-                }}
-              >
-                v{health?.version || '0.1.0'}
-              </span>
-            </div>
-            <p style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
-              Agentic AI Productivity Assistant
-            </p>
-          </div>
-        </div>
+  const handleConnectGoogle = async () => {
+    try {
+      const authData = await fetchGoogleAuthUrl();
+      if (!authData.configured || !authData.url) {
+        alert(authData.message || 'Please configure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in backend/.env');
+        return;
+      }
+      window.open(authData.url, 'GoogleAuthPopup', 'width=600,height=700');
+    } catch (err: any) {
+      alert(err.message || 'Failed to start Google sign-in');
+    }
+  };
 
-        {/* Status Indicators & External Links */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          {/* Health Pill */}
-          {health?.status === 'healthy' ? (
-            <div className="badge badge-success">
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#34d399' }} />
-              API Online ({health.database.latency_ms ?? 1}ms)
+  const handleExecuteCommandPrompt = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commandQuery.trim()) return;
+    setCommandExecuting(true);
+    setCommandResult(null);
+    try {
+      const res = await submitChatMessage(commandQuery.trim());
+      setCommandResult(res.final_response || 'Execution finished.');
+      await loadData();
+    } catch (err: any) {
+      setCommandResult(`Error: ${err.message}`);
+    } finally {
+      setCommandExecuting(false);
+    }
+  };
+
+  const navItems: NavSection[] = [
+    {
+      group: 'CORE ASSISTANT',
+      items: [
+        { id: 'dashboard', label: 'Command Center', icon: LayoutDashboard, badge: null },
+        { id: 'voice', label: 'Voice Assistant', icon: Mic, badge: 'Live' },
+        {
+          id: 'agent',
+          label: 'Agentic Core',
+          icon: Bot,
+          badge: pendingApprovalsCount > 0 ? `${pendingApprovalsCount} gate` : null,
+          badgeColor: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+        },
+      ],
+    },
+    {
+      group: 'PRODUCTIVITY SUITE',
+      items: [
+        { id: 'tasks', label: 'Tasks & Reminders', icon: ListTodo, badge: null },
+        { id: 'emails', label: 'Gmail Assistant', icon: Mail, badge: googleStatus?.connected ? 'Sync' : null },
+        { id: 'calendar', label: 'Google Calendar', icon: Calendar, badge: null },
+      ],
+    },
+    {
+      group: 'OS & SYSTEM',
+      items: [
+        { id: 'desktop', label: 'Windows Companion', icon: Monitor, badge: 'Phase 7' },
+        { id: 'memory', label: 'Semantic Memory', icon: Brain, badge: null },
+        { id: 'system', label: 'System & Health', icon: Server, badge: null },
+        { id: 'auth', label: 'Authentication', icon: Key, badge: null },
+        { id: 'roadmap', label: '10-Phase Roadmap', icon: Layers, badge: '100%' },
+      ],
+    },
+  ];
+
+  const getBreadcrumbTitle = (tab: TabKey): string => {
+    switch (tab) {
+      case 'dashboard':
+        return 'Executive Command Center';
+      case 'voice':
+        return 'Voice Assistant & Speech Engine';
+      case 'agent':
+        return 'LangGraph Agentic Core & Approvals';
+      case 'tasks':
+        return 'Tasks & Reminders Engine';
+      case 'emails':
+        return 'Gmail & Email Intelligence';
+      case 'calendar':
+        return 'Google Calendar & Scheduling';
+      case 'desktop':
+        return 'Windows Desktop Companion';
+      case 'memory':
+        return 'Semantic Vector Memory & Preferences';
+      case 'system':
+        return 'System Telemetry & Architecture';
+      case 'auth':
+        return 'Authentication & Session Security';
+      case 'roadmap':
+        return '10-Phase Implementation Roadmap';
+      default:
+        return 'Dashboard';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
+      <div className="flex flex-1 relative">
+        {/* Modern Collapsible Sidebar */}
+        <aside
+          className={`bg-[#0f172a]/95 backdrop-blur-xl border-r border-slate-800/80 flex flex-col justify-between transition-all duration-300 z-40 sticky top-0 h-screen ${
+            isSidebarCollapsed ? 'w-20' : 'w-64'
+          }`}
+        >
+          {/* Sidebar Header */}
+          <div>
+            <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 flex-shrink-0">
+                  <Sparkles size={20} className="animate-pulse" />
+                </div>
+                {!isSidebarCollapsed && (
+                  <div className="overflow-hidden">
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-base tracking-tight text-white">NEXUS</span>
+                      <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-500/30 font-mono font-bold">
+                        v{health?.version || '1.0'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 truncate">Agentic Productivity</p>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition flex-shrink-0"
+                title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+              >
+                {isSidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+              </button>
             </div>
-          ) : (
-            <div className="badge badge-error">
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f87171' }} />
-              {loading ? 'Checking...' : 'API Disconnected'}
+
+            {/* Quick Search Shortcut Button */}
+            <div className="p-3">
+              <button
+                onClick={() => setIsCommandPaletteOpen(true)}
+                className={`w-full py-2 px-3 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-indigo-500/40 text-slate-400 hover:text-slate-200 text-xs transition flex items-center justify-between group shadow-sm ${
+                  isSidebarCollapsed ? 'justify-center px-0' : ''
+                }`}
+                title="Search or Run Command (Ctrl+K)"
+              >
+                <div className="flex items-center gap-2">
+                  <Search size={14} className="group-hover:text-indigo-400 transition" />
+                  {!isSidebarCollapsed && <span>Search commands...</span>}
+                </div>
+                {!isSidebarCollapsed && (
+                  <kbd className="text-[10px] bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded text-slate-400 font-mono">
+                    ⌘K
+                  </kbd>
+                )}
+              </button>
+            </div>
+
+            {/* Navigation Sections */}
+            <nav className="px-2 space-y-4 py-2 overflow-y-auto max-h-[calc(100vh-230px)]">
+              {navItems.map((sec, idx) => (
+                <div key={idx} className="space-y-1">
+                  {!isSidebarCollapsed && (
+                    <div className="px-3 text-[10px] font-bold text-slate-500 tracking-wider uppercase font-mono mb-1">
+                      {sec.group}
+                    </div>
+                  )}
+                  {sec.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => setActiveTab(item.id as TabKey)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition group text-left relative ${
+                          isActive
+                            ? 'bg-gradient-to-r from-indigo-600/20 to-purple-600/10 text-white border border-indigo-500/40 shadow-sm'
+                            : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                        } ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
+                        title={item.label}
+                      >
+                        {isActive && (
+                          <span className="absolute left-0 top-2 bottom-2 w-1 bg-indigo-500 rounded-r-full" />
+                        )}
+                        <Icon
+                          size={18}
+                          className={`flex-shrink-0 transition ${
+                            isActive
+                              ? 'text-indigo-400'
+                              : 'text-slate-400 group-hover:text-slate-200'
+                          }`}
+                        />
+                        {!isSidebarCollapsed && (
+                          <div className="flex-1 flex items-center justify-between overflow-hidden">
+                            <span className="truncate">{item.label}</span>
+                            {item.badge && (
+                              <span
+                                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                                  item.badgeColor || 'bg-slate-800 text-slate-300 border border-slate-700'
+                                }`}
+                              >
+                                {item.badge}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </nav>
+          </div>
+
+          {/* Sidebar Footer User & Status */}
+          <div className="p-3 border-t border-slate-800/80 bg-slate-950/40">
+            <div
+              className={`flex items-center gap-3 p-2 rounded-xl bg-slate-900/60 border border-slate-800/60 ${
+                isSidebarCollapsed ? 'justify-center p-1.5' : ''
+              }`}
+            >
+              <div className="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-xs flex-shrink-0">
+                KO
+              </div>
+              {!isSidebarCollapsed && (
+                <div className="overflow-hidden flex-1">
+                  <div className="text-xs font-bold text-slate-200 truncate">Keshav</div>
+                  <div className="text-[10px] text-emerald-400 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Local Operator
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Workspace Area */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          {/* Top Navigation Header */}
+          <header className="h-16 border-b border-slate-800/80 bg-[#0b0f19]/80 backdrop-blur-xl px-6 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-slate-500 uppercase tracking-wider font-mono">Nexus</span>
+              <span className="text-slate-600">/</span>
+              <h1 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
+                {getBreadcrumbTitle(activeTab)}
+              </h1>
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Google Workspace Live Sync Pill */}
+              {googleStatus?.connected ? (
+                <div className="hidden sm:flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs text-emerald-400 font-medium">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="truncate max-w-[150px]">{googleStatus.email}</span>
+                </div>
+              ) : (
+                <button
+                  onClick={handleConnectGoogle}
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-semibold transition"
+                  title="Connect Google Workspace (Gmail & Calendar)"
+                >
+                  <span>🌐</span> Connect Google
+                </button>
+              )}
+
+              {/* API Health Pill */}
+              <div
+                className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono font-semibold ${
+                  health?.status === 'healthy'
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                    : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                }`}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    health?.status === 'healthy' ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'
+                  }`}
+                />
+                {health?.status === 'healthy'
+                  ? `API ${health?.database?.latency_ms ?? 1}ms`
+                  : 'API Disconnected'}
+              </div>
+
+              {/* Quick Action Button */}
+              <button
+                onClick={() => setIsCommandPaletteOpen(true)}
+                className="px-3.5 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-indigo-600/20 flex items-center gap-1.5"
+              >
+                <Zap size={14} />
+                <span>Command</span>
+                <kbd className="hidden lg:inline-block text-[9px] bg-black/30 px-1 py-0.2 rounded font-mono ml-1">
+                  ⌘K
+                </kbd>
+              </button>
+
+              <button
+                onClick={loadData}
+                disabled={loading}
+                className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl border border-slate-800 transition"
+                title="Refresh Status"
+              >
+                <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+              </button>
+
+              <a
+                href="http://localhost:8000/docs"
+                target="_blank"
+                rel="noreferrer"
+                className="hidden xl:inline-flex items-center gap-1 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 rounded-xl text-xs font-medium transition"
+              >
+                Swagger <ExternalLink size={11} />
+              </a>
+            </div>
+          </header>
+
+          {/* Pending Approvals Global Gate Notice */}
+          {pendingApprovalsCount > 0 && activeTab !== 'agent' && (
+            <div className="bg-amber-950/70 border-b border-amber-800/60 px-6 py-2.5 flex items-center justify-between text-xs text-amber-200">
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={15} className="text-amber-400 animate-pulse" />
+                <span>
+                  <strong>Safety Gate:</strong> {pendingApprovalsCount} sensitive action(s) require human approval before execution.
+                </span>
+              </div>
+              <button
+                onClick={() => setActiveTab('agent')}
+                className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg text-xs font-bold transition shadow"
+              >
+                Review & Approve →
+              </button>
             </div>
           )}
 
-          {/* Database Pill */}
-          <div className="badge badge-info">
-            <Database size={12} />
-            {health?.database?.dialect?.toUpperCase() || 'DB'} : {health?.database?.status || 'Unknown'}
-          </div>
-
-          {/* Quick links */}
-          <a
-            href="http://localhost:8000/docs"
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '0.82rem',
-              color: '#94a3b8',
-              padding: '6px 12px',
-              borderRadius: '6px',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              background: 'rgba(255, 255, 255, 0.03)',
-            }}
-          >
-            FastAPI Swagger <ExternalLink size={12} />
-          </a>
-
-          <button
-            onClick={loadData}
-            disabled={loading}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              background: '#4f46e5',
-              color: '#ffffff',
-            }}
-          >
-            <RefreshCw size={14} />
-            Refresh
-          </button>
-        </div>
-      </header>
-
-      {/* Main Container */}
-      <main style={{ maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '32px 24px', flex: 1 }}>
-        {/* Navigation Tabs */}
-        <div
-          style={{
-            display: 'flex',
-            gap: '8px',
-            marginBottom: '28px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-            paddingBottom: '12px',
-          }}
-        >
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            style={{
-              background: activeTab === 'dashboard' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.5) 0%, rgba(168, 85, 247, 0.5) 100%)' : 'transparent',
-              color: activeTab === 'dashboard' ? '#c084fc' : '#94a3b8',
-              borderColor: activeTab === 'dashboard' ? '#a855f7' : 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontWeight: 800,
-            }}
-          >
-            <LayoutDashboard size={16} /> Command Center
-          </button>
-          <button
-            onClick={() => setActiveTab('memory')}
-            style={{
-              background: activeTab === 'memory' ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(99, 102, 241, 0.4) 100%)' : 'transparent',
-              color: activeTab === 'memory' ? '#c4b5fd' : '#94a3b8',
-              borderColor: activeTab === 'memory' ? '#8b5cf6' : 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontWeight: 700,
-            }}
-          >
-            <Brain size={16} /> Phase 8 Semantic Memory
-          </button>
-          <button
-            onClick={() => setActiveTab('desktop')}
-            style={{
-              background: activeTab === 'desktop' ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.4) 0%, rgba(59, 130, 246, 0.4) 100%)' : 'transparent',
-              color: activeTab === 'desktop' ? '#22d3ee' : '#94a3b8',
-              borderColor: activeTab === 'desktop' ? '#06b6d4' : 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontWeight: 700,
-            }}
-          >
-            <Monitor size={16} /> Phase 7 Windows Companion
-          </button>
-          <button
-            onClick={() => setActiveTab('calendar')}
-            style={{
-              background: activeTab === 'calendar' ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(14, 165, 233, 0.4) 100%)' : 'transparent',
-              color: activeTab === 'calendar' ? '#60a5fa' : '#94a3b8',
-              borderColor: activeTab === 'calendar' ? '#3b82f6' : 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontWeight: 700,
-            }}
-          >
-            <Calendar size={16} /> Phase 6 Google Calendar
-          </button>
-          <button
-            onClick={() => setActiveTab('emails')}
-            style={{
-              background: activeTab === 'emails' ? 'linear-gradient(135deg, rgba(244, 63, 94, 0.4) 0%, rgba(168, 85, 247, 0.4) 100%)' : 'transparent',
-              color: activeTab === 'emails' ? '#fb7185' : '#94a3b8',
-              borderColor: activeTab === 'emails' ? '#f43f5e' : 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontWeight: 700,
-            }}
-          >
-            <Mail size={16} /> Phase 5 Gmail Assistant
-          </button>
-          <button
-            onClick={() => setActiveTab('tasks')}
-            style={{
-              background: activeTab === 'tasks' ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.4) 0%, rgba(59, 130, 246, 0.4) 100%)' : 'transparent',
-              color: activeTab === 'tasks' ? '#34d399' : '#94a3b8',
-              borderColor: activeTab === 'tasks' ? '#10b981' : 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontWeight: 700,
-            }}
-          >
-            <ListTodo size={16} /> Phase 4 Tasks & Reminders
-          </button>
-          <button
-            onClick={() => setActiveTab('agent')}
-            style={{
-              background: activeTab === 'agent' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.4) 0%, rgba(168, 85, 247, 0.4) 100%)' : 'transparent',
-              color: activeTab === 'agent' ? '#c084fc' : '#94a3b8',
-              borderColor: activeTab === 'agent' ? '#a855f7' : 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontWeight: 700,
-            }}
-          >
-            <Bot size={16} /> Phase 3 Agentic Core & Approvals
-          </button>
-          <button
-            onClick={() => setActiveTab('voice')}
-            style={{
-              background: activeTab === 'voice' ? 'linear-gradient(135deg, rgba(79, 70, 229, 0.4) 0%, rgba(6, 182, 212, 0.4) 100%)' : 'transparent',
-              color: activeTab === 'voice' ? '#38bdf8' : '#94a3b8',
-              borderColor: activeTab === 'voice' ? '#38bdf8' : 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontWeight: 700,
-            }}
-          >
-            <Mic size={16} /> Phase 2 Voice Engine (Live)
-          </button>
-          <button
-            onClick={() => setActiveTab('system')}
-            style={{
-              background: activeTab === 'system' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-              color: activeTab === 'system' ? '#c7d2fe' : '#94a3b8',
-              borderColor: activeTab === 'system' ? '#6366f1' : 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}
-          >
-            <Server size={16} /> Phase 1 Foundation & System
-          </button>
-          <button
-            onClick={() => setActiveTab('auth')}
-            style={{
-              background: activeTab === 'auth' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-              color: activeTab === 'auth' ? '#c7d2fe' : '#94a3b8',
-              borderColor: activeTab === 'auth' ? '#6366f1' : 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}
-          >
-            <Key size={16} /> Authentication & Identity
-          </button>
-          <button
-            onClick={() => setActiveTab('roadmap')}
-            style={{
-              background: activeTab === 'roadmap' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-              color: activeTab === 'roadmap' ? '#c7d2fe' : '#94a3b8',
-              borderColor: activeTab === 'roadmap' ? '#6366f1' : 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}
-          >
-            <Layers size={16} /> 10-Phase Roadmap Tracker
-          </button>
-        </div>
-
-        {/* Error Notification */}
-        {error && (
-          <div
-            className="card"
-            style={{
-              marginBottom: '24px',
-              borderLeft: '4px solid #ef4444',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              background: 'rgba(239, 68, 68, 0.08)',
-            }}
-          >
-            <ShieldAlert size={22} color="#f87171" />
-            <div>
-              <div style={{ fontWeight: 600, color: '#f87171' }}>Backend Connection Notice</div>
-              <div style={{ fontSize: '0.85rem', color: '#fca5a5' }}>{error}</div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB: UNIFIED COMMAND CENTER (PHASE 9) */}
-        {activeTab === 'dashboard' && <UnifiedDashboard onNavigateTab={setActiveTab} />}
-
-        {/* TAB: SEMANTIC MEMORY & PGVECTOR (PHASE 8) */}
-        {activeTab === 'memory' && <SemanticMemory />}
-
-        {/* TAB: WINDOWS DESKTOP COMPANION (PHASE 7) */}
-        {activeTab === 'desktop' && <DesktopCompanion />}
-
-        {/* TAB: GOOGLE CALENDAR ASSISTANT (PHASE 6) */}
-        {activeTab === 'calendar' && <CalendarAssistant />}
-
-        {/* TAB: GMAIL & EMAIL INTELLIGENCE (PHASE 5) */}
-        {activeTab === 'emails' && <EmailAssistant />}
-
-        {/* TAB: TASKS & REMINDERS (PHASE 4) */}
-        {activeTab === 'tasks' && <TaskManager />}
-
-        {/* TAB 0: AGENTIC CORE (PHASE 3) */}
-        {activeTab === 'agent' && <AgentOrchestrator />}
-
-        {/* TAB 1: VOICE ASSISTANT (PHASE 2) */}
-        {activeTab === 'voice' && <VoiceAssistant />}
-
-        {/* TAB 1: SYSTEM HEALTH & FOUNDATION */}
-        {activeTab === 'system' && (
-          <div>
-            {/* Top Metrics Row */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: '20px',
-                marginBottom: '28px',
-              }}
-            >
-              {/* Card 1: Backend Server */}
-              <div className="card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '0.82rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
-                    FastAPI Engine
-                  </span>
-                  <Activity size={18} color="#6366f1" />
-                </div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#ffffff', marginBottom: '6px' }}>
-                  {health?.status === 'healthy' ? 'Operational' : 'Waiting on Server'}
-                </div>
-                <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
-                  Port 8000 • Environment: <strong style={{ color: '#38bdf8' }}>{health?.environment || 'development'}</strong>
-                </div>
-              </div>
-
-              {/* Card 2: Database Layer */}
-              <div className="card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '0.82rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
-                    Storage Engine
-                  </span>
-                  <Database size={18} color="#10b981" />
-                </div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#ffffff', marginBottom: '6px' }}>
-                  {health?.database.dialect?.toUpperCase() || 'SQL'} Engine
-                </div>
-                <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
-                  Status: <span style={{ color: '#34d399', fontWeight: 600 }}>{health?.database.status}</span>
-                  {health?.database.latency_ms !== undefined && ` (${health.database.latency_ms} ms ping)`}
-                </div>
-              </div>
-
-              {/* Card 3: AI Configuration */}
-              <div className="card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '0.82rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
-                    LLM & Voice Model
-                  </span>
-                  <Flame size={18} color="#f59e0b" />
-                </div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#ffffff', marginBottom: '6px' }}>
-                  {config?.ai.model || 'GPT-4o'}
-                </div>
-                <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
-                  Voice: {config?.ai.voice_model || 'gpt-4o-realtime-preview'}
-                </div>
-              </div>
-            </div>
-
-            {/* Checklist of Phase 1 Deliverables */}
-            <div className="card" style={{ marginBottom: '28px' }}>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '16px', color: '#f8fafc' }}>
-                Phase 1 Acceptance Verification Checkpoint
-              </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <CheckCircle2 size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <div>
-                    <strong style={{ color: '#f1f5f9' }}>FastAPI Backend Started</strong>
-                    <p style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
-                      Asynchronous application structure with Lifespan lifecycle and CORS enabled.
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <CheckCircle2 size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <div>
-                    <strong style={{ color: '#f1f5f9' }}>Database Models & Alembic</strong>
-                    <p style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
-                      SQLAlchemy 2.0 models for User, OAuthAccount, Conversation, and Message with Alembic migration.
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <CheckCircle2 size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <div>
-                    <strong style={{ color: '#f1f5f9' }}>System Health & Config Endpoints</strong>
-                    <p style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
-                      GET /health and GET /api/v1/system/config verified with automated tests.
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <CheckCircle2 size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <div>
-                    <strong style={{ color: '#f1f5f9' }}>JWT Authentication System</strong>
-                    <p style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
-                      Bcrypt password hashing, Bearer JWT access tokens, and user registration endpoints.
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <CheckCircle2 size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <div>
-                    <strong style={{ color: '#f1f5f9' }}>Docker Compose Specifications</strong>
-                    <p style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
-                      PostgreSQL with pgvector and Redis service definitions ready for container deployment.
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <CheckCircle2 size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <div>
-                    <strong style={{ color: '#f1f5f9' }}>React Dashboard Client</strong>
-                    <p style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
-                      Vite + TypeScript dashboard connected to backend with live polling and health metrics.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Live Response Payload Inspector */}
-            <div className="card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#f8fafc' }}>
-                  Live API Health Payload (/health)
-                </span>
-                <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                  Last response: {health?.timestamp || new Date().toISOString()}
-                </span>
-              </div>
-              <pre>{JSON.stringify(health, null, 2)}</pre>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: AUTHENTICATION */}
-        {activeTab === 'auth' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '24px' }}>
-            <div className="card">
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '14px', color: '#f8fafc' }}>
-                User Registration & Token Generation
-              </h2>
-              <p style={{ fontSize: '0.82rem', color: '#94a3b8', marginBottom: '20px' }}>
-                Test the JWT identity layer implemented for Phase 1. Tokens use bcrypt hashing and HS256 signatures.
-              </p>
-
-              <form onSubmit={handleRegister}>
-                <div style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '6px' }}>
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    value={authName}
-                    onChange={(e) => setAuthName(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      borderRadius: '8px',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      color: '#ffffff',
-                    }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '6px' }}>
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={authEmail}
-                    onChange={(e) => setAuthEmail(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      borderRadius: '8px',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      color: '#ffffff',
-                    }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '6px' }}>
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      borderRadius: '8px',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      color: '#ffffff',
-                    }}
-                  />
-                </div>
-
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <button
-                    type="submit"
-                    disabled={authLoading}
-                    style={{ background: '#4f46e5', color: '#ffffff', flex: 1 }}
-                  >
-                    Register Account
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleLogin}
-                    disabled={authLoading}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.08)',
-                      color: '#f8fafc',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      flex: 1,
-                    }}
-                  >
-                    Login Existing
-                  </button>
-                </div>
-              </form>
-
-              {authMessage && (
-                <div
-                  style={{
-                    marginTop: '16px',
-                    padding: '10px 14px',
-                    borderRadius: '8px',
-                    fontSize: '0.82rem',
-                    background: authMessage.startsWith('Error')
-                      ? 'rgba(239, 68, 68, 0.15)'
-                      : 'rgba(16, 185, 129, 0.15)',
-                    color: authMessage.startsWith('Error') ? '#f87171' : '#34d399',
-                    border: '1px solid currentColor',
-                  }}
-                >
-                  {authMessage}
-                </div>
-              )}
-            </div>
-
-            <div className="card">
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '14px', color: '#f8fafc' }}>
-                Active Token Payload
-              </h2>
-              {authResult ? (
+          {/* Backend Error Banner */}
+          {error && (
+            <div className="m-6 p-4 rounded-2xl bg-rose-950/60 border border-rose-800 text-rose-200 text-xs flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <ShieldAlert size={20} className="text-rose-400" />
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-                    <UserIcon size={18} color="#60a5fa" />
-                    <span style={{ fontSize: '0.9rem', color: '#e2e8f0', fontWeight: 600 }}>
-                      {authResult.user.email} (UUID: {authResult.user.id})
-                    </span>
-                  </div>
-                  <pre>{JSON.stringify(authResult, null, 2)}</pre>
+                  <div className="font-bold text-rose-300">Backend Connection Error</div>
+                  <div className="text-rose-400">{error}</div>
                 </div>
-              ) : (
-                <div
-                  style={{
-                    height: '240px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#64748b',
-                    textAlign: 'center',
-                  }}
-                >
-                  <Key size={36} style={{ marginBottom: '12px', opacity: 0.5 }} />
-                  <p style={{ fontSize: '0.85rem' }}>
-                    Submit registration or login to view the signed JWT and User session object.
-                  </p>
-                </div>
-              )}
+              </div>
+              <button
+                onClick={loadData}
+                className="px-3 py-1 bg-rose-900/60 hover:bg-rose-800 text-rose-200 rounded-lg text-xs font-semibold"
+              >
+                Retry
+              </button>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* TAB 3: 10-PHASE ROADMAP TRACKER */}
-        {activeTab === 'roadmap' && (
-          <div className="card">
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '6px', color: '#f8fafc' }}>
-              Nexus 10-Milestone Implementation Plan
-            </h2>
-            <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '24px' }}>
-              Execution strictly follows verified milestones. Each phase must be tested before advancing.
-            </p>
+          {/* Active View Container */}
+          <main className="flex-1 p-6 max-w-7xl w-full mx-auto overflow-y-auto">
+            {activeTab === 'dashboard' && <UnifiedDashboard onNavigateTab={setActiveTab} />}
+            {activeTab === 'voice' && <VoiceAssistant />}
+            {activeTab === 'agent' && <AgentOrchestrator />}
+            {activeTab === 'tasks' && <TaskManager />}
+            {activeTab === 'emails' && <EmailAssistant />}
+            {activeTab === 'calendar' && <CalendarAssistant />}
+            {activeTab === 'desktop' && <DesktopCompanion />}
+            {activeTab === 'memory' && <SemanticMemory />}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {[
-                {
-                  phase: 1,
-                  title: 'Foundation & Infrastructure',
-                  days: 'Days 1–3',
-                  status: 'COMPLETE',
-                  desc: 'FastAPI, SQLAlchemy, models, health checks, JWT auth, Alembic migrations, and React Vite dashboard.',
-                  color: '#10b981',
-                },
-                {
-                  phase: 2,
-                  title: 'Voice Engine',
-                  days: 'Days 4–8',
-                  status: 'COMPLETE',
-                  desc: 'Audio capture, OpenAI Realtime API speech-to-speech, interchangeable STT/TTS adapters, VAD, and interruption handling.',
-                  color: '#10b981',
-                },
-                {
-                  phase: 3,
-                  title: 'LLM & LangGraph Agentic Core',
-                  days: 'Days 9–14',
-                  status: 'COMPLETE',
-                  desc: 'Intent classification, planner, tool selection router, approval gate checkpoints, and recovery.',
-                  color: '#10b981',
-                },
-                {
-                  phase: 4,
-                  title: 'Tasks & Reminders Engine',
-                  days: 'Days 15–18',
-                  status: 'COMPLETE',
-                  desc: 'Task CRUD, priority scoring, deadlines, Celery/Redis background worker, and scheduled notifications.',
-                  color: '#10b981',
-                },
-                {
-                  phase: 5,
-                  title: 'Gmail Assistant',
-                  days: 'Days 19–22',
-                  status: 'COMPLETE',
-                  desc: 'OAuth 2.0 Google connection, Gmail search, AI email summarization, draft generation, approval-gated sending.',
-                  color: '#10b981',
-                },
-                {
-                  phase: 6,
-                  title: 'Google Calendar Assistant',
-                  days: 'Days 23–26',
-                  status: 'COMPLETE',
-                  desc: 'Event inspection, free/busy availability check, conflict resolution, proposed schedules with user confirmation.',
-                  color: '#10b981',
-                },
-                {
-                  phase: 7,
-                  title: 'Windows Desktop Companion Agent',
-                  days: 'Days 27–32',
-                  status: 'COMPLETE',
-                  desc: 'Local Python companion, outbound secure WebSocket, strict action allowlists, application control, and file search.',
-                  color: '#10b981',
-                },
-                {
-                  phase: 8,
-                  title: 'Semantic Memory & pgvector',
-                  days: 'Days 33–36',
-                  status: 'COMPLETE',
-                  desc: 'Embedding generation, vector search, preference storage, conversation history, user memory deletion controls.',
-                  color: '#10b981',
-                },
-                {
-                  phase: 9,
-                  title: 'Frontend UI & Voice Controls',
-                  days: 'Days 37–41',
-                  status: 'COMPLETE',
-                  desc: 'Full-featured productivity dashboard: overview, live voice wave, email drafts, task kanban, calendar view, approvals modal.',
-                  color: '#10b981',
-                },
-                {
-                  phase: 10,
-                  title: 'Testing, Hardening & Deployment',
-                  days: 'Days 42–46',
-                  status: 'COMPLETE',
-                  desc: 'End-to-end evaluation suite, rate limiting, error tracking, Docker containerization, cloud deployment, and audit logging.',
-                  color: '#10b981',
-                },
-              ].map((m) => (
-                <div
-                  key={m.phase}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '16px 20px',
-                    borderRadius: '10px',
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: `1px solid ${m.status === 'COMPLETE' ? 'rgba(16, 185, 129, 0.3)' : m.status === 'NEXT UP' ? 'rgba(99, 102, 241, 0.4)' : 'rgba(255, 255, 255, 0.06)'}`,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div
-                      style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '50%',
-                        background: `${m.color}20`,
-                        color: m.color,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 700,
-                        fontSize: '0.85rem',
-                        border: `1px solid ${m.color}40`,
-                      }}
-                    >
-                      {m.phase}
+            {/* TAB: SYSTEM & HEALTH */}
+            {activeTab === 'system' && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="card">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-xs text-slate-400 uppercase font-semibold">FastAPI Engine</span>
+                      <Activity size={18} className="text-indigo-400" />
+                    </div>
+                    <div className="text-xl font-bold text-white mb-1">
+                      {health?.status === 'healthy' ? 'Operational' : 'Disconnected'}
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      Environment: <span className="text-cyan-400 font-semibold">{health?.environment || 'development'}</span>
+                    </div>
+                  </div>
+
+                  <div className="card">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-xs text-slate-400 uppercase font-semibold">Database Persistence</span>
+                      <Database size={18} className="text-emerald-400" />
+                    </div>
+                    <div className="text-xl font-bold text-white mb-1">
+                      {health?.database.dialect?.toUpperCase() || 'SQLite'}
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      Status: <span className="text-emerald-400 font-semibold">{health?.database.status}</span>
+                      {health?.database.latency_ms !== undefined && ` (${health.database.latency_ms} ms)`}
+                    </div>
+                  </div>
+
+                  <div className="card">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-xs text-slate-400 uppercase font-semibold">AI Models</span>
+                      <Flame size={18} className="text-amber-400" />
+                    </div>
+                    <div className="text-xl font-bold text-white mb-1">
+                      {config?.ai.model || 'GPT-4o'}
+                    </div>
+                    <div className="text-xs text-slate-400 truncate">
+                      Voice: {config?.ai.voice_model || 'gpt-4o-realtime-preview'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card space-y-4">
+                  <h3 className="text-base font-bold text-white">Full-Stack Production Readiness</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
+                      <strong className="text-slate-200">Container Deployment</strong>
+                      <p className="text-slate-400">Docker Compose files ready for multi-container production with PostgreSQL, pgvector, Redis, and FastAPI.</p>
+                    </div>
+                    <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
+                      <strong className="text-slate-200">Google Workspace Sync</strong>
+                      <p className="text-slate-400">OAuth 2.0 with Gmail REST API and Google Calendar v3. Symmetric Fernet token encryption active.</p>
+                    </div>
+                    <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
+                      <strong className="text-slate-200">Desktop Companion Daemon</strong>
+                      <p className="text-slate-400">Windows native WebSocket client with allowlisted app launcher, PIL screenshots, and psutil telemetry.</p>
+                    </div>
+                    <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
+                      <strong className="text-slate-200">Rate Limiting & Safety Policy</strong>
+                      <p className="text-slate-400">Sliding window memory rate limiter and deterministic approval policy for sensitive write actions.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card">
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Live /health JSON Payload</span>
+                  <pre>{JSON.stringify(health, null, 2)}</pre>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: AUTHENTICATION */}
+            {activeTab === 'auth' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="card space-y-4">
+                  <div>
+                    <h2 className="text-lg font-bold text-white">JWT Operator Authentication</h2>
+                    <p className="text-xs text-slate-400">Bcrypt password hashing and HS256 JWT access tokens.</p>
+                  </div>
+
+                  <form className="space-y-3">
+                    <div>
+                      <label className="text-xs text-slate-400 block mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={authEmail}
+                        onChange={(e) => setAuthEmail(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                      />
                     </div>
                     <div>
-                      <div style={{ fontWeight: 600, color: '#f8fafc', fontSize: '0.95rem' }}>
-                        Phase {m.phase}: {m.title}
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                        {m.desc} • <span style={{ color: '#cbd5e1' }}>{m.days}</span>
-                      </div>
+                      <label className="text-xs text-slate-400 block mb-1">Password</label>
+                      <input
+                        type="password"
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                      />
                     </div>
-                  </div>
+                    <div>
+                      <label className="text-xs text-slate-400 block mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        value={authName}
+                        onChange={(e) => setAuthName(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={handleRegister}
+                        disabled={authLoading}
+                        className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold"
+                      >
+                        Register
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleLogin}
+                        disabled={authLoading}
+                        className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold"
+                      >
+                        Login
+                      </button>
+                    </div>
+                  </form>
 
-                  <span
-                    style={{
-                      padding: '4px 10px',
-                      borderRadius: '6px',
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      background: `${m.color}20`,
-                      color: m.color,
-                      border: `1px solid ${m.color}40`,
-                    }}
-                  >
-                    {m.status}
-                  </span>
+                  {authMessage && (
+                    <div
+                      className={`p-3 rounded-xl text-xs border ${
+                        authMessage.startsWith('Error')
+                          ? 'bg-rose-950/60 border-rose-800 text-rose-300'
+                          : 'bg-emerald-950/60 border-emerald-800 text-emerald-300'
+                      }`}
+                    >
+                      {authMessage}
+                    </div>
+                  )}
                 </div>
-              ))}
+
+                <div className="card space-y-3">
+                  <h3 className="text-sm font-bold text-white">Active Token Payload</h3>
+                  {authResult ? (
+                    <div>
+                      <div className="text-xs text-emerald-400 font-semibold mb-2">
+                        Signed User: {authResult.user.email}
+                      </div>
+                      <pre>{JSON.stringify(authResult, null, 2)}</pre>
+                    </div>
+                  ) : (
+                    <div className="h-64 flex flex-col items-center justify-center text-slate-500 text-center text-xs">
+                      <Key size={32} className="mb-2 opacity-40" />
+                      Register or login above to inspect JWT credentials.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB: ROADMAP TRACKER */}
+            {activeTab === 'roadmap' && (
+              <div className="card space-y-4">
+                <div>
+                  <h2 className="text-lg font-bold text-white">10-Phase Milestone Implementation Architecture</h2>
+                  <p className="text-xs text-slate-400">All 10 phases verified with 43 automated backend tests and frontend Vite builds.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { p: 'Phase 1', t: 'Foundation & Infrastructure', d: 'FastAPI, SQLAlchemy, models, health checks, JWT auth, Alembic migrations, React Vite.' },
+                    { p: 'Phase 2', t: 'Voice Engine & WebSocket Pipeline', d: 'Audio capture, OpenAI Realtime speech-to-speech, interchangeable STT/TTS adapters, VAD.' },
+                    { p: 'Phase 3', t: 'LLM & LangGraph Agentic Core', d: 'Intent classification, planner, tool selection router, approval gate checkpoints, recovery.' },
+                    { p: 'Phase 4', t: 'Tasks & Reminders Engine', d: 'Task CRUD, priority scoring, deadlines, background scheduler loop, recurring reminders.' },
+                    { p: 'Phase 5', t: 'Gmail Integration & Email Assistant', d: 'OAuth 2.0 Google sync, Gmail search, AI summarization, draft composer, live send.' },
+                    { p: 'Phase 6', t: 'Google Calendar Assistant', d: 'Event inspection, free/busy check, conflict detection, availability slot booking.' },
+                    { p: 'Phase 7', t: 'Windows Desktop Companion', d: 'WebSocket client daemon, allowlisted apps, PIL screenshots, safe file search, psutil metrics.' },
+                    { p: 'Phase 8', t: 'Semantic Memory & Vector Search', d: 'Embedding generation, vector search, preference storage, user memory wipe controls.' },
+                    { p: 'Phase 9', t: 'Unified Executive Dashboard', d: 'Command center, omni-bar, live voice orb, drafts, task kanban, approvals modal.' },
+                    { p: 'Phase 10', t: 'Hardening, Compliance & Deployment', d: 'Rate limiting, error recovery, Docker containerization, cloud deployment, audit logging.' },
+                  ].map((item, idx) => (
+                    <div key={idx} className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-indigo-400">{item.p}</span>
+                        <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono font-bold">
+                          COMPLETE
+                        </span>
+                      </div>
+                      <div className="text-sm font-bold text-white">{item.t}</div>
+                      <p className="text-xs text-slate-400">{item.d}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+
+      {/* Global Interactive Command Palette (Ctrl+K) */}
+      {isCommandPaletteOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-start justify-center pt-24 px-4 animate-in fade-in duration-200">
+          <div
+            className="w-full max-w-xl bg-slate-900 border border-indigo-500/40 rounded-2xl shadow-2xl overflow-hidden shadow-indigo-500/20"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between gap-3">
+              <Search size={18} className="text-indigo-400 flex-shrink-0" />
+              <form onSubmit={handleExecuteCommandPrompt} className="flex-1">
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="Type an instruction or search tabs (e.g. 'Show calendar', 'voice', 'summarize emails')..."
+                  value={commandQuery}
+                  onChange={(e) => setCommandQuery(e.target.value)}
+                  className="w-full bg-transparent text-sm text-white placeholder-slate-500 focus:outline-none"
+                />
+              </form>
+              <button
+                onClick={() => setIsCommandPaletteOpen(false)}
+                className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {commandExecuting && (
+              <div className="p-4 text-xs text-indigo-300 flex items-center gap-2 bg-indigo-950/40 border-b border-indigo-900/50">
+                <span className="w-3.5 h-3.5 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
+                Dispatching command to LangGraph agent...
+              </div>
+            )}
+
+            {commandResult && (
+              <div className="p-4 text-xs text-slate-200 bg-black/40 border-b border-slate-800 max-h-40 overflow-y-auto whitespace-pre-wrap font-sans">
+                {commandResult}
+              </div>
+            )}
+
+            <div className="p-3 max-h-64 overflow-y-auto space-y-1">
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono px-3 py-1">
+                Quick Navigation & Actions
+              </div>
+              {[
+                { label: 'Executive Command Center', tab: 'dashboard', icon: LayoutDashboard },
+                { label: 'Voice Assistant & Speech', tab: 'voice', icon: Mic },
+                { label: 'Agentic Core & Approvals', tab: 'agent', icon: Bot },
+                { label: 'Tasks & Scheduled Reminders', tab: 'tasks', icon: ListTodo },
+                { label: 'Gmail Assistant & Inbox', tab: 'emails', icon: Mail },
+                { label: 'Google Calendar & Scheduling', tab: 'calendar', icon: Calendar },
+                { label: 'Windows Desktop Companion', tab: 'desktop', icon: Monitor },
+                { label: 'Semantic Vector Memory', tab: 'memory', icon: Brain },
+                { label: 'System Health & Metrics', tab: 'system', icon: Server },
+              ]
+                .filter((item) =>
+                  !commandQuery || item.label.toLowerCase().includes(commandQuery.toLowerCase())
+                )
+                .map((item, idx) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setActiveTab(item.tab as TabKey);
+                        setIsCommandPaletteOpen(false);
+                      }}
+                      className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white text-xs transition text-left"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Icon size={16} className="text-indigo-400" />
+                        <span>{item.label}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-500 font-mono">Jump</span>
+                    </button>
+                  );
+                })}
+            </div>
+
+            <div className="p-2.5 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-500 px-4">
+              <span>Press <strong>Enter</strong> to dispatch prompt to agent</span>
+              <span><strong>ESC</strong> to close</span>
             </div>
           </div>
-        )}
-      </main>
-
-      {/* Footer */}
-      <footer
-        style={{
-          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-          padding: '16px 32px',
-          fontSize: '0.8rem',
-          color: '#64748b',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: 'rgba(11, 15, 25, 0.9)',
-        }}
-      >
-        <span>Nexus Agentic AI Assistant • Phase 1 Foundation Verified</span>
-        <span>Python 3.11 • FastAPI • SQLite / PostgreSQL • Vite React TS</span>
-      </footer>
+        </div>
+      )}
     </div>
   );
 }

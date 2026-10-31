@@ -61,3 +61,4 @@ echo  To safely shut down all services at any time, run: stop-nexus.bat
 echo =====================================================================
 echo.
 pause
+
