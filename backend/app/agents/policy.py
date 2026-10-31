@@ -23,7 +23,11 @@ SAFE_READ_TOOLS: Set[str] = {
     "check_calendar_availability",
     "retrieve_memory",
     "get_desktop_status",
+    "get_active_window",
+    "get_system_metrics",
+    "search_files",
 }
+
 
 # Tools that require explicit human approval before execution
 SENSITIVE_ACTION_TOOLS: Set[str] = {

@@ -82,12 +82,19 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 
 # Direct root WebSocket route for voice streaming matching /ws/voice/{session_id}
 from app.api.v1.endpoints.voice import voice_websocket_channel
+from app.api.v1.endpoints.desktop import companion_websocket_endpoint
 import uuid
 
 @app.websocket("/ws/voice/{session_id}")
 async def direct_voice_websocket(websocket: WebSocket, session_id: uuid.UUID):
     """Direct root voice streaming channel."""
     await voice_websocket_channel(websocket, session_id)
+
+
+@app.websocket("/ws/desktop/companion")
+async def direct_companion_websocket(websocket: WebSocket):
+    """Direct root WebSocket for Windows desktop companion."""
+    await companion_websocket_endpoint(websocket)
 
 
 if __name__ == "__main__":

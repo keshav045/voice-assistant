@@ -12,6 +12,7 @@ import {
   ListTodo,
   Mail,
   Mic,
+  Monitor,
   RefreshCw,
   Server,
   ShieldAlert,
@@ -30,13 +31,14 @@ import { AgentOrchestrator } from './components/AgentOrchestrator';
 import { TaskManager } from './components/TaskManager';
 import { EmailAssistant } from './components/EmailAssistant';
 import { CalendarAssistant } from './components/CalendarAssistant';
+import { DesktopCompanion } from './components/DesktopCompanion';
 
 export function App() {
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [config, setConfig] = useState<SystemConfig | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'calendar' | 'emails' | 'tasks' | 'agent' | 'voice' | 'system' | 'auth' | 'roadmap'>('calendar');
+  const [activeTab, setActiveTab] = useState<'desktop' | 'calendar' | 'emails' | 'tasks' | 'agent' | 'voice' | 'system' | 'auth' | 'roadmap'>('desktop');
 
   // Auth test state
   const [authEmail, setAuthEmail] = useState<string>('agent.user@nexus.ai');
@@ -228,6 +230,20 @@ export function App() {
           }}
         >
           <button
+            onClick={() => setActiveTab('desktop')}
+            style={{
+              background: activeTab === 'desktop' ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.4) 0%, rgba(59, 130, 246, 0.4) 100%)' : 'transparent',
+              color: activeTab === 'desktop' ? '#22d3ee' : '#94a3b8',
+              borderColor: activeTab === 'desktop' ? '#06b6d4' : 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: 700,
+            }}
+          >
+            <Monitor size={16} /> Phase 7 Windows Companion
+          </button>
+          <button
             onClick={() => setActiveTab('calendar')}
             style={{
               background: activeTab === 'calendar' ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(14, 165, 233, 0.4) 100%)' : 'transparent',
@@ -358,6 +374,9 @@ export function App() {
             </div>
           </div>
         )}
+
+        {/* TAB: WINDOWS DESKTOP COMPANION (PHASE 7) */}
+        {activeTab === 'desktop' && <DesktopCompanion />}
 
         {/* TAB: GOOGLE CALENDAR ASSISTANT (PHASE 6) */}
         {activeTab === 'calendar' && <CalendarAssistant />}
@@ -731,17 +750,17 @@ export function App() {
                   phase: 7,
                   title: 'Windows Desktop Companion Agent',
                   days: 'Days 27–32',
-                  status: 'NEXT UP',
+                  status: 'COMPLETE',
                   desc: 'Local Python companion, outbound secure WebSocket, strict action allowlists, application control, and file search.',
-                  color: '#6366f1',
+                  color: '#10b981',
                 },
                 {
                   phase: 8,
                   title: 'Semantic Memory & pgvector',
                   days: 'Days 33–36',
-                  status: 'PLANNED',
+                  status: 'NEXT UP',
                   desc: 'Embedding generation, vector search, preference storage, conversation history, user memory deletion controls.',
-                  color: '#64748b',
+                  color: '#6366f1',
                 },
                 {
                   phase: 9,

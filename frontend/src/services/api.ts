@@ -510,4 +510,44 @@ export async function deleteCalendarEvent(eventId: string): Promise<void> {
   if (!res.ok) throw new Error('Failed to delete calendar event');
 }
 
+// --- Phase 7 Windows Desktop Companion DTOs & API Calls ---
+export interface DesktopStatusDto {
+  is_connected: boolean;
+  status: string;
+  hostname?: string;
+  os?: string;
+  connected_at?: string;
+  last_heartbeat?: string;
+  capabilities: string[];
+  allowed_applications: string[];
+}
+
+export interface DesktopCommandPayload {
+  action: string;
+  params?: Record<string, any>;
+  approval_granted?: boolean;
+}
+
+export async function fetchDesktopStatus(): Promise<DesktopStatusDto> {
+  const res = await fetch(`${API_BASE}/api/v1/desktop/status`, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to fetch desktop companion status');
+  return res.json();
+}
+
+export async function executeDesktopCommand(payload: DesktopCommandPayload): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/desktop/command`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Desktop command failed' }));
+    throw new Error(err.detail || 'Desktop command failed');
+  }
+  return res.json();
+}
+
+
 
