@@ -110,3 +110,4 @@ def execute_tool_call(tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
             "error": str(e),
             "latency_ms": round((time.perf_counter() - start_time) * 1000, 2),
         }
+

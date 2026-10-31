@@ -7,7 +7,9 @@ from app.api.v1.endpoints import (
     chat,
     conversations,
     health,
+    reminders,
     system,
+    tasks,
     voice,
 )
 
@@ -20,4 +22,6 @@ api_router.include_router(voice.router, prefix="/voice", tags=["voice"])
 api_router.include_router(chat.router, prefix="/chat", tags=["chat"])
 api_router.include_router(approvals.router, prefix="/approvals", tags=["approvals"])
 api_router.include_router(conversations.router, prefix="/conversations", tags=["conversations"])
+api_router.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
+api_router.include_router(reminders.router, prefix="/reminders", tags=["reminders"])
 

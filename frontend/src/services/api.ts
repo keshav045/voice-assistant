@@ -178,3 +178,138 @@ export async function submitApprovalDecision(
   }
   return res.json();
 }
+
+// --- Phase 4 Tasks & Reminders DTOs & API Calls ---
+export interface TaskDto {
+  id: string;
+  title: string;
+  description?: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  due_date?: string;
+  completed_at?: string;
+  tags?: string[];
+  created_at: string;
+}
+
+export interface TaskCreatePayload {
+  title: string;
+  description?: string;
+  priority?: string;
+  due_date?: string;
+  tags?: string[];
+}
+
+export interface DailySummaryDto {
+  summary_date: string;
+  total_tasks: number;
+  completed_count: number;
+  pending_count: number;
+  urgent_pending_count: number;
+  urgent_tasks: Array<{ id: string; title: string; priority: string }>;
+  completion_rate: number;
+}
+
+export interface ReminderDto {
+  id: string;
+  title: string;
+  scheduled_at: string;
+  is_recurring: boolean;
+  recurrence_rule?: string;
+  status: 'scheduled' | 'triggered' | 'dismissed' | 'cancelled';
+  triggered_at?: string;
+  notification_channel: string;
+  created_at: string;
+}
+
+export interface ReminderCreatePayload {
+  title: string;
+  scheduled_at: string;
+  is_recurring?: boolean;
+  recurrence_rule?: string;
+  channel?: string;
+}
+
+export async function fetchTasks(status?: string, priority?: string): Promise<TaskDto[]> {
+  const params = new URLSearchParams();
+  if (status) params.append('status', status);
+  if (priority) params.append('priority', priority);
+  const query = params.toString() ? `?${params.toString()}` : '';
+
+  const res = await fetch(`${API_BASE}/api/v1/tasks${query}`, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to fetch tasks');
+  return res.json();
+}
+
+export async function createTask(payload: TaskCreatePayload): Promise<TaskDto> {
+  const res = await fetch(`${API_BASE}/api/v1/tasks`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Failed to create task');
+  return res.json();
+}
+
+export async function completeTask(taskId: string): Promise<TaskDto> {
+  const res = await fetch(`${API_BASE}/api/v1/tasks/${taskId}/complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to complete task');
+  return res.json();
+}
+
+export async function deleteTask(taskId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/v1/tasks/${taskId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to delete task');
+}
+
+export async function fetchDailySummary(): Promise<DailySummaryDto> {
+  const res = await fetch(`${API_BASE}/api/v1/tasks/summary/daily`, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to fetch daily summary');
+  return res.json();
+}
+
+export async function fetchReminders(status?: string): Promise<ReminderDto[]> {
+  const query = status ? `?status=${status}` : '';
+  const res = await fetch(`${API_BASE}/api/v1/reminders${query}`, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to fetch reminders');
+  return res.json();
+}
+
+export async function createReminder(payload: ReminderCreatePayload): Promise<ReminderDto> {
+  const res = await fetch(`${API_BASE}/api/v1/reminders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Failed to create reminder');
+  return res.json();
+}
+
+export async function dismissReminder(reminderId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/v1/reminders/${reminderId}/dismiss`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to dismiss reminder');
+}
+
+export async function checkDueReminders(): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/v1/reminders/check-due`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to trigger reminder check');
+  return res.json();
+}

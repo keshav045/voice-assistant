@@ -210,3 +210,4 @@ class ApprovalRequest(Base):
 
     def __repr__(self) -> str:
         return f"<ApprovalRequest(id={self.id}, tool='{self.tool_name}', status='{self.status}')>"
+

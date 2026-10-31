@@ -8,6 +8,7 @@ import {
   Flame,
   Key,
   Layers,
+  ListTodo,
   Mic,
   RefreshCw,
   Server,
@@ -24,13 +25,14 @@ import {
 import type { SystemHealth, SystemConfig, AuthResponse } from './types';
 import { VoiceAssistant } from './components/VoiceAssistant';
 import { AgentOrchestrator } from './components/AgentOrchestrator';
+import { TaskManager } from './components/TaskManager';
 
 export function App() {
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [config, setConfig] = useState<SystemConfig | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'voice' | 'agent' | 'system' | 'auth' | 'roadmap'>('agent');
+  const [activeTab, setActiveTab] = useState<'voice' | 'agent' | 'tasks' | 'system' | 'auth' | 'roadmap'>('tasks');
 
   // Auth test state
   const [authEmail, setAuthEmail] = useState<string>('agent.user@nexus.ai');
@@ -222,6 +224,20 @@ export function App() {
           }}
         >
           <button
+            onClick={() => setActiveTab('tasks')}
+            style={{
+              background: activeTab === 'tasks' ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.4) 0%, rgba(59, 130, 246, 0.4) 100%)' : 'transparent',
+              color: activeTab === 'tasks' ? '#34d399' : '#94a3b8',
+              borderColor: activeTab === 'tasks' ? '#10b981' : 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: 700,
+            }}
+          >
+            <ListTodo size={16} /> Phase 4 Tasks & Reminders
+          </button>
+          <button
             onClick={() => setActiveTab('agent')}
             style={{
               background: activeTab === 'agent' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.4) 0%, rgba(168, 85, 247, 0.4) 100%)' : 'transparent',
@@ -310,6 +326,9 @@ export function App() {
             </div>
           </div>
         )}
+
+        {/* TAB: TASKS & REMINDERS (PHASE 4) */}
+        {activeTab === 'tasks' && <TaskManager />}
 
         {/* TAB 0: AGENTIC CORE (PHASE 3) */}
         {activeTab === 'agent' && <AgentOrchestrator />}
@@ -650,17 +669,17 @@ export function App() {
                   phase: 4,
                   title: 'Tasks & Reminders Engine',
                   days: 'Days 15–18',
-                  status: 'NEXT UP',
+                  status: 'COMPLETE',
                   desc: 'Task CRUD, priority scoring, deadlines, Celery/Redis background worker, and scheduled notifications.',
-                  color: '#6366f1',
+                  color: '#10b981',
                 },
                 {
                   phase: 5,
                   title: 'Gmail Assistant',
                   days: 'Days 19–22',
-                  status: 'PLANNED',
+                  status: 'NEXT UP',
                   desc: 'OAuth 2.0 Google connection, Gmail search, AI email summarization, draft generation, approval-gated sending.',
-                  color: '#64748b',
+                  color: '#6366f1',
                 },
                 {
                   phase: 6,

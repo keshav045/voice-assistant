@@ -91,3 +91,4 @@ def delete_task(task_id: str) -> Dict[str, Any]:
         "deleted_id": task_id,
         "message": f"Task '{deleted.get('title')}' successfully deleted.",
     }
+

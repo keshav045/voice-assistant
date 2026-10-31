@@ -1,5 +1,6 @@
 """Nexus Agentic AI Assistant - FastAPI Application Entrypoint."""
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Dict
@@ -8,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.database.session import check_db_connection, init_db
+from app.services.scheduler import scheduler_background_loop
 
 # Configure logging
 logging.basicConfig(
@@ -21,15 +23,19 @@ logger = logging.getLogger("nexus.main")
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application startup and shutdown lifecycle management."""
     logger.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}...")
-    # Initialize DB tables (for early prototype / local development)
+    # Initialize DB tables
     try:
         await init_db()
         logger.info("Database schemas initialized.")
     except Exception as e:
         logger.warning(f"Database initialization warning: {e}")
 
+    # Start background scheduler loop
+    scheduler_task = asyncio.create_task(scheduler_background_loop(poll_interval_seconds=10))
+
     yield
 
+    scheduler_task.cancel()
     logger.info("Nexus backend shutting down.")
 
 

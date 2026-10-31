@@ -37,3 +37,4 @@ class AgentState(TypedDict, total=False):
     workflow_status: str  # "running", "pending_approval", "completed", "failed"
     error_details: Optional[str]
     final_response: Optional[str]
+

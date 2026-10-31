@@ -5,6 +5,7 @@ from app.models.user import User, OAuthAccount, GUID
 from app.models.conversation import Conversation, Message
 from app.models.voice import VoiceSession
 from app.models.agent import AgentRun, ToolExecution, ApprovalRequest
+from app.models.productivity import Task, Reminder
 
 __all__ = [
     "Base",
@@ -16,6 +17,8 @@ __all__ = [
     "AgentRun",
     "ToolExecution",
     "ApprovalRequest",
+    "Task",
+    "Reminder",
     "GUID",
 ]
 

@@ -101,3 +101,4 @@ class PolicyEngine:
         elif tool_name == "desktop_run_command":
             return f"Execute Windows command: {args.get('command')}"
         return f"Perform sensitive operation: {tool_name}"
+
