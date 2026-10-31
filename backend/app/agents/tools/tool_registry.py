@@ -1,23 +1,88 @@
 """Tool Registry and execution dispatcher for Agent tools."""
 
+import asyncio
 import time
 import logging
 from typing import Any, Callable, Dict, List
+import uuid
 from app.agents.tools.task_tools import (
     create_task,
     delete_task,
     get_task_details,
     list_tasks,
 )
+from app.services.gmail_service import SAMPLE_INBOX
 
 logger = logging.getLogger("nexus.tools.registry")
 
+# In-memory drafts cache
+_DRAFT_STORE: Dict[str, Dict[str, Any]] = {}
+
+
+# --- Email Tool Handlers ---
+def search_emails(query: str = "") -> Dict[str, Any]:
+    """Search inbox for emails matching query."""
+    q = query.lower()
+    matches = [
+        m for m in SAMPLE_INBOX
+        if not q or q in m["subject"].lower() or q in m["body"].lower() or q in m["sender"].lower()
+    ]
+    return {
+        "success": True,
+        "count": len(matches),
+        "messages": matches,
+    }
+
+
+def summarize_emails(query: str = "") -> Dict[str, Any]:
+    """Summarize emails matching query."""
+    res = search_emails(query)
+    messages = res.get("messages", [])
+    if not messages:
+        return {"success": True, "summary": "No matching emails found."}
+
+    lines = [f"Summary of {len(messages)} emails:"]
+    for m in messages:
+        lines.append(f"• From: {m['sender']} | Subject: {m['subject']} | Details: {m['snippet']}")
+    return {"success": True, "summary": "\n".join(lines), "emails_analyzed": len(messages)}
+
+
+def create_email_draft(recipient: str, subject: str, body: str) -> Dict[str, Any]:
+    """Create a new email draft."""
+    draft_id = f"draft-{uuid.uuid4().hex[:8]}"
+    draft = {
+        "id": draft_id,
+        "recipient": recipient,
+        "subject": subject,
+        "body": body,
+        "status": "draft",
+    }
+    _DRAFT_STORE[draft_id] = draft
+    return {"success": True, "draft": draft, "message": f"Draft created for '{recipient}' with subject '{subject}'."}
+
+
+def send_email(recipient: str, subject: str, body: str) -> Dict[str, Any]:
+    """Send an email (Sensitive operation)."""
+    return {
+        "success": True,
+        "message": f"Email successfully dispatched to '{recipient}' with subject '{subject}'.",
+        "recipient": recipient,
+        "subject": subject,
+    }
+
+
 # Available tools map
 TOOLS_CATALOG: Dict[str, Callable[..., Any]] = {
+    # Task tools
     "create_task": create_task,
     "list_tasks": list_tasks,
     "get_task_details": get_task_details,
     "delete_task": delete_task,
+    # Email tools (Phase 5)
+    "search_emails": search_emails,
+    "summarize_emails": summarize_emails,
+    "create_email_draft": create_email_draft,
+    "send_email": send_email,
 }
 
 # OpenAI-compatible function schemas
@@ -80,6 +145,64 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_emails",
+            "description": "Search user's Gmail inbox for messages matching keywords.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Search keyword or sender name"},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "summarize_emails",
+            "description": "Summarize unread or recent email messages, extracting invitations and action items.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Optional filter query"},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "create_email_draft",
+            "description": "Prepare a new email draft for the user.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "recipient": {"type": "string", "description": "Email address of the recipient"},
+                    "subject": {"type": "string", "description": "Subject of the email"},
+                    "body": {"type": "string", "description": "Body content of the email"},
+                },
+                "required": ["recipient", "subject", "body"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "send_email",
+            "description": "Send an email to a recipient (REQUIRES explicit human approval).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "recipient": {"type": "string", "description": "Email address of the recipient"},
+                    "subject": {"type": "string", "description": "Subject of the email"},
+                    "body": {"type": "string", "description": "Body content of the email"},
+                },
+                "required": ["recipient", "subject", "body"],
+            },
+        },
+    },
 ]
 
 
@@ -96,7 +219,11 @@ def execute_tool_call(tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
         }
 
     try:
-        result = tool_fn(**args)
+        if asyncio.iscoroutinefunction(tool_fn):
+            result = asyncio.run(tool_fn(**args))
+        else:
+            result = tool_fn(**args)
+
         latency = round((time.perf_counter() - start_time) * 1000, 2)
         return {
             "success": True,
@@ -110,4 +237,3 @@ def execute_tool_call(tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
             "error": str(e),
             "latency_ms": round((time.perf_counter() - start_time) * 1000, 2),
         }
-

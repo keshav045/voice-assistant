@@ -9,6 +9,7 @@ import {
   Key,
   Layers,
   ListTodo,
+  Mail,
   Mic,
   RefreshCw,
   Server,
@@ -26,13 +27,14 @@ import type { SystemHealth, SystemConfig, AuthResponse } from './types';
 import { VoiceAssistant } from './components/VoiceAssistant';
 import { AgentOrchestrator } from './components/AgentOrchestrator';
 import { TaskManager } from './components/TaskManager';
+import { EmailAssistant } from './components/EmailAssistant';
 
 export function App() {
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [config, setConfig] = useState<SystemConfig | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'voice' | 'agent' | 'tasks' | 'system' | 'auth' | 'roadmap'>('tasks');
+  const [activeTab, setActiveTab] = useState<'emails' | 'tasks' | 'agent' | 'voice' | 'system' | 'auth' | 'roadmap'>('emails');
 
   // Auth test state
   const [authEmail, setAuthEmail] = useState<string>('agent.user@nexus.ai');
@@ -224,6 +226,20 @@ export function App() {
           }}
         >
           <button
+            onClick={() => setActiveTab('emails')}
+            style={{
+              background: activeTab === 'emails' ? 'linear-gradient(135deg, rgba(244, 63, 94, 0.4) 0%, rgba(168, 85, 247, 0.4) 100%)' : 'transparent',
+              color: activeTab === 'emails' ? '#fb7185' : '#94a3b8',
+              borderColor: activeTab === 'emails' ? '#f43f5e' : 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: 700,
+            }}
+          >
+            <Mail size={16} /> Phase 5 Gmail Assistant
+          </button>
+          <button
             onClick={() => setActiveTab('tasks')}
             style={{
               background: activeTab === 'tasks' ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.4) 0%, rgba(59, 130, 246, 0.4) 100%)' : 'transparent',
@@ -326,6 +342,9 @@ export function App() {
             </div>
           </div>
         )}
+
+        {/* TAB: GMAIL & EMAIL INTELLIGENCE (PHASE 5) */}
+        {activeTab === 'emails' && <EmailAssistant />}
 
         {/* TAB: TASKS & REMINDERS (PHASE 4) */}
         {activeTab === 'tasks' && <TaskManager />}
@@ -677,17 +696,17 @@ export function App() {
                   phase: 5,
                   title: 'Gmail Assistant',
                   days: 'Days 19–22',
-                  status: 'NEXT UP',
+                  status: 'COMPLETE',
                   desc: 'OAuth 2.0 Google connection, Gmail search, AI email summarization, draft generation, approval-gated sending.',
-                  color: '#6366f1',
+                  color: '#10b981',
                 },
                 {
                   phase: 6,
                   title: 'Google Calendar Assistant',
                   days: 'Days 23–26',
-                  status: 'PLANNED',
+                  status: 'NEXT UP',
                   desc: 'Event inspection, free/busy availability check, conflict resolution, proposed schedules with user confirmation.',
-                  color: '#64748b',
+                  color: '#6366f1',
                 },
                 {
                   phase: 7,

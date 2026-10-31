@@ -6,6 +6,7 @@ from app.models.conversation import Conversation, Message
 from app.models.voice import VoiceSession
 from app.models.agent import AgentRun, ToolExecution, ApprovalRequest
 from app.models.productivity import Task, Reminder
+from app.models.email import EmailDraft
 
 __all__ = [
     "Base",
@@ -19,6 +20,7 @@ __all__ = [
     "ApprovalRequest",
     "Task",
     "Reminder",
+    "EmailDraft",
     "GUID",
 ]
 

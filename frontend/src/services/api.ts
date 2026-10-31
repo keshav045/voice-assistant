@@ -313,3 +313,93 @@ export async function checkDueReminders(): Promise<any> {
   if (!res.ok) throw new Error('Failed to trigger reminder check');
   return res.json();
 }
+
+// --- Phase 5 Gmail Integration DTOs & API Calls ---
+export interface EmailMessageDto {
+  id: string;
+  sender: string;
+  recipient: string;
+  subject: string;
+  date: string;
+  snippet: string;
+  body: string;
+  is_read: boolean;
+  labels: string[];
+}
+
+export interface EmailDraftDto {
+  id: string;
+  user_id?: string;
+  recipient: string;
+  subject: string;
+  body: string;
+  status: 'draft' | 'pending_approval' | 'sent' | 'discarded';
+  gmail_draft_id?: string;
+  sent_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EmailDraftCreatePayload {
+  recipient: string;
+  subject: string;
+  body: string;
+}
+
+export interface EmailSendPayload {
+  recipient: string;
+  subject: string;
+  body: string;
+  draft_id?: string;
+}
+
+export async function searchEmails(query: string = '', limit: number = 10): Promise<{ success: boolean; count: number; messages: EmailMessageDto[]; query: string }> {
+  const params = new URLSearchParams();
+  if (query) params.append('q', query);
+  params.append('limit', limit.toString());
+  const res = await fetch(`${API_BASE}/api/v1/emails/search?${params.toString()}`, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to search emails');
+  return res.json();
+}
+
+export async function summarizeEmails(query: string = ''): Promise<{ success: boolean; summary: string; emails_analyzed: number; query?: string }> {
+  const res = await fetch(`${API_BASE}/api/v1/emails/summarize`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
+  });
+  if (!res.ok) throw new Error('Failed to summarize emails');
+  return res.json();
+}
+
+export async function fetchEmailDrafts(status?: string): Promise<EmailDraftDto[]> {
+  const query = status ? `?status=${status}` : '';
+  const res = await fetch(`${API_BASE}/api/v1/emails/drafts${query}`, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to fetch drafts');
+  return res.json();
+}
+
+export async function createEmailDraft(payload: EmailDraftCreatePayload): Promise<EmailDraftDto> {
+  const res = await fetch(`${API_BASE}/api/v1/emails/drafts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Failed to create draft');
+  return res.json();
+}
+
+export async function sendEmail(payload: EmailSendPayload): Promise<{ success: boolean; message: string; sent_at: string; recipient: string }> {
+  const res = await fetch(`${API_BASE}/api/v1/emails/send`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Failed to send email');
+  return res.json();
+}
+

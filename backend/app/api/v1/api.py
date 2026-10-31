@@ -6,6 +6,7 @@ from app.api.v1.endpoints import (
     auth,
     chat,
     conversations,
+    emails,
     health,
     reminders,
     system,
@@ -24,4 +25,5 @@ api_router.include_router(approvals.router, prefix="/approvals", tags=["approval
 api_router.include_router(conversations.router, prefix="/conversations", tags=["conversations"])
 api_router.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
 api_router.include_router(reminders.router, prefix="/reminders", tags=["reminders"])
+api_router.include_router(emails.router, prefix="/emails", tags=["emails"])
 
