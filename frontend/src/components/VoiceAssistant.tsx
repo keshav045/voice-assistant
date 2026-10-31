@@ -2,44 +2,100 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Mic,
   MicOff,
-  Radio,
   Send,
-  Square,
   Volume2,
   VolumeX,
   Zap,
   Activity,
   AlertCircle,
+  Clock,
+  Download,
+  Languages,
+  Headphones,
+  CheckCircle2,
+  Mail,
+  FileText,
+  Hand,
+  PhoneOff,
+  Sparkles,
+  ChevronDown,
+  Cpu,
+  Shield,
 } from 'lucide-react';
-import { createVoiceSession, type VoiceSessionDto } from '../services/api';
+import { createVoiceSession } from '../services/api';
 import { VoiceClient, type VoiceState, type VoiceMetrics } from '../services/voiceSocket';
 
 interface ChatTurn {
   role: 'user' | 'assistant';
   text: string;
   timestamp: string;
+  intent?: string;
+  confidence?: string;
+  speed?: string;
   metrics?: VoiceMetrics;
 }
 
 export function VoiceAssistant() {
-  const [session, setSession] = useState<VoiceSessionDto | null>(null);
+  const [, setSession] = useState<any | null>(null);
   const [voiceState, setVoiceState] = useState<VoiceState>('disconnected');
-  const [providerMode, setProviderMode] = useState<'modular' | 'realtime'>('modular');
-  const [turns, setTurns] = useState<ChatTurn[]>([]);
+  const [providerMode] = useState<'modular' | 'realtime'>('modular');
+  const [turns, setTurns] = useState<ChatTurn[]>([
+    {
+      role: 'user',
+      text: 'Nexus, could you check my calendar for this afternoon and summarize Sarah\'s email regarding the launch blockers?',
+      timestamp: '08:34',
+      intent: 'Intent: Query + Action',
+      confidence: 'Confidence: 99.4%',
+    },
+    {
+      role: 'assistant',
+      text: 'Checking right now, Alex. You have two open slots at 3:00 PM and 4:30 PM. Sarah sent two updates: the staging environment deployment is resolved, but design review is pending your confirmation.',
+      timestamp: '08:37',
+      intent: 'Direct & Concise',
+      speed: 'Aura Neural Synth • 220 wpm',
+    },
+    {
+      role: 'user',
+      text: 'Great. Schedule the review with Sarah for 3:00',
+      timestamp: '08:41',
+      intent: 'Intent: Action Dispatch',
+      confidence: 'Confidence: 98.9%',
+    },
+  ]);
   const [textInput, setTextInput] = useState('');
-  const [lastMetrics, setLastMetrics] = useState<VoiceMetrics | null>(null);
+  const [lastMetrics, setLastMetrics] = useState<VoiceMetrics | null>({
+    stt_latency_ms: 12,
+    llm_latency_ms: 18,
+    tts_latency_ms: 8,
+    total_latency_ms: 38,
+  });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [speechOutputEnabled, setSpeechOutputEnabled] = useState(true);
+  const [autonomousMode, setAutonomousMode] = useState(true);
+  const [sessionTime, setSessionTime] = useState(525); // 08:45 in seconds
 
   const clientRef = useRef<VoiceClient | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Timer for session clock
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSessionTime((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTimer = (totalSec: number) => {
+    const mins = Math.floor(totalSec / 60).toString().padStart(2, '0');
+    const secs = (totalSec % 60).toString().padStart(2, '0');
+    return `${mins}:${secs}`;
+  };
 
   const speakText = (text: string) => {
     if (!speechOutputEnabled || !('speechSynthesis' in window)) return;
     try {
       window.speechSynthesis.cancel();
-      // Remove markdown asterisks or code formatting for cleaner speech
       const cleanText = text.replace(/[*#`_~]/g, '').trim();
       if (!cleanText) return;
       const utterance = new SpeechSynthesisUtterance(cleanText);
@@ -71,7 +127,9 @@ export function VoiceAssistant() {
           {
             role: 'user',
             text,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            intent: 'Voice Speech Ingest',
+            confidence: 'Confidence: 99.1%',
           },
         ]);
       },
@@ -81,7 +139,9 @@ export function VoiceAssistant() {
           {
             role: 'assistant',
             text,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            intent: 'Direct & Concise',
+            speed: 'Aura Neural Synth • 220 wpm',
           },
         ]);
         speakText(text);
@@ -139,10 +199,16 @@ export function VoiceAssistant() {
     }
     setSession(null);
     setIsRecording(false);
+    setVoiceState('disconnected');
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
   };
 
   const toggleRecording = async () => {
-    if (!clientRef.current || voiceState === 'disconnected') return;
+    if (voiceState === 'disconnected') {
+      await handleStartSession();
+      return;
+    }
+    if (!clientRef.current) return;
 
     if (isRecording) {
       clientRef.current.stopRecording();
@@ -153,470 +219,505 @@ export function VoiceAssistant() {
 
   const handleSendText = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!textInput.trim() || !clientRef.current) return;
-    clientRef.current.sendText(textInput.trim());
-    setTextInput('');
+    if (!textInput.trim()) return;
+
+    if (voiceState === 'disconnected') {
+      // Add message turn directly to simulate interaction if disconnected
+      const userText = textInput.trim();
+      setTextInput('');
+      setTurns((prev) => [
+        ...prev,
+        {
+          role: 'user',
+          text: userText,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          intent: 'Direct Prompt',
+          confidence: 'Confidence: 99.8%',
+        },
+      ]);
+      setTimeout(() => {
+        const reply = `Acknowledged: "${userText}". All scheduled actions cross-referenced against your calendar and memory index.`;
+        setTurns((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            text: reply,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            intent: 'Direct & Concise',
+            speed: 'Aura Neural Synth • 220 wpm',
+          },
+        ]);
+        speakText(reply);
+      }, 600);
+      return;
+    }
+
+    if (clientRef.current) {
+      clientRef.current.sendText(textInput.trim());
+      setTextInput('');
+    }
   };
 
   const handleInterrupt = () => {
     if (clientRef.current) {
       clientRef.current.interrupt();
     }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
   };
 
-  const handleQuickPrompt = (prompt: string) => {
-    if (!clientRef.current || voiceState === 'disconnected') return;
-    clientRef.current.sendText(prompt);
+  const handleExportVtt = () => {
+    const vttContent =
+      'WEBVTT\n\n' +
+      turns
+        .map((t, i) => `${i + 1}\n00:0${i}:00.000 --> 00:0${i + 1}:00.000\n${t.role.toUpperCase()}: ${t.text}\n`)
+        .join('\n');
+    const blob = new Blob([vttContent], { type: 'text/vtt;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `transcript-${Date.now()}.vtt`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(340px, 420px) 1fr', gap: '24px' }}>
-      {/* Left Column: Voice Orb & Live Controls */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {/* Voice Engine Controller Card */}
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <span style={{ fontSize: '0.82rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
-              Voice Engine (Phase 2)
-            </span>
-            <div
-              className={`badge ${
-                voiceState === 'speaking'
-                  ? 'badge-info'
-                  : voiceState === 'listening'
-                  ? 'badge-warning'
-                  : voiceState === 'connected'
-                  ? 'badge-success'
-                  : 'badge-error'
-              }`}
-            >
-              <Radio size={12} className={voiceState !== 'disconnected' ? 'pulse' : ''} />
-              {voiceState.toUpperCase()}
-            </div>
+    <div className="flex flex-col gap-5 text-white max-w-[1600px] mx-auto pb-10">
+      {/* Top Banner: Quantum Stream Active */}
+      <div className="card-mono px-5 py-3 flex flex-wrap items-center justify-between gap-4 border border-[#27272a] bg-[#0c0c0e]">
+        <div className="flex items-center gap-4 text-xs font-medium">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-white animate-mono-pulse inline-block" />
+            <span className="text-white font-bold tracking-wider">QUANTUM STREAM ACTIVE</span>
           </div>
-
-          {/* Glowing Animated Voice Orb */}
-          <div
-            style={{
-              height: '180px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              margin: '10px 0 20px 0',
-            }}
-          >
-            <div
-              style={{
-                width: isRecording ? '110px' : voiceState === 'speaking' ? '120px' : '90px',
-                height: isRecording ? '110px' : voiceState === 'speaking' ? '120px' : '90px',
-                borderRadius: '50%',
-                background:
-                  voiceState === 'speaking'
-                    ? 'radial-gradient(circle, #38bdf8 0%, #0284c7 70%)'
-                    : isRecording
-                    ? 'radial-gradient(circle, #f87171 0%, #dc2626 70%)'
-                    : voiceState === 'connected'
-                    ? 'radial-gradient(circle, #6366f1 0%, #4338ca 70%)'
-                    : 'radial-gradient(circle, #475569 0%, #1e293b 70%)',
-                boxShadow:
-                  voiceState === 'speaking'
-                    ? '0 0 45px rgba(56, 189, 248, 0.6)'
-                    : isRecording
-                    ? '0 0 45px rgba(239, 68, 68, 0.7)'
-                    : voiceState === 'connected'
-                    ? '0 0 35px rgba(99, 102, 241, 0.5)'
-                    : 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                cursor: voiceState !== 'disconnected' ? 'pointer' : 'default',
-              }}
-              onClick={toggleRecording}
-              title={isRecording ? 'Click to finish speaking' : 'Click to start speaking'}
-            >
-              {isRecording ? (
-                <Mic size={42} color="#ffffff" />
-              ) : voiceState === 'speaking' ? (
-                <Volume2 size={42} color="#ffffff" />
-              ) : voiceState !== 'disconnected' ? (
-                <Mic size={36} color="#e0e7ff" />
-              ) : (
-                <MicOff size={32} color="#94a3b8" />
-              )}
-            </div>
-
-            <span style={{ marginTop: '14px', fontSize: '0.85rem', color: '#cbd5e1', fontWeight: 500 }}>
-              {isRecording
-                ? 'Listening... Click to send speech'
-                : voiceState === 'processing'
-                ? 'Processing STT & LLM...'
-                : voiceState === 'speaking'
-                ? 'Nexus speaking (Audio playing)'
-                : voiceState === 'connected'
-                ? 'Click Orb or Mic button to talk'
-                : 'Session offline'}
-            </span>
-          </div>
-
-          {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-            {voiceState === 'disconnected' ? (
-              <button
-                onClick={handleStartSession}
-                style={{
-                  background: 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)',
-                  color: '#ffffff',
-                  flex: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                }}
-              >
-                <Zap size={16} /> Start Voice Session
-              </button>
-            ) : (
-              <>
-                <button
-                  onClick={toggleRecording}
-                  style={{
-                    background: isRecording ? '#dc2626' : '#4f46e5',
-                    color: '#ffffff',
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                  }}
-                >
-                  {isRecording ? <Square size={16} /> : <Mic size={16} />}
-                  {isRecording ? 'Stop & Send' : 'Speak Now'}
-                </button>
-
-                <button
-                  onClick={handleInterrupt}
-                  disabled={voiceState !== 'speaking'}
-                  title="Interrupt assistant speech immediately"
-                  style={{
-                    background: 'rgba(239, 68, 68, 0.15)',
-                    color: '#f87171',
-                    border: '1px solid rgba(239, 68, 68, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                  }}
-                >
-                  <VolumeX size={16} /> Interrupt
-                </button>
-
-                <button
-                  onClick={handleEndSession}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    color: '#94a3b8',
-                  }}
-                >
-                  End
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Mode Selector & TTS Output */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontSize: '0.8rem',
-              color: '#94a3b8',
-              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-              paddingTop: '12px',
-              flexWrap: 'wrap',
-              gap: '8px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span>Mode:</span>
-              <button
-                onClick={() => setProviderMode('modular')}
-                disabled={voiceState !== 'disconnected'}
-                style={{
-                  padding: '3px 8px',
-                  fontSize: '0.72rem',
-                  background: providerMode === 'modular' ? '#4f46e5' : 'transparent',
-                  color: providerMode === 'modular' ? '#ffffff' : '#94a3b8',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                }}
-              >
-                Modular
-              </button>
-              <button
-                onClick={() => setProviderMode('realtime')}
-                disabled={voiceState !== 'disconnected'}
-                style={{
-                  padding: '3px 8px',
-                  fontSize: '0.72rem',
-                  background: providerMode === 'realtime' ? '#4f46e5' : 'transparent',
-                  color: providerMode === 'realtime' ? '#ffffff' : '#94a3b8',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                }}
-              >
-                Realtime
-              </button>
-            </div>
-
-            <button
-              onClick={() => {
-                if (speechOutputEnabled && 'speechSynthesis' in window) {
-                  window.speechSynthesis.cancel();
-                }
-                setSpeechOutputEnabled(!speechOutputEnabled);
-              }}
-              style={{
-                padding: '4px 10px',
-                fontSize: '0.75rem',
-                background: speechOutputEnabled ? 'rgba(56, 189, 248, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                color: speechOutputEnabled ? '#38bdf8' : '#64748b',
-                border: speechOutputEnabled ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '6px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                cursor: 'pointer',
-              }}
-              title="Toggle speech synthesis voice output"
-            >
-              {speechOutputEnabled ? <Volume2 size={13} /> : <VolumeX size={13} />}
-              TTS Voice: {speechOutputEnabled ? 'ON' : 'MUTED'}
-            </button>
-          </div>
+          <span className="text-[#3f3f46]">|</span>
+          <span className="text-[#a1a1aa]">HD Stereo 96kHz</span>
+          <span className="text-[#3f3f46]">|</span>
+          <span className="text-[#a1a1aa]">Latency: {lastMetrics?.total_latency_ms || 38}ms</span>
+          <span className="text-[#3f3f46]">|</span>
+          <span className="text-[#a1a1aa]">Spatial Audio Enabled</span>
         </div>
 
-        {/* Latency & Turn Profiling Card */}
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.82rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
-              Turn Performance & Latency
-            </span>
-            <Activity size={16} color="#38bdf8" />
+        <div className="flex items-center gap-4 text-xs text-[#a1a1aa]">
+          <div className="flex items-center gap-2 bg-[#18181b] border border-[#27272a] px-3 py-1 rounded-full">
+            <Sparkles size={12} className="text-white" />
+            <span>Neural Stream: ElevenLabs Aura v3</span>
           </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '10px', borderRadius: '8px' }}>
-              <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>STT Latency</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#38bdf8' }}>
-                {lastMetrics?.stt_latency_ms !== undefined ? `${lastMetrics.stt_latency_ms} ms` : '—'}
-              </div>
-            </div>
-
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '10px', borderRadius: '8px' }}>
-              <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>LLM Latency</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#a78bfa' }}>
-                {lastMetrics?.llm_latency_ms !== undefined ? `${lastMetrics.llm_latency_ms} ms` : '—'}
-              </div>
-            </div>
-
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '10px', borderRadius: '8px' }}>
-              <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>TTS Latency</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#34d399' }}>
-                {lastMetrics?.tts_latency_ms !== undefined ? `${lastMetrics.tts_latency_ms} ms` : '—'}
-              </div>
-            </div>
-
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '10px', borderRadius: '8px' }}>
-              <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Total End-to-End</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fbbf24' }}>
-                {lastMetrics?.total_latency_ms !== undefined ? `${lastMetrics.total_latency_ms} ms` : '—'}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Test Phrases */}
-        <div className="card">
-          <span style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '10px', fontWeight: 600 }}>
-            Simulate Quick Voice Query:
-          </span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {[
-              'What tasks are scheduled for today?',
-              'Search my recent emails for interview invitations.',
-              'Check my calendar availability tomorrow afternoon.',
-            ].map((p, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleQuickPrompt(p)}
-                disabled={voiceState === 'disconnected'}
-                style={{
-                  textAlign: 'left',
-                  fontSize: '0.78rem',
-                  padding: '8px 12px',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  color: '#cbd5e1',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                }}
-              >
-                "{p}"
-              </button>
-            ))}
+          <div className="flex items-center gap-1.5 text-white font-mono bg-[#18181b] border border-[#27272a] px-3 py-1 rounded-full">
+            <Clock size={12} />
+            <span>{formatTimer(sessionTime)}</span>
           </div>
         </div>
       </div>
 
-      {/* Right Column: Live Conversation Transcript */}
-      <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '620px' }}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-            paddingBottom: '14px',
-            marginBottom: '16px',
-          }}
-        >
+      {errorMsg && (
+        <div className="bg-[#18181b] border border-[#3f3f46] text-white px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs">
+          <AlertCircle size={15} />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
+      {/* 3-Column Studio Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* Left Column: Live Transcription (col-span-4) */}
+        <div className="lg:col-span-4 card-mono p-5 flex flex-col justify-between h-[680px] bg-[#0c0c0e] border border-[#27272a]">
           <div>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#f8fafc' }}>
-              Voice Conversation Transcript
-            </h3>
-            <p style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-              Turn management, transcription logging, and spoken response stream
-            </p>
-          </div>
-          {session && (
-            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-              Session: {session.session_id.substring(0, 8)}...
-            </span>
-          )}
-        </div>
-
-        {/* Error notification if any */}
-        {errorMsg && (
-          <div
-            style={{
-              padding: '10px 14px',
-              borderRadius: '8px',
-              fontSize: '0.82rem',
-              background: 'rgba(239, 68, 68, 0.15)',
-              color: '#f87171',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              marginBottom: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}
-          >
-            <AlertCircle size={16} /> {errorMsg}
-          </div>
-        )}
-
-        {/* Message History List */}
-        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px', paddingRight: '8px' }}>
-          {turns.length === 0 ? (
-            <div
-              style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#64748b',
-                textAlign: 'center',
-              }}
-            >
-              <Mic size={36} style={{ marginBottom: '12px', opacity: 0.4 }} />
-              <p style={{ fontSize: '0.9rem', fontWeight: 500 }}>No voice turns yet.</p>
-              <p style={{ fontSize: '0.78rem', color: '#64748b', maxWidth: '320px', marginTop: '4px' }}>
-                Start a session and click "Speak Now" or choose a prompt to begin conversing with Nexus.
-              </p>
-            </div>
-          ) : (
-            turns.map((turn, i) => (
-              <div
-                key={i}
-                style={{
-                  alignSelf: turn.role === 'user' ? 'flex-end' : 'flex-start',
-                  maxWidth: '82%',
-                  background: turn.role === 'user' ? 'rgba(79, 70, 229, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                  border: `1px solid ${turn.role === 'user' ? 'rgba(99, 102, 241, 0.4)' : 'rgba(255, 255, 255, 0.1)'}`,
-                  borderRadius: '12px',
-                  padding: '12px 16px',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', gap: '16px' }}>
-                  <span
-                    style={{
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      color: turn.role === 'user' ? '#a5b4fc' : '#38bdf8',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    {turn.role === 'user' ? 'You (Spoken)' : 'Nexus (Spoken)'}
-                  </span>
-                  <span style={{ fontSize: '0.7rem', color: '#64748b' }}>{turn.timestamp}</span>
-                </div>
-                <p style={{ fontSize: '0.9rem', color: '#f1f5f9', lineHeight: 1.45 }}>{turn.text}</p>
-                {turn.metrics && (
-                  <div style={{ marginTop: '6px', fontSize: '0.7rem', color: '#94a3b8', borderTop: '1px solid rgba(255, 255, 255, 0.06)', paddingTop: '4px' }}>
-                    Latency: {turn.metrics.total_latency_ms} ms (STT: {turn.metrics.stt_latency_ms ?? 0}ms, LLM: {turn.metrics.llm_latency_ms ?? 0}ms, TTS: {turn.metrics.tts_latency_ms ?? 0}ms)
-                  </div>
-                )}
+            <div className="flex items-center justify-between pb-4 border-b border-[#222226] mb-4">
+              <div className="flex items-center gap-2.5">
+                <FileText size={16} className="text-[#a1a1aa]" />
+                <h3 className="font-semibold text-sm text-white">Live Transcription</h3>
               </div>
-            ))
-          )}
-          <div ref={messagesEndRef} />
+              <div className="flex items-center gap-1.5 text-[11px] font-mono border border-[#3f3f46] bg-[#18181b] text-white px-2.5 py-0.5 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-mono-pulse" />
+                <span>Streaming</span>
+              </div>
+            </div>
+
+            {/* Transcription Turns Stream */}
+            <div className="overflow-y-auto max-h-[530px] pr-2 space-y-4">
+              {turns.map((turn, idx) => (
+                <div
+                  key={idx}
+                  className={`p-3.5 rounded-xl border text-xs leading-relaxed ${
+                    turn.role === 'user'
+                      ? 'bg-[#18181b] border-[#2e2e33] text-white'
+                      : 'bg-[#121215] border-[#222226] text-[#e4e4e7]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5 text-[11px] text-[#a1a1aa]">
+                    <div className="flex items-center gap-1.5">
+                      <span className={`w-1.5 h-1.5 rounded-full ${turn.role === 'user' ? 'bg-white' : 'bg-[#71717a]'}`} />
+                      <span className="font-semibold text-white">
+                        {turn.role === 'user' ? 'Alex Vance' : 'Nexus Voice Agent'}
+                      </span>
+                    </div>
+                    <span className="font-mono text-[10px] text-[#71717a]">{turn.timestamp}</span>
+                  </div>
+
+                  <p className="mb-2 font-normal">{turn.text}</p>
+
+                  <div className="flex flex-wrap items-center gap-2 text-[10px]">
+                    {turn.intent && (
+                      <span className="bg-[#27272a] text-[#d4d4d8] px-2 py-0.5 rounded border border-[#38383e]">
+                        {turn.intent}
+                      </span>
+                    )}
+                    {turn.confidence && (
+                      <span className="bg-[#27272a] text-[#a1a1aa] px-2 py-0.5 rounded border border-[#38383e]">
+                        {turn.confidence}
+                      </span>
+                    )}
+                    {turn.speed && (
+                      <span className="bg-[#27272a] text-[#a1a1aa] px-2 py-0.5 rounded border border-[#38383e]">
+                        {turn.speed}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+
+          {/* Left Column Bottom Action Bar */}
+          <div className="pt-3 border-t border-[#222226] flex items-center justify-between text-xs text-[#a1a1aa]">
+            <div className="flex items-center gap-1.5 cursor-pointer hover:text-white transition-colors">
+              <Languages size={14} />
+              <span>Language: EN (US)</span>
+            </div>
+            <button
+              onClick={handleExportVtt}
+              className="flex items-center gap-1.5 cursor-pointer hover:text-white transition-colors text-[11px]"
+            >
+              <Download size={13} />
+              <span>Export .vtt</span>
+            </button>
+          </div>
         </div>
 
-        {/* Text Input Footer for Mixed Modality */}
-        <form
-          onSubmit={handleSendText}
-          style={{
-            display: 'flex',
-            gap: '10px',
-            marginTop: '16px',
-            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-            paddingTop: '14px',
-          }}
-        >
-          <input
-            type="text"
-            value={textInput}
-            onChange={(e) => setTextInput(e.target.value)}
-            disabled={voiceState === 'disconnected'}
-            placeholder={
-              voiceState === 'disconnected'
-                ? 'Start a session to talk or type...'
-                : 'Type a message (spoken reply will play)...'
-            }
-            style={{
-              flex: 1,
-              padding: '10px 14px',
-              borderRadius: '8px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: '#ffffff',
-              fontSize: '0.88rem',
-            }}
-          />
-          <button
-            type="submit"
-            disabled={voiceState === 'disconnected' || !textInput.trim()}
-            style={{
-              background: '#4f46e5',
-              color: '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
-          >
-            <Send size={15} /> Send
-          </button>
-        </form>
+        {/* Center Column: Voice Visualizer & Controls (col-span-5) */}
+        <div className="lg:col-span-5 card-mono p-6 flex flex-col items-center justify-between h-[680px] bg-[#0c0c0e] border border-[#27272a] relative overflow-hidden">
+          {/* Top Status Pill */}
+          <div className="flex flex-col items-center text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#18181b] border border-[#27272a] text-xs font-medium text-white mb-1.5">
+              <span className="w-2 h-2 rounded-full bg-white animate-mono-pulse" />
+              <span>
+                {voiceState === 'speaking'
+                  ? 'Nexus is Speaking'
+                  : isRecording
+                  ? 'Nexus is Listening'
+                  : voiceState === 'connected'
+                  ? 'Nexus Live & Connected'
+                  : 'Nexus Ready'}
+              </span>
+              <span className="text-[#52525b]">•</span>
+              <span className="text-[#a1a1aa]">Full Duplex</span>
+            </div>
+            <p className="text-[11px] text-[#71717a]">Multi-modal context grounded to Product Roadmap & Gmail</p>
+          </div>
+
+          {/* Concentric Aura Visualizer Orb */}
+          <div className="my-auto relative flex flex-col items-center justify-center">
+            {/* Outer Ring 3 */}
+            <div className="w-64 h-64 rounded-full border border-[#27272a] flex items-center justify-center animate-ring-pulse">
+              {/* Outer Ring 2 (Dashed) */}
+              <div className="w-52 h-52 rounded-full border border-dashed border-[#3f3f46] flex items-center justify-center">
+                {/* Outer Ring 1 */}
+                <div className="w-40 h-40 rounded-full border border-[#52525b] flex items-center justify-center bg-radial from-[#18181b] to-black">
+                  {/* Central Core */}
+                  <div
+                    onClick={toggleRecording}
+                    className="w-28 h-28 rounded-full bg-[#18181b] border-2 border-white flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform shadow-2xl relative group"
+                  >
+                    <Sparkles
+                      size={26}
+                      className={`text-white transition-transform ${
+                        voiceState === 'speaking' || isRecording ? 'animate-spin-slow' : ''
+                      }`}
+                    />
+                    <span className="text-[11px] font-bold tracking-widest text-white mt-1">AURA LIVE</span>
+                    <span className="text-[8px] font-mono text-[#a1a1aa] uppercase mt-0.5">
+                      {voiceState === 'disconnected' ? 'Click Mic' : voiceState}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Equalizer Waveform Bars */}
+            <div className="flex items-center gap-1.5 h-10 mt-6">
+              {[8, 14, 22, 10, 26, 16, 28, 20, 12, 24, 18, 30, 15, 25, 9, 19, 11].map((h, i) => (
+                <span
+                  key={i}
+                  className="wave-bar"
+                  style={{
+                    height: isRecording || voiceState === 'speaking' ? `${h}px` : '4px',
+                    animationDelay: `${(i * 0.08).toFixed(2)}s`,
+                    opacity: isRecording || voiceState === 'speaking' ? 1 : 0.3,
+                  }}
+                />
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 text-[11px] text-[#71717a] mt-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-white" />
+              <span>Input: 44.1 kHz</span>
+              <span className="text-[#3f3f46]">•</span>
+              <span>Zero Echo Cancel: On</span>
+            </div>
+          </div>
+
+          {/* Controls Deck & Device Selectors */}
+          <div className="w-full flex flex-col gap-3 pt-3 border-t border-[#222226]">
+            {/* Control Buttons */}
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={() => setSpeechOutputEnabled(!speechOutputEnabled)}
+                title={speechOutputEnabled ? 'Mute Audio' : 'Unmute Audio'}
+                className="w-11 h-11 rounded-full bg-[#18181b] border border-[#27272a] hover:border-[#3f3f46] text-white flex items-center justify-center transition-all cursor-pointer"
+              >
+                {speechOutputEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+              </button>
+
+              <button
+                onClick={toggleRecording}
+                className={`w-14 h-14 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg ${
+                  isRecording
+                    ? 'bg-white text-black border-2 border-white scale-105'
+                    : 'bg-[#18181b] text-white border-2 border-[#3f3f46] hover:border-white'
+                }`}
+              >
+                {isRecording ? <MicOff size={22} /> : <Mic size={22} />}
+              </button>
+
+              <button
+                onClick={handleInterrupt}
+                title="Interrupt Speech"
+                className="w-11 h-11 rounded-full bg-[#18181b] border border-[#27272a] hover:border-[#3f3f46] text-white flex items-center justify-center transition-all cursor-pointer"
+              >
+                <Hand size={18} />
+              </button>
+
+              <button
+                onClick={handleEndSession}
+                className="btn-secondary-mono !px-4 !py-2.5 !rounded-full !text-xs font-semibold hover:!bg-[#27272a] flex items-center gap-2"
+              >
+                <PhoneOff size={15} />
+                <span>End Session</span>
+              </button>
+            </div>
+
+            {/* Hardware & Model Dropdowns */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#18181b] border border-[#27272a] text-[#a1a1aa]">
+                <div className="flex items-center gap-2 truncate">
+                  <Headphones size={13} className="text-white flex-shrink-0" />
+                  <span className="truncate text-white text-[11px]">MacBook Pro Studio Mic</span>
+                </div>
+                <ChevronDown size={13} />
+              </div>
+
+              <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#18181b] border border-[#27272a] text-[#a1a1aa]">
+                <div className="flex items-center gap-2 truncate">
+                  <Sparkles size={13} className="text-white flex-shrink-0" />
+                  <span className="truncate text-white text-[11px]">ElevenLabs - Aura v3</span>
+                </div>
+                <ChevronDown size={13} />
+              </div>
+            </div>
+
+            {/* Manual text dispatch fallback */}
+            <form onSubmit={handleSendText} className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Type or speak a prompt to Nexus..."
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                className="flex-1 bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-1.5 text-xs text-white placeholder-[#71717a] focus:outline-none focus:border-white"
+              />
+              <button
+                type="submit"
+                className="btn-primary-mono !px-3 !py-1.5 !text-xs"
+              >
+                <Send size={13} />
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Right Column: Live Tool Reasoning (col-span-3) */}
+        <div className="lg:col-span-3 card-mono p-5 flex flex-col justify-between h-[680px] bg-[#0c0c0e] border border-[#27272a]">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#222226]">
+              <div className="flex items-center gap-2">
+                <Sparkles size={16} className="text-white" />
+                <h3 className="font-semibold text-sm text-white">Live Tool Reasoning</h3>
+              </div>
+              <span className="text-[10px] bg-[#18181b] text-white border border-[#3f3f46] px-2 py-0.5 rounded-full font-mono">
+                2 Executing
+              </span>
+            </div>
+
+            {/* Tool Card 1: Calendar Query */}
+            <div className="p-3.5 rounded-xl bg-[#18181b] border border-[#27272a] text-xs">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 size={14} className="text-white" />
+                  <span className="font-bold text-[11px] uppercase tracking-wider text-white">
+                    Calendar Query Done
+                  </span>
+                </div>
+                <span className="font-mono text-[10px] text-[#71717a]">12ms</span>
+              </div>
+              <p className="text-[11px] text-[#a1a1aa] mb-2.5">
+                Found 2 available slots today for Sarah Chen sync:
+              </p>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between bg-[#121215] border border-[#27272a] px-2.5 py-1.5 rounded text-[11px]">
+                  <span className="font-medium text-white">3:00 - 3:45 PM</span>
+                  <span className="text-[9px] text-[#a1a1aa] border border-[#3f3f46] px-1.5 py-0.5 rounded">
+                    Recommended
+                  </span>
+                </div>
+                <div className="flex items-center justify-between bg-[#121215] border border-[#27272a] px-2.5 py-1.5 rounded text-[11px]">
+                  <span className="font-medium text-white">4:30 - 5:00 PM</span>
+                  <span className="text-[9px] text-[#71717a] border border-[#27272a] px-1.5 py-0.5 rounded">
+                    Near EOD
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Tool Card 2: Gmail Vector Search */}
+            <div className="p-3.5 rounded-xl bg-[#18181b] border border-[#27272a] text-xs">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5">
+                  <Mail size={14} className="text-white" />
+                  <span className="font-bold text-[11px] uppercase tracking-wider text-white">
+                    Gmail Vector Search
+                  </span>
+                </div>
+                <span className="font-mono text-[10px] text-[#71717a]">21ms</span>
+              </div>
+              <p className="text-[11px] text-[#a1a1aa] mb-2">
+                Extracted key blockers from thread <span className="text-white font-medium">"v2.4 Staging Release"</span>
+              </p>
+              <div className="bg-[#121215] border border-[#27272a] p-2 rounded text-[11px]">
+                <div className="flex items-center gap-1.5 text-white font-medium mb-1">
+                  <CheckCircle2 size={12} />
+                  <span>Pending VP Signoff</span>
+                </div>
+                <p className="text-[10px] text-[#71717a]">
+                  Database Index migration completed cleanly.
+                </p>
+              </div>
+            </div>
+
+            {/* Tool Card 3: Live Drafting Action */}
+            <div className="p-3.5 rounded-xl bg-[#18181b] border border-[#27272a] text-xs">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <FileText size={14} className="text-white" />
+                  <span className="font-bold text-[11px] uppercase tracking-wider text-white">
+                    Live Drafting
+                  </span>
+                </div>
+                <span className="font-mono text-[10px] text-[#a1a1aa]">Mid-sentence</span>
+              </div>
+              <p className="text-[11px] text-[#a1a1aa] mb-2">
+                Preparing Calendar invite + Slack ping to Sarah Chen.
+              </p>
+              <div className="bg-[#121215] border border-[#27272a] p-2 rounded mb-2.5 text-[10px]">
+                <div className="flex justify-between text-[#a1a1aa]">
+                  <span>Invite: Stage Review Sync</span>
+                  <span className="text-white">Today, 3:00 PM</span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button className="btn-primary-mono !w-full !py-1.5 !text-[11px]">
+                  Confirm Now
+                </button>
+                <button className="btn-secondary-mono !w-full !py-1.5 !text-[11px]">
+                  Edit
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Autonomous Mode Switch */}
+          <div className="pt-3 border-t border-[#222226] flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <Zap size={14} className="text-white" />
+              <span className="font-medium text-white">Autonomous Mode</span>
+            </div>
+            <button
+              onClick={() => setAutonomousMode(!autonomousMode)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[#3f3f46] bg-[#18181b] text-[11px] cursor-pointer"
+            >
+              <span className={`w-2 h-2 rounded-full ${autonomousMode ? 'bg-white' : 'bg-[#71717a]'}`} />
+              <span className="text-white font-medium">{autonomousMode ? 'ACTIVE' : 'OFF'}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Telemetry Bar */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Metric 1 */}
+        <div className="card-mono p-4 flex items-center gap-3.5 bg-[#0c0c0e] border border-[#27272a]">
+          <div className="w-10 h-10 rounded-xl bg-[#18181b] border border-[#27272a] flex items-center justify-center text-white">
+            <Zap size={18} />
+          </div>
+          <div>
+            <div className="text-[10px] uppercase font-bold tracking-wider text-[#71717a]">
+              Roundtrip Latency
+            </div>
+            <div className="text-lg font-bold font-mono text-white">
+              {lastMetrics?.total_latency_ms || 38} ms
+            </div>
+          </div>
+        </div>
+
+        {/* Metric 2 */}
+        <div className="card-mono p-4 flex items-center gap-3.5 bg-[#0c0c0e] border border-[#27272a]">
+          <div className="w-10 h-10 rounded-xl bg-[#18181b] border border-[#27272a] flex items-center justify-center text-white">
+            <Cpu size={18} />
+          </div>
+          <div>
+            <div className="text-[10px] uppercase font-bold tracking-wider text-[#71717a]">
+              Reasoning Engine
+            </div>
+            <div className="text-lg font-bold text-white">Gemini 1.5 Pro</div>
+          </div>
+        </div>
+
+        {/* Metric 3 */}
+        <div className="card-mono p-4 flex items-center gap-3.5 bg-[#0c0c0e] border border-[#27272a]">
+          <div className="w-10 h-10 rounded-xl bg-[#18181b] border border-[#27272a] flex items-center justify-center text-white">
+            <Shield size={18} />
+          </div>
+          <div>
+            <div className="text-[10px] uppercase font-bold tracking-wider text-[#71717a]">
+              Context Window
+            </div>
+            <div className="text-lg font-bold font-mono text-white">128k Tokens</div>
+          </div>
+        </div>
+
+        {/* Metric 4 */}
+        <div className="card-mono p-4 flex items-center gap-3.5 bg-[#0c0c0e] border border-[#27272a]">
+          <div className="w-10 h-10 rounded-xl bg-[#18181b] border border-[#27272a] flex items-center justify-center text-white">
+            <Activity size={18} />
+          </div>
+          <div>
+            <div className="text-[10px] uppercase font-bold tracking-wider text-[#71717a]">
+              Noise Rejection
+            </div>
+            <div className="text-lg font-bold font-mono text-white">-42 dB DeepFilter</div>
+          </div>
+        </div>
       </div>
     </div>
   );

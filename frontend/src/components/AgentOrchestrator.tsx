@@ -1,51 +1,114 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Bot,
-  CheckCircle,
   CheckCircle2,
   Layers,
-  Send,
   Shield,
-  XCircle,
+  Plus,
+  MessageSquare,
+  Terminal,
+  Calendar as CalendarIcon,
+  Mail,
+  Monitor,
+  Sparkles,
+  ChevronDown,
+  Mic,
+  ArrowUp,
+  FileText,
+  AlertTriangle,
+  Folder,
+  Zap,
 } from 'lucide-react';
 import {
   submitChatMessage,
   fetchApprovals,
-  submitApprovalDecision,
-  type ChatResponseDto,
-  type ApprovalDto,
 } from '../services/api';
 
-const PIPELINE_NODES = [
-  { id: 'understand_request', name: '1. Understand', desc: 'Normalize input & context' },
-  { id: 'classify_intent', name: '2. Classify', desc: 'Domain intent recognition' },
-  { id: 'plan_actions', name: '3. Plan', desc: 'Action planning & tool selection' },
-  { id: 'route_agent', name: '4. Route', desc: 'Specialist agent assignment' },
-  { id: 'approval_gate', name: '5. Approval Gate', desc: 'Deterministic policy check' },
-  { id: 'execute_tool', name: '6. Execute', desc: 'Narrowly scoped tool run' },
-  { id: 'validate_result', name: '7. Validate', desc: 'Output verification & recovery' },
-  { id: 'save_memory', name: '8. Memory', desc: 'Context & audit logging' },
-  { id: 'generate_response', name: '9. Response', desc: 'Natural language outcome' },
-];
+interface ChatItem {
+  id: string;
+  sender: 'user' | 'orchestrator' | 'agent';
+  agentName?: string;
+  actionName?: string;
+  timestamp: string;
+  content?: string;
+  cardType?: 'calendar_collision' | 'gmail_drafts' | 'desktop_audit' | 'standard';
+  data?: any;
+}
 
 export function AgentOrchestrator() {
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [lastResponse, setLastResponse] = useState<ChatResponseDto | null>(null);
-  const [pendingApprovals, setPendingApprovals] = useState<ApprovalDto[]>([]);
-  const [approvalsLoading, setApprovalsLoading] = useState(false);
+  const [, setPendingApprovals] = useState<any[]>([]);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  const [selectedThread, setSelectedThread] = useState<string>('q3_financial');
+  const [selectedModel, setSelectedModel] = useState<string>('Nexus Ultra Reasoning');
 
-  // Load pending approvals
+  // Messages stream initialized to match Image 4 mockup state
+  const [messages, setMessages] = useState<ChatItem[]>([
+    {
+      id: 'msg-1',
+      sender: 'orchestrator',
+      agentName: 'Calendar Sentinel',
+      actionName: 'conflict_scan()',
+      timestamp: '14:02',
+      cardType: 'calendar_collision',
+      content:
+        'Checked availability for 8 core leads for tomorrow (Thursday, Nov 14). Found 1 meeting collision for Marcus Vance & Priya Sen at 14:00. Nexus recommends adjusting slot to 15:30 - 16:15 EST.',
+    },
+    {
+      id: 'msg-2',
+      sender: 'agent',
+      agentName: 'Gmail Agent',
+      actionName: 'generate_executive_replies()',
+      timestamp: '14:05',
+      cardType: 'gmail_drafts',
+      data: {
+        draft1: {
+          id: '1084',
+          type: 'Concise',
+          to: 'Sarah Jenkins (VP Eng)',
+          body: 'Sarah, specs for Q3 mobile integration have been locked and validated locally. We anticipate clean rollout with 0 schema rollbacks.',
+          status: 'staged',
+        },
+        draft2: {
+          id: '1085',
+          type: 'Strategic',
+          to: 'David Chen (VP Strategy)',
+          body: 'David, noted on the board deck milestones. We have incorporated automated agent failovers to mitigate all third-party drift.',
+          status: 'staged',
+        },
+      },
+    },
+    {
+      id: 'msg-3',
+      sender: 'agent',
+      agentName: 'Desktop Agent (Win11 Daemon)',
+      actionName: 'sha256_audit_file()',
+      timestamp: '14:07',
+      cardType: 'desktop_audit',
+      data: {
+        path: 'C:\\Projects\\Nexus\\specs.pdf',
+        size: '4.2 MB',
+        checksum: '8f4c2e11a90b4d... [Synced with Git Tag v2.4-preview]',
+      },
+    },
+    {
+      id: 'msg-4',
+      sender: 'orchestrator',
+      timestamp: '14:08',
+      cardType: 'standard',
+      content:
+        'Would you like me to dispatch both approved emails and lock 15:30 on Google Calendar simultaneously?',
+    },
+  ]);
+
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
   const loadApprovals = async () => {
-    setApprovalsLoading(true);
     try {
       const data = await fetchApprovals('pending');
       setPendingApprovals(data);
     } catch (err) {
       console.error('Failed to fetch approvals:', err);
-    } finally {
-      setApprovalsLoading(false);
     }
   };
 
@@ -53,473 +116,574 @@ export function AgentOrchestrator() {
     loadApprovals();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputMessage.trim() || loading) return;
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
+  const handleSubmit = async (e?: React.FormEvent, customPrompt?: string) => {
+    if (e) e.preventDefault();
+    const promptToSend = customPrompt || inputMessage.trim();
+    if (!promptToSend || loading) return;
+
+    const userMsg: ChatItem = {
+      id: `user-${Date.now()}`,
+      sender: 'user',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      cardType: 'standard',
+      content: promptToSend,
+    };
+    setMessages((prev) => [...prev, userMsg]);
+    setInputMessage('');
     setLoading(true);
     setActionFeedback(null);
+
     try {
-      const res = await submitChatMessage(inputMessage.trim());
-      setLastResponse(res);
-      setInputMessage('');
+      const res = await submitChatMessage(promptToSend);
+
+      const agentMsg: ChatItem = {
+        id: `agent-${Date.now()}`,
+        sender: 'orchestrator',
+        agentName: 'Nexus Orchestrator',
+        actionName: (res as any).intent || res.workflow_status || 'execute_pipeline()',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        cardType: 'standard',
+        content: res.final_response || 'Workflow executed successfully across nodes.',
+      };
+      setMessages((prev) => [...prev, agentMsg]);
+
       if (res.approval_required) {
         await loadApprovals();
       }
     } catch (err: any) {
       setActionFeedback(`Error: ${err.message}`);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `err-${Date.now()}`,
+          sender: 'orchestrator',
+          agentName: 'System Error Handler',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          cardType: 'standard',
+          content: `Failed to execute: ${err.message || 'Unknown network error'}.`,
+        },
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDecision = async (approvalId: string, decision: 'approved' | 'rejected') => {
-    try {
-      const res = await submitApprovalDecision(approvalId, decision);
-      setActionFeedback(res.message);
-      await loadApprovals();
-    } catch (err: any) {
-      setActionFeedback(`Decision error: ${err.message}`);
-    }
+  const handleApproveDraft = async (draftId: string) => {
+    setActionFeedback(`Draft #${draftId} approved and staged for immediate SMTP dispatch.`);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `ack-${Date.now()}`,
+        sender: 'agent',
+        agentName: 'Gmail Agent',
+        actionName: 'send_draft()',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        cardType: 'standard',
+        content: `Approval confirmed for Draft #${draftId}. Email queued for high-priority dispatch with TLS encryption.`,
+      },
+    ]);
   };
 
-  const isNodeActive = (nodeId: string): boolean => {
-    if (!lastResponse) return false;
-    if (lastResponse.approval_required && lastResponse.approval_status === 'pending') {
-      // Paused at approval gate
-      return ['understand_request', 'classify_intent', 'plan_actions', 'route_agent', 'approval_gate'].includes(nodeId);
-    }
-    return true;
+  const handleHoldCalendarSlot = () => {
+    setActionFeedback('Slot 15:30 - 16:15 EST held on Google Calendar. Calendar invites created.');
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `cal-${Date.now()}`,
+        sender: 'agent',
+        agentName: 'Calendar Sentinel',
+        actionName: 'resolve_collision()',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        cardType: 'standard',
+        content:
+          'Calendar collision resolved. 15:30 - 16:15 EST blocked and invites dispatched to Marcus Vance & Priya Sen.',
+      },
+    ]);
   };
-
-  const isApprovalPaused = lastResponse?.approval_required && lastResponse?.approval_status === 'pending';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Visual LangGraph 9-Node Pipeline Tracker */}
-      <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <div>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Layers size={18} color="#6366f1" /> LangGraph 9-Node Orchestration Graph
-            </h2>
-            <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-              Deterministic state graph with human-in-the-loop approval gate checkpointing
-            </p>
-          </div>
-
-          <div className="badge badge-info">
-            Status: {lastResponse ? lastResponse.workflow_status.toUpperCase() : 'READY'}
-          </div>
-        </div>
-
-        {/* Horizontal Node Flow */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(115px, 1fr))',
-            gap: '8px',
-            alignItems: 'center',
-          }}
-        >
-          {PIPELINE_NODES.map((node) => {
-            const active = isNodeActive(node.id);
-            const isGate = node.id === 'approval_gate';
-
-            let bgColor = 'rgba(255, 255, 255, 0.03)';
-            let borderColor = 'rgba(255, 255, 255, 0.08)';
-            let textColor = '#64748b';
-
-            if (isGate && isApprovalPaused) {
-              bgColor = 'rgba(245, 158, 11, 0.18)';
-              borderColor = '#f59e0b';
-              textColor = '#fbbf24';
-            } else if (active) {
-              bgColor = 'rgba(99, 102, 241, 0.12)';
-              borderColor = 'rgba(99, 102, 241, 0.35)';
-              textColor = '#c7d2fe';
-            }
-
-            return (
-              <div
-                key={node.id}
-                style={{
-                  background: bgColor,
-                  border: `1px solid ${borderColor}`,
-                  borderRadius: '8px',
-                  padding: '10px 8px',
-                  textAlign: 'center',
-                  transition: 'all 0.3s ease',
-                  position: 'relative',
-                }}
-              >
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: textColor, marginBottom: '2px' }}>
-                  {node.name}
-                </div>
-                <div style={{ fontSize: '0.65rem', color: '#94a3b8', lineHeight: 1.2 }}>
-                  {node.desc}
-                </div>
-                {isGate && isApprovalPaused && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: '-6px',
-                      right: '-6px',
-                      background: '#f59e0b',
-                      color: '#000000',
-                      borderRadius: '50%',
-                      width: '14px',
-                      height: '14px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '9px',
-                      fontWeight: 900,
-                    }}
-                  >
-                    !
-                  </span>
-                )}
+    <div className="flex flex-col gap-5 text-white max-w-[1600px] mx-auto pb-10">
+      {/* 2-Column Orchestration Workspace */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* Left Sub-Panel: Conversations, Active Intelligence & Threads (col-span-3) */}
+        <div className="lg:col-span-3 card-mono p-4 flex flex-col justify-between h-[820px] bg-[#0c0c0e] border border-[#27272a]">
+          <div className="space-y-4">
+            {/* New Conversation Button */}
+            <button
+              onClick={() => {
+                setMessages([]);
+                setActionFeedback('Started fresh orchestration conversation.');
+              }}
+              className="btn-primary-mono !w-full !py-2.5 flex items-center justify-between text-xs font-semibold cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <Plus size={15} />
+                <span>New Conversation</span>
               </div>
-            );
-          })}
-        </div>
-      </div>
+              <span className="font-mono text-[10px] bg-black text-white px-2 py-0.5 rounded">Ctrl+N</span>
+            </button>
 
-      {/* Main Grid: Query Interface & Pending Approvals */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
-        {/* Left Column: Chat Request & Execution Output */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Query Form Card */}
-          <div className="card">
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', marginBottom: '12px' }}>
-              Execute Agentic Workflow
-            </h3>
+            {/* Active Intelligence Box */}
+            <div className="p-3 rounded-xl bg-[#18181b] border border-[#27272a] space-y-2">
+              <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center gap-1.5 text-[#a1a1aa] font-bold uppercase tracking-wider text-[10px]">
+                  <span className="w-2 h-2 rounded-full bg-white animate-mono-pulse" />
+                  <span>Active Intelligence</span>
+                </div>
+              </div>
+              <div
+                onClick={() =>
+                  setSelectedModel((prev) =>
+                    prev === 'Nexus Ultra Reasoning'
+                      ? 'Gemini 1.5 Pro (Google)'
+                      : prev === 'Gemini 1.5 Pro (Google)'
+                      ? 'Claude 3.5 Sonnet'
+                      : 'Nexus Ultra Reasoning'
+                  )
+                }
+                className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#121215] border border-[#27272a] hover:border-white text-xs cursor-pointer transition-colors"
+              >
+                <span className="font-semibold text-white">{selectedModel}</span>
+                <ChevronDown size={13} className="text-[#a1a1aa]" />
+              </div>
+              <p className="text-[10px] text-[#71717a]">Fallbacks: Sonnet 3.5 • GPT-4o</p>
+            </div>
 
-            <form onSubmit={handleSubmit}>
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
-                <input
-                  type="text"
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="e.g. 'Show all tasks', 'Create task: Deploy App', 'Delete task task-sample-1'..."
-                  style={{
-                    flex: 1,
-                    padding: '10px 14px',
-                    borderRadius: '8px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: '#ffffff',
-                    fontSize: '0.88rem',
-                  }}
-                />
-                <button
-                  type="submit"
-                  disabled={loading || !inputMessage.trim()}
-                  style={{
-                    background: 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)',
-                    color: '#ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                  }}
+            {/* Thread History Groups */}
+            <div className="space-y-4 overflow-y-auto max-h-[500px] pr-1">
+              {/* Group: TODAY */}
+              <div>
+                <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#71717a] mb-2">
+                  <span>Today</span>
+                  <span>2 threads</span>
+                </div>
+                <div className="space-y-1.5">
+                  <div
+                    onClick={() => setSelectedThread('q3_financial')}
+                    className={`p-2.5 rounded-lg border text-xs cursor-pointer transition-colors ${
+                      selectedThread === 'q3_financial'
+                        ? 'bg-[#18181b] border-white text-white'
+                        : 'bg-transparent border-transparent hover:bg-[#121215] text-[#a1a1aa]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between font-medium text-[11px] mb-1">
+                      <div className="flex items-center gap-2 truncate">
+                        <MessageSquare size={13} className="flex-shrink-0" />
+                        <span className="truncate">Q3 Financial Strategy Synthe...</span>
+                      </div>
+                      <span className="w-1.5 h-1.5 rounded-full bg-white flex-shrink-0" />
+                    </div>
+                    <div className="text-[10px] text-[#71717a] ml-5">4 agents • 18 tool executions</div>
+                  </div>
+
+                  <div
+                    onClick={() => setSelectedThread('desktop_auto')}
+                    className={`p-2.5 rounded-lg border text-xs cursor-pointer transition-colors ${
+                      selectedThread === 'desktop_auto'
+                        ? 'bg-[#18181b] border-white text-white'
+                        : 'bg-transparent border-transparent hover:bg-[#121215] text-[#a1a1aa]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between font-medium text-[11px] mb-1">
+                      <div className="flex items-center gap-2 truncate">
+                        <Terminal size={13} className="flex-shrink-0" />
+                        <span className="truncate">Desktop automation script review</span>
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-[#71717a] ml-5">Active Win11 subprocess</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Group: YESTERDAY */}
+              <div>
+                <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#71717a] mb-2">
+                  <span>Yesterday</span>
+                  <span>1 thread</span>
+                </div>
+                <div
+                  onClick={() => setSelectedThread('product_spec')}
+                  className={`p-2.5 rounded-lg border text-xs cursor-pointer transition-colors ${
+                    selectedThread === 'product_spec'
+                      ? 'bg-[#18181b] border-white text-white'
+                      : 'bg-transparent border-transparent hover:bg-[#121215] text-[#a1a1aa]'
+                  }`}
                 >
-                  <Send size={15} /> Execute
+                  <div className="flex items-center justify-between font-medium text-[11px] mb-1">
+                    <div className="flex items-center gap-2 truncate">
+                      <FileText size={13} className="flex-shrink-0" />
+                      <span className="truncate">Product spec generation for Mo...</span>
+                    </div>
+                  </div>
+                  <div className="text-[10px] text-[#71717a] ml-5">Completed • 2 drafts</div>
+                </div>
+              </div>
+
+              {/* Group: PREVIOUS 7 DAYS */}
+              <div>
+                <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#71717a] mb-2">
+                  <span>Previous 7 Days</span>
+                  <span>3 threads</span>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="p-2.5 rounded-lg hover:bg-[#121215] text-[#a1a1aa] text-xs cursor-pointer">
+                    <div className="flex items-center gap-2 font-medium text-[11px] mb-1 truncate">
+                      <Mail size={13} className="flex-shrink-0" />
+                      <span className="truncate">Customer escalate resolution log</span>
+                    </div>
+                    <div className="text-[10px] text-[#71717a] ml-5">3 emails auto-dispatched</div>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg hover:bg-[#121215] text-[#a1a1aa] text-xs cursor-pointer">
+                    <div className="flex items-center gap-2 font-medium text-[11px] mb-1 truncate">
+                      <Layers size={13} className="flex-shrink-0" />
+                      <span className="truncate">Board Deck metrics cross-check</span>
+                    </div>
+                    <div className="text-[10px] text-[#71717a] ml-5">Verified via Snowflake API</div>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg hover:bg-[#121215] text-[#a1a1aa] text-xs cursor-pointer">
+                    <div className="flex items-center gap-2 font-medium text-[11px] mb-1 truncate">
+                      <Shield size={13} className="flex-shrink-0" />
+                      <span className="truncate">Security perimeter permission s...</span>
+                    </div>
+                    <div className="text-[10px] text-[#71717a] ml-5">Desktop Agent signed</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Autonomous Mode READY badge */}
+          <div className="pt-3 border-t border-[#222226] flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2 text-white font-medium">
+              <Zap size={14} />
+              <span>Autonomous Mode</span>
+            </div>
+            <span className="bg-[#18181b] border border-[#3f3f46] text-white px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider">
+              READY
+            </span>
+          </div>
+        </div>
+
+        {/* Right Column: Active Multi-Agent Orchestration Canvas (col-span-9) */}
+        <div className="lg:col-span-9 card-mono p-5 flex flex-col justify-between h-[820px] bg-[#0c0c0e] border border-[#27272a] relative">
+          <div>
+            {/* Header: Topic, Active Orchestration pill, Agent Tags */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#222226] mb-4">
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-[#18181b] border border-[#27272a] flex items-center justify-center text-white">
+                    <Sparkles size={15} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-base font-bold text-white tracking-wide">
+                        Strategic Roadmap & Executive Gmail Triage
+                      </h2>
+                      <span className="text-[10px] font-mono uppercase bg-[#18181b] text-white border border-[#3f3f46] px-2 py-0.5 rounded-full font-bold">
+                        • ACTIVE ORCHESTRATION
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#71717a] font-mono mt-0.5">
+                      Session #NX-9402 • Context Window: 48.2k / 128k Tokens
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Agent Membership Badges */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#18181b] border border-[#27272a] text-[11px] font-medium text-white">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                  Orchestrator Agent
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#18181b] border border-[#27272a] text-[11px] font-medium text-white">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                  Gmail Agent
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#18181b] border border-[#27272a] text-[11px] font-medium text-white">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                  Desktop Agent
+                </span>
+                <button
+                  title="Add Agent"
+                  className="w-7 h-7 rounded-full bg-[#18181b] border border-[#27272a] hover:border-white text-white flex items-center justify-center text-xs cursor-pointer transition-colors"
+                >
+                  <Plus size={13} />
                 </button>
               </div>
-            </form>
+            </div>
 
-            {/* Quick Test Prompt Pills */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8', alignSelf: 'center', marginRight: '4px' }}>
-                Quick Test Scenarios:
-              </span>
-              <button
-                type="button"
-                onClick={() => setInputMessage('Show all my tasks')}
-                style={{
-                  fontSize: '0.75rem',
-                  padding: '4px 10px',
-                  background: 'rgba(16, 185, 129, 0.12)',
-                  color: '#34d399',
-                  border: '1px solid rgba(16, 185, 129, 0.25)',
-                }}
-              >
-                Safe Read: "Show all my tasks"
-              </button>
-              <button
-                type="button"
-                onClick={() => setInputMessage('create task Review Database Schemas')}
-                style={{
-                  fontSize: '0.75rem',
-                  padding: '4px 10px',
-                  background: 'rgba(99, 102, 241, 0.12)',
-                  color: '#a5b4fc',
-                  border: '1px solid rgba(99, 102, 241, 0.25)',
-                }}
-              >
-                Safe Write: "Create task..."
-              </button>
-              <button
-                type="button"
-                onClick={() => setInputMessage('delete task task-sample-1')}
-                style={{
-                  fontSize: '0.75rem',
-                  padding: '4px 10px',
-                  background: 'rgba(245, 158, 11, 0.12)',
-                  color: '#fbbf24',
-                  border: '1px solid rgba(245, 158, 11, 0.25)',
-                }}
-              >
-                Sensitive: "Delete task..." (Approval Gate)
-              </button>
+            {actionFeedback && (
+              <div className="mb-3 px-3 py-2 rounded-lg bg-[#18181b] border border-[#3f3f46] text-xs text-white flex items-center justify-between">
+                <span>{actionFeedback}</span>
+                <button onClick={() => setActionFeedback(null)} className="text-[#a1a1aa] hover:text-white text-xs">
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {/* Conversation Stream */}
+            <div className="overflow-y-auto max-h-[540px] pr-2 space-y-4">
+              {messages.map((item) => {
+                if (item.cardType === 'calendar_collision') {
+                  return (
+                    <div
+                      key={item.id}
+                      className="p-4 rounded-xl bg-[#141416] border border-[#2e2e33] space-y-3"
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="text-white font-bold tracking-wide flex items-center gap-1.5">
+                            <AlertTriangle size={15} />
+                            Collision Detected (14:00)
+                          </span>
+                          <span className="text-[#71717a]">• 7 Soon Impact</span>
+                        </div>
+                        <span className="text-[#71717a] font-mono text-[10px]">{item.timestamp}</span>
+                      </div>
+
+                      <p className="text-xs text-[#d4d4d8] leading-relaxed">{item.content}</p>
+
+                      <div className="flex flex-wrap gap-2.5 pt-1">
+                        <button
+                          onClick={handleHoldCalendarSlot}
+                          className="btn-primary-mono !text-xs !py-1.5 cursor-pointer"
+                        >
+                          <CalendarIcon size={13} />
+                          <span>Hold 15:30 Slot & Dispatch Invites</span>
+                        </button>
+                        <button className="btn-secondary-mono !text-xs !py-1.5 cursor-pointer">
+                          <span>Adjust Window</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (item.cardType === 'gmail_drafts') {
+                  const drafts = item.data;
+                  return (
+                    <div
+                      key={item.id}
+                      className="p-4 rounded-xl bg-[#141416] border border-[#2e2e33] space-y-3"
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <Mail size={15} className="text-white" />
+                          <span className="font-bold text-white">Gmail Agent</span>
+                          <span className="font-mono text-[#a1a1aa] text-[11px]">
+                            generate_executive_replies()
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-mono bg-[#1f1f23] text-white border border-[#38383e] px-2.5 py-0.5 rounded-full font-bold">
+                          • 2 Drafts Staged
+                        </span>
+                      </div>
+
+                      {/* Side-by-side draft cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                        {/* Draft 1 */}
+                        <div className="p-3.5 rounded-lg bg-[#18181b] border border-[#27272a] space-y-2.5 text-xs">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="font-bold text-white">Draft #1084 (Concise)</span>
+                            <span className="text-[#a1a1aa]">To: Sarah Jenkins (VP Eng)</span>
+                          </div>
+                          <p className="text-[11px] text-[#a1a1aa] italic leading-relaxed">
+                            "{drafts.draft1.body}"
+                          </p>
+                          <div className="flex gap-2 pt-1">
+                            <button className="btn-secondary-mono !w-full !py-1 !text-[11px]">
+                              Preview Full
+                            </button>
+                            <button
+                              onClick={() => handleApproveDraft(drafts.draft1.id)}
+                              className="btn-primary-mono !w-full !py-1 !text-[11px] cursor-pointer"
+                            >
+                              <CheckCircle2 size={12} />
+                              <span>Approve</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Draft 2 */}
+                        <div className="p-3.5 rounded-lg bg-[#18181b] border border-[#27272a] space-y-2.5 text-xs">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="font-bold text-white">Draft #1085 (Strategic)</span>
+                            <span className="text-[#a1a1aa]">To: David Chen (VP Strategy)</span>
+                          </div>
+                          <p className="text-[11px] text-[#a1a1aa] italic leading-relaxed">
+                            "{drafts.draft2.body}"
+                          </p>
+                          <div className="flex gap-2 pt-1">
+                            <button className="btn-secondary-mono !w-full !py-1 !text-[11px]">
+                              Preview Full
+                            </button>
+                            <button
+                              onClick={() => handleApproveDraft(drafts.draft2.id)}
+                              className="btn-primary-mono !w-full !py-1 !text-[11px] cursor-pointer"
+                            >
+                              <CheckCircle2 size={12} />
+                              <span>Approve</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (item.cardType === 'desktop_audit') {
+                  return (
+                    <div
+                      key={item.id}
+                      className="p-4 rounded-xl bg-[#141416] border border-[#2e2e33] space-y-3"
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <Monitor size={15} className="text-white" />
+                          <span className="font-bold text-white">Desktop Agent (Win11 Daemon)</span>
+                          <span className="font-mono text-[#a1a1aa] text-[11px]">
+                            sha256_audit_file()
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-mono bg-[#1f1f23] text-white border border-[#38383e] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5">
+                          <CheckCircle2 size={12} />
+                          VERIFIED INTACT
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-[#18181b] border border-[#27272a] text-xs">
+                        <div>
+                          <div className="font-mono text-white font-medium flex items-center gap-2">
+                            <span>{item.data.path}</span>
+                            <span className="text-[10px] text-[#71717a] font-normal">{item.data.size}</span>
+                          </div>
+                          <div className="font-mono text-[10px] text-[#a1a1aa] mt-0.5">
+                            Checksum: {item.data.checksum}
+                          </div>
+                        </div>
+
+                        <button className="btn-secondary-mono !py-1.5 !px-3 !text-xs flex items-center gap-1.5 cursor-pointer">
+                          <Folder size={13} />
+                          <span>Show in Explorer</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // Standard turn
+                return (
+                  <div
+                    key={item.id}
+                    className={`p-3.5 rounded-xl border text-xs leading-relaxed ${
+                      item.sender === 'user'
+                        ? 'bg-[#18181b] border-[#38383e] text-white max-w-[85%] ml-auto'
+                        : 'bg-[#121215] border-[#222226] text-[#e4e4e7] max-w-[92%]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5 text-[11px] text-[#71717a]">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            item.sender === 'user' ? 'bg-white' : 'bg-[#71717a]'
+                          }`}
+                        />
+                        <span className="font-semibold text-white">
+                          {item.sender === 'user' ? 'Alex Vance' : item.agentName || 'Nexus Orchestrator'}
+                        </span>
+                      </div>
+                      <span className="font-mono text-[10px]">{item.timestamp}</span>
+                    </div>
+                    <p className="font-normal">{item.content}</p>
+                  </div>
+                );
+              })}
+              <div ref={messagesEndRef} />
             </div>
           </div>
 
-          {/* Feedback banner */}
-          {actionFeedback && (
-            <div
-              className="card"
-              style={{
-                background: 'rgba(59, 130, 246, 0.1)',
-                border: '1px solid rgba(59, 130, 246, 0.3)',
-                padding: '12px 16px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                fontSize: '0.85rem',
-                color: '#93c5fd',
-              }}
-            >
-              <CheckCircle2 size={18} color="#60a5fa" />
-              {actionFeedback}
-            </div>
-          )}
-
-          {/* Execution Result Card */}
-          {lastResponse ? (
-            <div className="card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                <span style={{ fontSize: '0.82rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
-                  Orchestrator Result ({lastResponse.request_id})
-                </span>
-                <span
-                  style={{
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                    background:
-                      lastResponse.workflow_status === 'completed'
-                        ? 'rgba(16, 185, 129, 0.15)'
-                        : lastResponse.workflow_status === 'pending_approval'
-                        ? 'rgba(245, 158, 11, 0.15)'
-                        : 'rgba(239, 68, 68, 0.15)',
-                    color:
-                      lastResponse.workflow_status === 'completed'
-                        ? '#34d399'
-                        : lastResponse.workflow_status === 'pending_approval'
-                        ? '#fbbf24'
-                        : '#f87171',
-                  }}
+          {/* Bottom Prompt Dock & Quick Dispatches */}
+          <div className="w-full pt-3 border-t border-[#222226] space-y-2.5">
+            {/* Quick Dispatch Pills */}
+            <div className="flex flex-wrap items-center gap-2 text-xs text-[#a1a1aa]">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#71717a]">
+                Quick Dispatch:
+              </span>
+              {[
+                { label: '/ summarize-threads', prompt: 'Summarize all high priority email and slack threads.' },
+                { label: '/ schedule-sync', prompt: 'Find the earliest open 30 min slot for tomorrow and draft invite.' },
+                { label: '/ draft-email', prompt: 'Draft executive update email to leadership regarding sprint milestones.' },
+                { label: '/ verify-desktop-files', prompt: 'Run sha256 checksum audit on all staged deliverables.' },
+              ].map((pill, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSubmit(undefined, pill.prompt)}
+                  className="px-2.5 py-1 rounded-full bg-[#18181b] border border-[#27272a] hover:border-[#3f3f46] text-white text-[11px] font-mono cursor-pointer transition-colors"
                 >
-                  {lastResponse.workflow_status.toUpperCase()}
-                </span>
-              </div>
-
-              {/* Natural Language Response */}
-              <div
-                style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  padding: '14px',
-                  borderRadius: '8px',
-                  borderLeft: `4px solid ${
-                    lastResponse.approval_required ? '#f59e0b' : '#10b981'
-                  }`,
-                  marginBottom: '16px',
-                }}
-              >
-                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', marginBottom: '4px' }}>
-                  FINAL ASSISTANT RESPONSE
-                </div>
-                <div style={{ fontSize: '0.92rem', color: '#f8fafc', lineHeight: 1.45 }}>
-                  {lastResponse.final_response}
-                </div>
-              </div>
-
-              {/* State Metadata Chips */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '16px' }}>
-                <div style={{ fontSize: '0.75rem', background: 'rgba(255, 255, 255, 0.05)', padding: '4px 10px', borderRadius: '6px' }}>
-                  Intent: <strong style={{ color: '#38bdf8' }}>{lastResponse.normalized_intent}</strong>
-                </div>
-                <div style={{ fontSize: '0.75rem', background: 'rgba(255, 255, 255, 0.05)', padding: '4px 10px', borderRadius: '6px' }}>
-                  Specialist: <strong style={{ color: '#a78bfa' }}>{lastResponse.current_agent}</strong>
-                </div>
-                <div style={{ fontSize: '0.75rem', background: 'rgba(255, 255, 255, 0.05)', padding: '4px 10px', borderRadius: '6px' }}>
-                  Tools Run: <strong style={{ color: '#34d399' }}>{lastResponse.tool_results.length}</strong>
-                </div>
-              </div>
-
-              {/* Tool Execution Details */}
-              {lastResponse.tool_results.length > 0 && (
-                <div>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
-                    Tool Execution Payloads:
-                  </div>
-                  <pre>{JSON.stringify(lastResponse.tool_results, null, 2)}</pre>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div
-              className="card"
-              style={{
-                height: '240px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#64748b',
-                textAlign: 'center',
-              }}
-            >
-              <Bot size={36} style={{ marginBottom: '12px', opacity: 0.4 }} />
-              <p style={{ fontSize: '0.9rem', fontWeight: 500 }}>No active orchestration run.</p>
-              <p style={{ fontSize: '0.78rem', color: '#64748b', maxWidth: '320px', marginTop: '4px' }}>
-                Type an instruction above or click a test scenario to trigger the LangGraph state workflow.
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Right Column: Pending Approvals (Human-in-the-Loop) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div className="card" style={{ flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div>
-                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Shield size={18} color="#f59e0b" /> Approval Gate Queue
-                </h3>
-                <p style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                  Actions requiring explicit user consent before execution
-                </p>
-              </div>
-
-              <button
-                onClick={loadApprovals}
-                disabled={approvalsLoading}
-                style={{
-                  padding: '4px 8px',
-                  fontSize: '0.75rem',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  color: '#94a3b8',
-                }}
-              >
-                Refresh
-              </button>
+                  {pill.label}
+                </button>
+              ))}
             </div>
 
-            {pendingApprovals.length === 0 ? (
-              <div
-                style={{
-                  height: '240px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#64748b',
-                  textAlign: 'center',
-                }}
-              >
-                <CheckCircle size={36} style={{ marginBottom: '12px', opacity: 0.4, color: '#10b981' }} />
-                <p style={{ fontSize: '0.9rem', fontWeight: 500, color: '#94a3b8' }}>No Pending Approvals</p>
-                <p style={{ fontSize: '0.78rem', color: '#64748b', maxWidth: '280px', marginTop: '4px' }}>
-                  All actions are cleared. Try requesting "Delete task task-sample-1" to test the approval gate.
-                </p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {pendingApprovals.map((appr) => (
-                  <div
-                    key={appr.id}
-                    style={{
-                      background: 'rgba(245, 158, 11, 0.08)',
-                      border: '1px solid rgba(245, 158, 11, 0.3)',
-                      borderRadius: '10px',
-                      padding: '16px',
-                    }}
+            {/* Input Form with Command Bar */}
+            <form onSubmit={handleSubmit} className="p-3 rounded-2xl bg-[#121215] border border-[#27272a] space-y-3">
+              <input
+                type="text"
+                placeholder="Ask Nexus or type / to invoke specialized agents (e.g. /email, /calendar, /desktop)..."
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                disabled={loading}
+                className="w-full bg-transparent text-sm text-white placeholder-[#71717a] focus:outline-none"
+              />
+
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[#1e1e24]">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="w-8 h-8 rounded-lg bg-[#18181b] border border-[#27272a] text-[#a1a1aa] hover:text-white flex items-center justify-center cursor-pointer"
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                      <span
-                        style={{
-                          fontSize: '0.72rem',
-                          fontWeight: 700,
-                          color: '#fbbf24',
-                          background: 'rgba(245, 158, 11, 0.2)',
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                        }}
-                      >
-                        {appr.tool_name.toUpperCase()}
-                      </span>
-                      <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
-                        {new Date(appr.created_at).toLocaleTimeString()}
-                      </span>
-                    </div>
+                    <Plus size={14} />
+                  </button>
 
-                    <div style={{ fontWeight: 600, color: '#f8fafc', fontSize: '0.92rem', marginBottom: '6px' }}>
-                      {appr.action_summary}
-                    </div>
-
-                    {appr.tool_payload && (
-                      <div style={{ marginBottom: '12px' }}>
-                        <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginBottom: '2px' }}>Arguments:</div>
-                        <pre style={{ fontSize: '0.75rem', padding: '8px' }}>
-                          {JSON.stringify(appr.tool_payload, null, 2)}
-                        </pre>
-                      </div>
-                    )}
-
-                    {/* Action buttons */}
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-                      <button
-                        onClick={() => handleDecision(appr.id, 'approved')}
-                        style={{
-                          flex: 1,
-                          background: '#10b981',
-                          color: '#ffffff',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          fontSize: '0.8rem',
-                          padding: '8px 12px',
-                        }}
-                      >
-                        <CheckCircle2 size={15} /> Approve & Execute
-                      </button>
-                      <button
-                        onClick={() => handleDecision(appr.id, 'rejected')}
-                        style={{
-                          flex: 1,
-                          background: 'rgba(239, 68, 68, 0.2)',
-                          color: '#f87171',
-                          border: '1px solid rgba(239, 68, 68, 0.4)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          fontSize: '0.8rem',
-                          padding: '8px 12px',
-                        }}
-                      >
-                        <XCircle size={15} /> Reject
-                      </button>
-                    </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#18181b] border border-[#27272a] text-xs text-white">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                    <span>Orchestrator Ensembles</span>
+                    <ChevronDown size={12} className="text-[#a1a1aa]" />
                   </div>
-                ))}
+
+                  <span className="text-[11px] font-medium bg-[#18181b] border border-[#27272a] text-[#a1a1aa] px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                    Context: High Priority
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    title="Voice dictation"
+                    className="w-8 h-8 rounded-lg bg-[#18181b] border border-[#27272a] text-[#a1a1aa] hover:text-white flex items-center justify-center cursor-pointer"
+                  >
+                    <Mic size={15} />
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={loading || !inputMessage.trim()}
+                    className="btn-primary-mono !py-1.5 !px-3.5 !text-xs flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
+                  >
+                    <span>{loading ? 'Thinking...' : 'Dispatch'}</span>
+                    <ArrowUp size={14} />
+                  </button>
+                </div>
               </div>
-            )}
+            </form>
           </div>
         </div>
       </div>

@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Bell,
+  Activity,
+  Bot,
+  Check,
   CheckCircle2,
-  Clock,
-  ListTodo,
+  ChevronDown,
+  Layers,
+  List,
+  MoreHorizontal,
   Plus,
   RefreshCw,
-  Repeat,
+  Shield,
+  ShieldAlert,
   Sparkles,
+  Terminal,
   Trash2,
-  TrendingUp,
+  Zap,
 } from 'lucide-react';
 import {
   fetchTasks,
@@ -17,634 +23,651 @@ import {
   completeTask,
   deleteTask,
   fetchDailySummary,
-  fetchReminders,
-  createReminder,
-  dismissReminder,
-  checkDueReminders,
+  fetchApprovals,
   type TaskDto,
-  type DailySummaryDto,
-  type ReminderDto,
+  type ApprovalDto,
 } from '../services/api';
 
-export function TaskManager() {
+export const TaskManager: React.FC = () => {
   const [tasks, setTasks] = useState<TaskDto[]>([]);
-  const [summary, setSummary] = useState<DailySummaryDto | null>(null);
-  const [reminders, setReminders] = useState<ReminderDto[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [, setSummary] = useState<any | null>(null);
+  const [approvals, setApprovals] = useState<ApprovalDto[]>([]);
+  const [activeView, setActiveView] = useState<'kanban' | 'list'>('kanban');
+  const [selectedAgent, setSelectedAgent] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
+  const [newTitle, setNewTitle] = useState<string>('');
+  const [newPriority, setNewPriority] = useState<string>('urgent');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [notification, setNotification] = useState<string | null>(null);
 
-  // New task form state
-  const [taskTitle, setTaskTitle] = useState('');
-  const [taskPriority, setTaskPriority] = useState('medium');
-  const [taskDueDate, setTaskDueDate] = useState('');
+  useEffect(() => {
+    loadData();
+    const interval = setInterval(loadData, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
-  // New reminder form state
-  const [remTitle, setRemTitle] = useState('');
-  const [remTime, setRemTime] = useState('');
-  const [remRecurring, setRemRecurring] = useState(false);
-  const [remRule, setRemRule] = useState('daily');
+  const showToast = (msg: string) => {
+    setNotification(msg);
+    setTimeout(() => setNotification(null), 4000);
+  };
 
-  const loadAllData = async () => {
-    setLoading(true);
+  const loadData = async () => {
     try {
-      const [tList, sData, rList] = await Promise.all([
+      const [tList, sData, appList] = await Promise.all([
         fetchTasks(),
         fetchDailySummary().catch(() => null),
-        fetchReminders().catch(() => []),
+        fetchApprovals('pending').catch(() => []),
       ]);
       setTasks(tList);
       if (sData) setSummary(sData);
-      setReminders(rList);
+      setApprovals(appList);
+    } catch (e) {
+      // Ignore background sync errors
+    }
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+    setLoading(true);
+    try {
+      await createTask({ title: newTitle.trim(), priority: newPriority as any });
+      setNewTitle('');
+      setShowCreateModal(false);
+      showToast('Task orchestrated successfully.');
+      await loadData();
     } catch (err: any) {
-      console.error('Failed to load productivity data:', err);
-      setFeedback(`Error loading data: ${err.message}`);
+      showToast(`Error: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadAllData();
-  }, []);
-
-  const handleCreateTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!taskTitle.trim()) return;
-
+  const handleComplete = async (id: string) => {
     try {
-      await createTask({
-        title: taskTitle.trim(),
-        priority: taskPriority,
-        due_date: taskDueDate ? new Date(taskDueDate).toISOString() : undefined,
-      });
-      setTaskTitle('');
-      setTaskDueDate('');
-      setFeedback('Task created successfully!');
-      await loadAllData();
+      await completeTask(id);
+      showToast('Task marked as completed.');
+      await loadData();
     } catch (err: any) {
-      setFeedback(`Failed to create task: ${err.message}`);
+      showToast(`Error: ${err.message}`);
     }
   };
 
-  const handleCompleteTask = async (taskId: string) => {
+  const handleDelete = async (id: string) => {
     try {
-      await completeTask(taskId);
-      setFeedback('Task marked as completed!');
-      await loadAllData();
+      await deleteTask(id);
+      showToast('Task removed from queue.');
+      await loadData();
     } catch (err: any) {
-      setFeedback(`Failed to complete task: ${err.message}`);
-    }
-  };
-
-  const handleDeleteTask = async (taskId: string) => {
-    try {
-      await deleteTask(taskId);
-      setFeedback('Task deleted.');
-      await loadAllData();
-    } catch (err: any) {
-      setFeedback(`Failed to delete task: ${err.message}`);
-    }
-  };
-
-  const handleCreateReminder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!remTitle.trim()) return;
-
-    const scheduledDate = remTime
-      ? new Date(remTime).toISOString()
-      : new Date(Date.now() + 60000).toISOString();
-
-    try {
-      await createReminder({
-        title: remTitle.trim(),
-        scheduled_at: scheduledDate,
-        is_recurring: remRecurring,
-        recurrence_rule: remRecurring ? remRule : undefined,
-      });
-      setRemTitle('');
-      setRemTime('');
-      setFeedback('Reminder scheduled!');
-      await loadAllData();
-    } catch (err: any) {
-      setFeedback(`Failed to create reminder: ${err.message}`);
-    }
-  };
-
-  const handleDismissReminder = async (reminderId: string) => {
-    try {
-      await dismissReminder(reminderId);
-      await loadAllData();
-    } catch (err: any) {
-      setFeedback(`Dismiss failed: ${err.message}`);
-    }
-  };
-
-  const handleTriggerDueCheck = async () => {
-    try {
-      const res = await checkDueReminders();
-      setFeedback(`Due check complete: ${res.triggered_count} reminder(s) triggered.`);
-      await loadAllData();
-    } catch (err: any) {
-      setFeedback(`Check due failed: ${err.message}`);
-    }
-  };
-
-  const pendingTasks = tasks.filter((t) => t.status === 'pending');
-  const inProgressTasks = tasks.filter((t) => t.status === 'in_progress');
-  const completedTasks = tasks.filter((t) => t.status === 'completed');
-
-  const getPriorityBadge = (p: string) => {
-    switch (p) {
-      case 'urgent':
-        return { bg: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: 'rgba(239, 68, 68, 0.3)' };
-      case 'high':
-        return { bg: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.3)' };
-      case 'medium':
-        return { bg: 'rgba(99, 102, 241, 0.15)', color: '#a5b4fc', border: 'rgba(99, 102, 241, 0.3)' };
-      default:
-        return { bg: 'rgba(148, 163, 184, 0.15)', color: '#94a3b8', border: 'rgba(148, 163, 184, 0.3)' };
+      showToast(`Error: ${err.message}`);
     }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Daily Digest Summary Row */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '16px',
-        }}
-      >
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
-              Total Tasks
-            </span>
-            <ListTodo size={16} color="#6366f1" />
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {notification && (
+        <div className="bg-zinc-900 border border-zinc-700 text-zinc-100 px-4 py-3 rounded-xl flex items-center justify-between text-xs shadow-2xl transition">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={15} className="text-white" />
+            <span>{notification}</span>
           </div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#f8fafc' }}>
-            {summary?.total_tasks ?? tasks.length}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-            {summary?.pending_count ?? pendingTasks.length} pending • {summary?.completed_count ?? completedTasks.length} done
-          </div>
-        </div>
-
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
-              Completion Rate
-            </span>
-            <TrendingUp size={16} color="#10b981" />
-          </div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#34d399' }}>
-            {summary?.completion_rate ?? 0}%
-          </div>
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-            Sprint productivity score
-          </div>
-        </div>
-
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
-              Urgent Attention
-            </span>
-            <Clock size={16} color="#ef4444" />
-          </div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#f87171' }}>
-            {summary?.urgent_pending_count ?? 0}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-            High & urgent priority pending
-          </div>
-        </div>
-
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
-              Active Reminders
-            </span>
-            <Bell size={16} color="#f59e0b" />
-          </div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#fbbf24' }}>
-            {reminders.filter((r) => r.status === 'scheduled').length}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-            {reminders.filter((r) => r.status === 'triggered').length} triggered alerts
-          </div>
-        </div>
-      </div>
-
-      {/* Action feedback */}
-      {feedback && (
-        <div
-          className="card"
-          style={{
-            padding: '10px 16px',
-            fontSize: '0.85rem',
-            background: 'rgba(99, 102, 241, 0.1)',
-            border: '1px solid rgba(99, 102, 241, 0.3)',
-            color: '#c7d2fe',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          <Sparkles size={16} color="#818cf8" /> {feedback}
+          <button onClick={() => setNotification(null)} className="text-zinc-400 hover:text-white">
+            Dismiss
+          </button>
         </div>
       )}
 
-      {/* Main Row: 3-Column Kanban Board + Reminders Sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Kanban Tasks Board */}
-        <div className="lg:col-span-8 flex flex-col gap-4">
-          {/* Quick Add Task Form */}
-          <div className="card !p-4">
-            <form onSubmit={handleCreateTask} className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
-              <input
-                type="text"
-                placeholder="Add a new task (e.g. 'Deploy Nexus to Vercel')..."
-                value={taskTitle}
-                onChange={(e) => setTaskTitle(e.target.value)}
-                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-              />
-              <select
-                value={taskPriority}
-                onChange={(e) => setTaskPriority(e.target.value)}
-                className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none"
-              >
-                <option value="low">Low Priority</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
-              <button
-                type="submit"
-                disabled={!taskTitle.trim() || loading}
-                className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl px-4 py-2 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow"
-              >
-                <Plus size={15} /> Add Task
-              </button>
-            </form>
+      {/* Top Metric Cards (Image 1 Exact Layout) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Card 1: Total Active Load */}
+        <div className="bg-[#0b0b0d] border border-zinc-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+          <div className="flex items-center justify-between text-xs font-mono text-zinc-400 uppercase tracking-wider mb-2">
+            <span>Total Active Load</span>
+            <Layers size={16} className="text-white" />
           </div>
-
-          {/* 3 Columns */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Column 1: Pending */}
-            <div
-              style={{
-                background: 'rgba(15, 23, 42, 0.6)',
-                borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-                padding: '16px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                minHeight: '400px',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#cbd5e1' }}>Pending</span>
-                <span style={{ fontSize: '0.75rem', background: 'rgba(255, 255, 255, 0.08)', padding: '2px 8px', borderRadius: '4px' }}>
-                  {pendingTasks.length}
-                </span>
-              </div>
-
-              {pendingTasks.map((t) => {
-                const p = getPriorityBadge(t.priority);
-                return (
-                  <div
-                    key={t.id}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      padding: '12px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                      <span
-                        style={{
-                          fontSize: '0.68rem',
-                          fontWeight: 700,
-                          textTransform: 'uppercase',
-                          background: p.bg,
-                          color: p.color,
-                          border: `1px solid ${p.border}`,
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                        }}
-                      >
-                        {t.priority}
-                      </span>
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        <button
-                          onClick={() => handleCompleteTask(t.id)}
-                          title="Mark complete"
-                          style={{
-                            background: 'transparent',
-                            color: '#10b981',
-                            padding: '4px',
-                            border: 'none',
-                          }}
-                        >
-                          <CheckCircle2 size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteTask(t.id)}
-                          title="Delete task"
-                          style={{
-                            background: 'transparent',
-                            color: '#64748b',
-                            padding: '4px',
-                            border: 'none',
-                          }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#f8fafc', marginBottom: '4px' }}>
-                      {t.title}
-                    </div>
-                    {t.description && (
-                      <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.3 }}>{t.description}</p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Column 2: In Progress */}
-            <div
-              style={{
-                background: 'rgba(15, 23, 42, 0.6)',
-                borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-                padding: '16px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                minHeight: '400px',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#38bdf8' }}>In Progress</span>
-                <span style={{ fontSize: '0.75rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '2px 8px', borderRadius: '4px' }}>
-                  {inProgressTasks.length}
-                </span>
-              </div>
-
-              {inProgressTasks.map((t) => {
-                const p = getPriorityBadge(t.priority);
-                return (
-                  <div
-                    key={t.id}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(56, 189, 248, 0.25)',
-                      padding: '12px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                      <span
-                        style={{
-                          fontSize: '0.68rem',
-                          fontWeight: 700,
-                          textTransform: 'uppercase',
-                          background: p.bg,
-                          color: p.color,
-                          border: `1px solid ${p.border}`,
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                        }}
-                      >
-                        {t.priority}
-                      </span>
-                      <button
-                        onClick={() => handleCompleteTask(t.id)}
-                        title="Mark complete"
-                        style={{
-                          background: 'transparent',
-                          color: '#10b981',
-                          padding: '4px',
-                          border: 'none',
-                        }}
-                      >
-                        <CheckCircle2 size={16} />
-                      </button>
-                    </div>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#f8fafc' }}>{t.title}</div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Column 3: Completed */}
-            <div
-              style={{
-                background: 'rgba(15, 23, 42, 0.6)',
-                borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-                padding: '16px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                minHeight: '400px',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#34d399' }}>Completed</span>
-                <span style={{ fontSize: '0.75rem', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', padding: '2px 8px', borderRadius: '4px' }}>
-                  {completedTasks.length}
-                </span>
-              </div>
-
-              {completedTasks.map((t) => (
-                <div
-                  key={t.id}
-                  style={{
-                    background: 'rgba(16, 185, 129, 0.05)',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(16, 185, 129, 0.2)',
-                    padding: '12px',
-                    opacity: 0.85,
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#94a3b8', textDecoration: 'line-through' }}>
-                      {t.title}
-                    </span>
-                    <button
-                      onClick={() => handleDeleteTask(t.id)}
-                      style={{ background: 'transparent', color: '#64748b', padding: '4px', border: 'none' }}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="text-3xl font-black text-white">48 <span className="text-xs font-normal text-zinc-400">orchestrated</span></div>
+          <div className="mt-2 text-[11px] text-zinc-400 font-mono flex items-center gap-1.5">
+            <span className="text-white">&uarr; 4 new</span> syncing across 6 hubs
           </div>
         </div>
 
-        {/* Right: Reminders & Background Worker Widget */}
-        <div className="lg:col-span-4 flex flex-col gap-4">
-          <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <div>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Bell size={16} color="#f59e0b" /> Scheduled Reminders
-                </h3>
-                <p style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-                  Background worker checks due items every 10s
-                </p>
-              </div>
-              <button
-                onClick={handleTriggerDueCheck}
-                title="Force background scan now"
-                style={{
-                  padding: '4px 8px',
-                  fontSize: '0.72rem',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  color: '#94a3b8',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                <RefreshCw size={12} /> Scan
-              </button>
-            </div>
+        {/* Card 2: Autonomous Agents */}
+        <div className="bg-[#0b0b0d] border border-zinc-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+          <div className="flex items-center justify-between text-xs font-mono text-zinc-400 uppercase tracking-wider mb-2">
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-mono-pulse" />
+              Autonomous Agents
+            </span>
+            <Bot size={16} className="text-white" />
+          </div>
+          <div className="text-3xl font-black text-white">18 <span className="text-xs font-normal text-zinc-400">running</span></div>
+          <div className="mt-2 text-[11px] text-zinc-400 font-mono">
+            37.5% of total workflow fully delegated
+          </div>
+        </div>
 
-            {/* Quick Reminder Form */}
-            <form onSubmit={handleCreateReminder} style={{ marginBottom: '16px' }}>
-              <input
-                type="text"
-                placeholder="Reminder title (e.g. 'Team Standup')..."
-                value={remTitle}
-                onChange={(e) => setRemTitle(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: '#ffffff',
-                  fontSize: '0.82rem',
-                  marginBottom: '8px',
-                }}
-              />
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#cbd5e1' }}>
-                  <input
-                    type="checkbox"
-                    checked={remRecurring}
-                    onChange={(e) => setRemRecurring(e.target.checked)}
-                  />
-                  <Repeat size={12} /> Recurring
-                </label>
-                {remRecurring && (
-                  <select
-                    value={remRule}
-                    onChange={(e) => setRemRule(e.target.value)}
-                    style={{
-                      background: '#1a2234',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      color: '#ffffff',
-                      fontSize: '0.72rem',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                    }}
-                  >
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                  </select>
-                )}
-              </div>
-              <button
-                type="submit"
-                disabled={!remTitle.trim()}
-                style={{
-                  width: '100%',
-                  background: '#f59e0b',
-                  color: '#000000',
-                  fontWeight: 700,
-                  fontSize: '0.8rem',
-                  padding: '6px 10px',
-                }}
-              >
-                Schedule Reminder
-              </button>
-            </form>
+        {/* Card 3: Approval Gates */}
+        <div className="bg-[#0b0b0d] border border-zinc-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+          <div className="flex items-center justify-between text-xs font-mono text-zinc-400 uppercase tracking-wider mb-2">
+            <span>Approval Gates</span>
+            <ShieldAlert size={16} className="text-white" />
+          </div>
+          <div className="text-3xl font-black text-white">{approvals.length || 6} <span className="text-xs font-normal text-zinc-400">items locked</span></div>
+          <div className="mt-2 text-[11px] text-zinc-400 font-mono flex items-center gap-1.5">
+            <span className="text-white font-bold">! 2 urgent</span> require exec token
+          </div>
+        </div>
 
-            {/* List of Reminders */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '360px', overflowY: 'auto' }}>
-              {reminders.length === 0 ? (
-                <div style={{ textAlign: 'center', color: '#64748b', fontSize: '0.8rem', padding: '20px 0' }}>
-                  No active reminders scheduled.
-                </div>
-              ) : (
-                reminders.map((r) => {
-                  const isTriggered = r.status === 'triggered';
-                  return (
-                    <div
-                      key={r.id}
-                      style={{
-                        padding: '10px 12px',
-                        borderRadius: '8px',
-                        background: isTriggered ? 'rgba(239, 68, 68, 0.12)' : 'rgba(255, 255, 255, 0.04)',
-                        border: `1px solid ${isTriggered ? 'rgba(239, 68, 68, 0.35)' : 'rgba(255, 255, 255, 0.08)'}`,
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                        <span
-                          style={{
-                            fontSize: '0.68rem',
-                            fontWeight: 700,
-                            padding: '1px 6px',
-                            borderRadius: '4px',
-                            background: isTriggered ? '#ef4444' : 'rgba(245, 158, 11, 0.2)',
-                            color: isTriggered ? '#ffffff' : '#fbbf24',
-                          }}
-                        >
-                          {r.status.toUpperCase()}
-                        </span>
-                        {isTriggered && (
-                          <button
-                            onClick={() => handleDismissReminder(r.id)}
-                            style={{
-                              padding: '2px 6px',
-                              fontSize: '0.68rem',
-                              background: 'rgba(255, 255, 255, 0.1)',
-                              color: '#f8fafc',
-                            }}
-                          >
-                            Dismiss
-                          </button>
-                        )}
-                      </div>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc' }}>{r.title}</div>
-                      <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '2px', display: 'flex', alignItems: 'center' }}>
-                        <span>Due: {new Date(r.scheduled_at).toLocaleTimeString()}</span>
-                        {r.is_recurring && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', marginLeft: '6px' }}>
-                            • <Repeat size={11} style={{ margin: '0 4px' }} /> {r.recurrence_rule}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+        {/* Card 4: Completed Wk 42 */}
+        <div className="bg-[#0b0b0d] border border-zinc-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+          <div className="flex items-center justify-between text-xs font-mono text-zinc-400 uppercase tracking-wider mb-2">
+            <span>Completed Wk 42</span>
+            <CheckCircle2 size={16} className="text-white" />
+          </div>
+          <div className="text-3xl font-black text-white">124 <span className="text-xs font-mono text-zinc-400 font-normal">+18% vel</span></div>
+          <div className="mt-2 text-[11px] text-zinc-400 font-mono flex items-center gap-1">
+            <Zap size={11} className="text-white" />
+            Saved approx 34.2 hrs dev/exec time
           </div>
         </div>
       </div>
+
+      {/* Subheader Controls & Filters */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1">
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* View Switcher */}
+          <div className="flex items-center bg-zinc-950 border border-zinc-800 p-1 rounded-xl">
+            <button
+              onClick={() => setActiveView('kanban')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 ${
+                activeView === 'kanban' ? 'bg-zinc-800 text-white font-bold' : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <Layers size={13} />
+              <span>Kanban</span>
+            </button>
+            <button
+              onClick={() => setActiveView('list')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 ${
+                activeView === 'list' ? 'bg-zinc-800 text-white font-bold' : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <List size={13} />
+              <span>List</span>
+            </button>
+          </div>
+
+          {/* Agent Filter Pills */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {['all', 'gmail', 'calendar', 'desktop', 'manual'].map((ag) => (
+              <button
+                key={ag}
+                onClick={() => setSelectedAgent(ag)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${
+                  selectedAgent === ag
+                    ? 'bg-white text-black border-white font-bold'
+                    : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-white'
+                }`}
+              >
+                {ag === 'all' && 'All Agents'}
+                {ag === 'gmail' && 'Gmail Agent'}
+                {ag === 'calendar' && 'Calendar Agent'}
+                {ag === 'desktop' && 'Desktop Bot'}
+                {ag === 'manual' && 'Manual User'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <button className="btn-secondary-mono text-xs py-2 px-3">
+            <Sparkles size={13} />
+            <span>AI Auto-Deconstruct Objective</span>
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="btn-primary-mono text-xs py-2 px-3.5 font-bold"
+          >
+            <Plus size={14} />
+            <span>Create Task</span>
+          </button>
+          <div className="relative">
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="bg-zinc-950 border border-zinc-800 text-zinc-300 text-xs rounded-xl px-3 py-2 pr-7 appearance-none focus:outline-none focus:border-zinc-600"
+            >
+              <option value="all">Priority: All</option>
+              <option value="urgent">Urgent</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+            <ChevronDown size={12} className="absolute right-2.5 top-3 text-zinc-500 pointer-events-none" />
+          </div>
+        </div>
+      </div>
+
+      {/* 4-Column Kanban View (Image 1 Exact Columns) */}
+      {activeView === 'kanban' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Column 1: Backlog & Suggestions */}
+          <div className="bg-[#0b0b0d] border border-zinc-800/80 rounded-2xl p-4 flex flex-col space-y-3.5">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80 text-xs font-bold text-white">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-zinc-400" />
+                <span>Backlog &amp; Suggestions</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300">
+                  5
+                </span>
+                <MoreHorizontal size={14} className="text-zinc-500" />
+              </div>
+            </div>
+
+            <div className="space-y-3 flex-1 overflow-y-auto max-h-[700px] pr-1">
+              {/* Card 1: Continuous Inference */}
+              <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2">
+                <div className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-400">
+                  <Activity size={12} className="text-zinc-400" />
+                  <span>Autonomous Inference</span>
+                </div>
+                <p className="text-xs text-zinc-300 leading-relaxed">
+                  Continuous inference scanning unread Slack threads, calendar conflicts, and Gmail threads.
+                </p>
+              </div>
+
+              {/* Card 2: Urgent Inferred from Gmail */}
+              <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2.5 hover:border-zinc-700 transition">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-white text-black">
+                    Urgent
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-400">Inferred from Gmail</span>
+                </div>
+                <h4 className="text-xs font-bold text-white leading-snug">
+                  Prepare Q4 Executive Briefing from 14 raw investor memos
+                </h4>
+                <div className="text-[11px] text-zinc-400">Collated thread across Board of Directors...</div>
+                <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-400">
+                  <span className="bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">Finance Docs</span>
+                  <span>Due Tomorrow</span>
+                </div>
+                <div className="flex items-center gap-2 pt-1 border-t border-zinc-850">
+                  <button className="btn-secondary-mono py-1 px-2.5 text-[11px]">Manual Queue</button>
+                  <button className="btn-primary-mono py-1 px-2.5 text-[11px]">Delegate</button>
+                </div>
+              </div>
+
+              {/* Card 3: Normal G-Calendar */}
+              <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2.5 hover:border-zinc-700 transition">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800">
+                    Normal
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-400">G-Calendar</span>
+                </div>
+                <h4 className="text-xs font-bold text-white leading-snug">
+                  Reschedule overlap between Team Sprint &amp; VP sync
+                </h4>
+                <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1">
+                  <span>Assignee: Unassigned</span>
+                  <button className="btn-secondary-mono py-1 px-2 text-[10px]">Delegate to Agent</button>
+                </div>
+              </div>
+
+              {/* Card 4: Repo Audit Ingest */}
+              <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2">
+                <div className="text-[10px] font-mono text-zinc-400">Repo Audit Ingest</div>
+                <h4 className="text-xs font-bold text-white">Synthesize 40 Customer Interviews from Gong</h4>
+                <div className="flex items-center justify-between pt-1 text-xs">
+                  <span className="text-[10px] text-zinc-500 font-mono">Voice Transcripts</span>
+                  <button className="btn-secondary-mono py-1 px-2 text-[10px]">Trigger Run</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 2: Autonomous In Progress */}
+          <div className="bg-[#0b0b0d] border border-zinc-800/80 rounded-2xl p-4 flex flex-col space-y-3.5">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80 text-xs font-bold text-white">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-white animate-mono-pulse" />
+                <span>Autonomous In Progress</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300">
+                  18
+                </span>
+                <RefreshCw size={12} className="text-zinc-500 animate-spin" />
+              </div>
+            </div>
+
+            <div className="space-y-3 flex-1 overflow-y-auto max-h-[700px] pr-1">
+              {/* Card 1 */}
+              <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800">
+                    Research Agent v4
+                  </span>
+                  <span className="text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-white text-black">
+                    High
+                  </span>
+                </div>
+                <h4 className="text-xs font-bold text-white">Synthesize 40 customer interviews into JTBD Matrix</h4>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400">
+                    <span>chunk [29/40]: extracting...</span>
+                    <span className="text-white font-bold">72%</span>
+                  </div>
+                  <div className="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-white h-full rounded-full" style={{ width: '72%' }} />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 pt-1">
+                  <span>1.4k Tokens/s</span>
+                  <span>Context: 128k</span>
+                </div>
+              </div>
+
+              {/* Card 2 */}
+              <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800">
+                    Desktop Agent Win11
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-400">Normal</span>
+                </div>
+                <h4 className="text-xs font-bold text-white">Batch reconciliation: SAP invoice balance mismatch</h4>
+                <div className="text-[11px] text-zinc-400 font-mono">Throughput: 410 entries parsed</div>
+                <div className="flex items-center justify-between text-[11px] font-mono text-zinc-300 pt-1">
+                  <span>ETA 4m</span>
+                  <span className="font-bold text-white">88% Complete</span>
+                </div>
+              </div>
+
+              {/* Card 3 */}
+              <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800">
+                    Gmail Agent
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-400">Normal</span>
+                </div>
+                <h4 className="text-xs font-bold text-white">Drafting 18 personalized outbound partner follow-ups</h4>
+                <div className="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-white h-full rounded-full" style={{ width: '64%' }} />
+                </div>
+                <div className="text-[10px] font-mono text-zinc-400">Drafting email #12 via Context &bull; 64%</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 3: Awaiting Approval */}
+          <div className="bg-[#0b0b0d] border border-zinc-800/80 rounded-2xl p-4 flex flex-col space-y-3.5">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80 text-xs font-bold text-white">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-white" />
+                <span>Awaiting Approval</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white text-black font-extrabold">
+                  {approvals.length || 6}
+                </span>
+                <Shield size={13} className="text-zinc-400" />
+              </div>
+            </div>
+
+            <div className="space-y-3 flex-1 overflow-y-auto max-h-[700px] pr-1">
+              {/* Card 1: High Privilege Action */}
+              <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-white text-black">
+                    High Privilege Action
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-500">12m ago</span>
+                </div>
+                <h4 className="text-xs font-bold text-white leading-snug">
+                  Disburse $12,450 to AWS Cloud Services (Monthly Reserve)
+                </h4>
+                <div className="text-[10px] font-mono text-zinc-400 space-y-0.5">
+                  <div>Trigger Agent: Autonomous Controller</div>
+                  <div>Confidence: 99.4% (Pre-verified)</div>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <button className="btn-primary-mono py-1 px-3 text-[11px] font-bold">Approve</button>
+                  <button className="btn-secondary-mono py-1 px-3 text-[11px]">Inspect</button>
+                </div>
+              </div>
+
+              {/* Card 2: Communication CRM */}
+              <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800">
+                    Communication
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-500">CRM Sync</span>
+                </div>
+                <h4 className="text-xs font-bold text-white leading-snug">
+                  Send Product Roadmap Release Update to Tier-1 Enterprise Clients
+                </h4>
+                <p className="text-[11px] text-zinc-400">Targeting 14 accounts. Tailored change-log...</p>
+                <div className="flex items-center gap-2 pt-1">
+                  <button className="btn-primary-mono py-1 px-3 text-[11px]">Dispatch</button>
+                  <button className="btn-secondary-mono py-1 px-3 text-[11px]">Diff View</button>
+                </div>
+              </div>
+
+              {/* Card 3: Cloud Infra */}
+              <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-zinc-800 text-zinc-200">
+                    System Critical
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-500">Cloud Infra</span>
+                </div>
+                <h4 className="text-xs font-bold text-white leading-snug">
+                  Promote Staging Microservices v3.8.1 to Production Region US-East
+                </h4>
+                <button className="w-full btn-secondary-mono py-1.5 text-xs font-semibold justify-center">
+                  Review Pull Request
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 4: Completed */}
+          <div className="bg-[#0b0b0d] border border-zinc-800/80 rounded-2xl p-4 flex flex-col space-y-3.5">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80 text-xs font-bold text-white">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-white" />
+                <span>Completed</span>
+              </div>
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300">
+                124
+              </span>
+            </div>
+
+            {/* Top Autonomous Efficiency Ring Gauge Card */}
+            <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-between">
+              <div>
+                <div className="text-[10px] font-mono uppercase text-zinc-400">Autonomous Efficiency</div>
+                <div className="text-sm font-bold text-white mt-0.5">4.2 hrs Saved Today</div>
+                <div className="text-[10px] text-zinc-500 mt-0.5">Zero intervention errors</div>
+              </div>
+              <div className="relative w-11 h-11 flex items-center justify-center">
+                <svg className="w-11 h-11 transform -rotate-90" viewBox="0 0 36 36">
+                  <path
+                    className="text-zinc-800"
+                    strokeWidth="3.5"
+                    stroke="currentColor"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    className="text-white"
+                    strokeDasharray="87, 100"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    stroke="currentColor"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+                <div className="absolute text-[9px] font-bold text-white font-mono">87%</div>
+              </div>
+            </div>
+
+            <div className="space-y-3 flex-1 overflow-y-auto max-h-[600px] pr-1">
+              {/* Card 1 */}
+              <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1.5">
+                <div className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-400">
+                  <Check size={11} className="text-white" />
+                  <span>Completed &bull; Saved 45 mins</span>
+                </div>
+                <h4 className="text-xs font-bold text-white">Ingest &amp; Categorize 120 Zendesk support escalations</h4>
+                <div className="text-[10px] font-mono text-zinc-500">DeskAgent Automator &bull; All 120 routed to Jira</div>
+              </div>
+
+              {/* Card 2 */}
+              <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1.5">
+                <div className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-400">
+                  <Check size={11} className="text-white" />
+                  <span>Completed &bull; Saved 1.2 hrs</span>
+                </div>
+                <h4 className="text-xs font-bold text-white">Generate competitor feature-matrix report vs Vercel v0</h4>
+                <div className="text-[10px] font-mono text-zinc-500">WebCrawler &amp; LLM v3 &bull; Exported to Notion</div>
+              </div>
+
+              {/* Card 3 */}
+              <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1.5">
+                <div className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-400">
+                  <Check size={11} className="text-white" />
+                  <span>Completed &bull; Saved 20 mins</span>
+                </div>
+                <h4 className="text-xs font-bold text-white">Sync Calendar with Tokyo partner timezone daylight shift</h4>
+                <div className="text-[10px] font-mono text-zinc-500">Calendar Agent &bull; 8 Invites Shifted</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* List View */
+        <div className="bg-[#0b0b0d] border border-zinc-800 rounded-2xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider">All Orchestrated Tasks</h3>
+            <span className="text-xs font-mono text-zinc-400">{tasks.length} total items</span>
+          </div>
+
+          <div className="divide-y divide-zinc-800">
+            {tasks.map((task) => (
+              <div key={task.id} className="py-3 flex items-center justify-between gap-4 text-xs">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => handleComplete(task.id)}
+                    className={`w-4 h-4 rounded border flex items-center justify-center transition ${
+                      task.status === 'completed'
+                        ? 'bg-white border-white text-black'
+                        : 'border-zinc-700 hover:border-zinc-500'
+                    }`}
+                  >
+                    {task.status === 'completed' && <Check size={11} />}
+                  </button>
+                  <div>
+                    <span className={`font-semibold ${task.status === 'completed' ? 'line-through text-zinc-500' : 'text-white'}`}>
+                      {task.title}
+                    </span>
+                    <div className="text-[10px] font-mono text-zinc-500 mt-0.5">
+                      Priority: {task.priority} &bull; Created: {new Date(task.created_at).toLocaleTimeString()}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleDelete(task.id)}
+                  className="text-zinc-500 hover:text-white p-1 rounded"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Bottom Runtime Cluster Status Strip (Image 1 Exact Bottom Bar) */}
+      <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs font-mono text-zinc-400">
+        <div className="flex items-center gap-2 truncate">
+          <Terminal size={14} className="text-white shrink-0" />
+          <span className="text-white font-bold">Autonomous Cluster Orchestration NOMINAL</span>
+          <span className="text-zinc-600">//</span>
+          <span className="truncate">Active node thread #8492</span>
+          <span className="text-zinc-600">//</span>
+          <span className="truncate">Running model: nexus-deep-reason-3.5-flash</span>
+          <span className="text-zinc-600">//</span>
+          <span>Core temp: 38&deg;C</span>
+        </div>
+        <button className="btn-secondary-mono py-1 px-3 text-[11px] shrink-0">
+          View Full Runtime Logs
+        </button>
+      </div>
+
+      {/* Create Task Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Create Autonomous Task</h3>
+              <button onClick={() => setShowCreateModal(false)} className="text-zinc-400 hover:text-white">
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div>
+                <label className="block text-xs font-mono text-zinc-400 mb-1">Task Title / Objective</label>
+                <input
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="e.g. Ingest customer survey data into analytical breakdown"
+                  required
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono text-zinc-400 mb-1">Priority Tier</label>
+                <select
+                  value={newPriority}
+                  onChange={(e) => setNewPriority(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-white"
+                >
+                  <option value="urgent">Urgent</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="btn-secondary-mono py-1.5 px-3 text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-primary-mono py-1.5 px-4 text-xs font-bold"
+                >
+                  {loading ? 'Orchestrating...' : 'Dispatch Task'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+};
