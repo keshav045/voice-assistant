@@ -75,3 +75,4 @@ class MemoryAgent:
     ) -> int:
         """Wipe all stored memories (Sensitive operation)."""
         return await self.service.wipe_all_memories(db=db, user_id=user_id)
+

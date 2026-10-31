@@ -37,3 +37,4 @@ The **Nexus Windows Desktop Companion** is a local Python daemon running on the 
 # From the project root
 python desktop-companion/main.py ws://localhost:8000/ws/desktop/companion
 ```
+

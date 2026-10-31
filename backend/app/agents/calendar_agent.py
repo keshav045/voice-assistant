@@ -161,3 +161,4 @@ class CalendarAgent:
         event.updated_at = datetime.now(timezone.utc)
         await db.commit()
         return True
+

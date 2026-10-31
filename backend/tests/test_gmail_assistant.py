@@ -127,3 +127,4 @@ async def test_email_agentic_policy_gates():
     assert send_dec.allowed is True
     assert send_dec.requires_approval is True
     assert "Send email" in send_dec.action_summary
+

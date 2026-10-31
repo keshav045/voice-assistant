@@ -109,3 +109,4 @@ class EmailAgent:
             "sent_at": now.isoformat(),
             "recipient": recipient,
         }
+

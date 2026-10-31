@@ -69,3 +69,4 @@ class EmailDraft(Base):
 
     def __repr__(self) -> str:
         return f"<EmailDraft(id={self.id}, recipient='{self.recipient}', subject='{self.subject}', status='{self.status}')>"
+

@@ -56,3 +56,4 @@ class AuditLogger:
 
 # Global singleton instance
 audit_logger = AuditLogger()
+

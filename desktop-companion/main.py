@@ -211,3 +211,4 @@ if __name__ == "__main__":
         asyncio.run(client.connect_and_listen())
     except KeyboardInterrupt:
         logger.info("Companion daemon stopped by user.")
+

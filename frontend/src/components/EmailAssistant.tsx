@@ -524,3 +524,4 @@ export const EmailAssistant: React.FC = () => {
     </div>
   );
 };
+

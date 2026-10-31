@@ -180,3 +180,4 @@ class DesktopCompanionManager:
 
 # Global singleton manager instance
 desktop_manager = DesktopCompanionManager()
+

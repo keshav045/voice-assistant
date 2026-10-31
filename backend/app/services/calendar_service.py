@@ -175,3 +175,4 @@ class CalendarService:
                 )
 
         return free_slots
+

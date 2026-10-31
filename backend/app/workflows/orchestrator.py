@@ -95,19 +95,46 @@ async def plan_actions(state: AgentState) -> Dict[str, Any]:
     lower = user_msg.lower()
     tool_calls = []
 
+    # 1. Task tools
     if "delete task" in lower or "remove task" in lower:
-        # Extract task id if mentioned or use default sample
         words = lower.split()
         task_id = "task-sample-1"
         for w in words:
             if "task-" in w:
                 task_id = w
         tool_calls.append({"tool": "delete_task", "args": {"task_id": task_id}})
-    elif "list" in lower or "show" in lower or "tasks" in lower and "create" not in lower:
+    elif "list" in lower or "show" in lower or "tasks" in lower and "create" not in lower and "email" not in lower and "calendar" not in lower:
         tool_calls.append({"tool": "list_tasks", "args": {}})
-    elif "create task" in lower or "add task" in lower or "schedule" in lower:
+    elif "create task" in lower or "add task" in lower:
         title = user_msg.replace("create task", "").replace("add task", "").strip() or "New Task"
         tool_calls.append({"tool": "create_task", "args": {"title": title, "priority": "high"}})
+
+    # 2. Email tools
+    elif "summarize email" in lower or "email summary" in lower:
+        tool_calls.append({"tool": "summarize_emails", "args": {"query": ""}})
+    elif "search email" in lower or "check email" in lower or "inbox" in lower or "unread email" in lower:
+        tool_calls.append({"tool": "search_emails", "args": {"query": ""}})
+    elif "send email" in lower:
+        tool_calls.append({
+            "tool": "send_email",
+            "args": {"recipient": "recipient@example.com", "subject": "Automated Dispatch", "body": "Message content"},
+        })
+
+    # 3. Calendar tools
+    elif "free" in lower and "slot" in lower or "availability" in lower:
+        tool_calls.append({
+            "tool": "check_calendar_availability",
+            "args": {"start_time": "2026-10-31T14:00:00Z", "end_time": "2026-10-31T15:00:00Z"},
+        })
+    elif "calendar" in lower or "meetings" in lower or "schedule" in lower and "task" not in lower:
+        tool_calls.append({"tool": "list_calendar_events", "args": {}})
+
+    # 4. Desktop companion tools
+    elif "notepad" in lower or "calculator" in lower:
+        app = "notepad" if "notepad" in lower else "calculator"
+        tool_calls.append({"tool": "open_application", "args": {"app_name": app}})
+    elif "active window" in lower or "current window" in lower:
+        tool_calls.append({"tool": "get_active_window", "args": {}})
 
     return {
         "pending_tool_calls": tool_calls,
@@ -266,6 +293,12 @@ async def generate_response(state: AgentState) -> Dict[str, Any]:
         msg = res_data.get("message")
         if not msg and "tasks" in res_data:
             msg = f"You currently have {len(res_data['tasks'])} tasks in your system."
+        elif not msg and "messages" in res_data:
+            msg = f"Found {len(res_data['messages'])} matching email messages."
+        elif not msg and "events" in res_data:
+            msg = f"Found {len(res_data['events'])} scheduled calendar events."
+        elif not msg and "summary" in res_data:
+            msg = res_data["summary"]
         final_text = msg or f"Operation '{tool_name}' completed successfully."
     else:
         final_text = f"Operation '{tool_name}' failed: {output.get('error')}"

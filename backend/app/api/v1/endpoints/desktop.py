@@ -79,3 +79,4 @@ async def companion_websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         logger.error(f"Error in companion WebSocket: {e}")
         desktop_manager.disconnect()
+

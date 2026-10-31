@@ -79,3 +79,4 @@ async def test_system_config_hardening_capabilities():
         caps = data.get("capabilities", [])
         assert "audit_logging" in caps
         assert "rate_limiting" in caps
+

@@ -128,3 +128,4 @@ def test_companion_websocket_handshake():
         hb_ack_raw = websocket.receive_text()
         hb_ack = json.loads(hb_ack_raw)
         assert hb_ack["type"] == "heartbeat_ack"
+

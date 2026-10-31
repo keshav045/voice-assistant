@@ -139,3 +139,4 @@ class GmailService:
             "emails_analyzed": len(messages),
             "query": query,
         }
+
