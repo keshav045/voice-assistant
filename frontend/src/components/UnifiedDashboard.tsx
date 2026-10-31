@@ -1,5 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
+  Zap,
+  CheckSquare,
+  Calendar,
+  Mail,
+  Monitor,
+  Shield,
+  Check,
+  CheckCircle2,
+  Mic,
+  Bot,
+  Brain,
+  LayoutGrid,
+} from 'lucide-react';
+import {
   fetchTasks,
   fetchDailySummary,
   fetchEmailDrafts,
@@ -143,7 +157,10 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
                 Dispatching...
               </>
             ) : (
-              <>⚡ Dispatch</>
+              <>
+                <Zap className="w-4 h-4 mr-1.5" />
+                Dispatch
+              </>
             )}
           </button>
         </form>
@@ -181,7 +198,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
         >
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs text-slate-400">Tasks Pending</span>
-            <span className="text-base">📋</span>
+            <CheckSquare className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-2xl font-bold text-white">
             {summary ? summary.pending_count : tasks.filter((t) => t.status !== 'completed').length}
@@ -197,7 +214,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
         >
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs text-slate-400">Calendar Agenda</span>
-            <span className="text-base">📅</span>
+            <Calendar className="w-4 h-4 text-blue-400" />
           </div>
           <div className="text-2xl font-bold text-white">{events.length}</div>
           <span className="text-[11px] text-blue-400 font-mono">Synced with Google Cal</span>
@@ -209,7 +226,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
         >
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs text-slate-400">Email Drafts & Outbox</span>
-            <span className="text-base">✉</span>
+            <Mail className="w-4 h-4 text-rose-400" />
           </div>
           <div className="text-2xl font-bold text-white">{drafts.length}</div>
           <span className="text-[11px] text-rose-400 font-mono">
@@ -223,7 +240,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
         >
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs text-slate-400">Windows Companion</span>
-            <span className="text-base">💻</span>
+            <Monitor className="w-4 h-4 text-cyan-400" />
           </div>
           <div className="text-2xl font-bold text-white">
             {desktopStatus?.is_connected ? 'Active' : 'Standby'}
@@ -243,7 +260,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <span>🛡</span> Human-in-the-Loop Approval Queue
+                  <Shield className="w-4 h-4 text-amber-400" /> Human-in-the-Loop Approval Queue
                   {approvals.length > 0 && (
                     <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full font-mono">
                       {approvals.length} Action(s) Waiting
@@ -257,8 +274,9 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
             </div>
 
             {approvals.length === 0 ? (
-              <div className="text-center py-6 text-xs text-slate-500 bg-slate-950/40 rounded-xl border border-slate-800">
-                ✓ No pending approval requests. Agent operations running normally.
+              <div className="text-center py-6 text-xs text-slate-500 bg-slate-950/40 rounded-xl border border-slate-800 flex items-center justify-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>No pending approval requests. Agent operations running normally.</span>
               </div>
             ) : (
               <div className="space-y-3">
@@ -304,7 +322,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <span>📅</span> Upcoming Agenda & Meetings
+                  <Calendar className="w-4 h-4 text-blue-400" /> Upcoming Agenda & Meetings
                 </h3>
                 <p className="text-xs text-slate-400">Synchronized meetings and focus time blocks.</p>
               </div>
@@ -354,7 +372,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <span>⚡</span> Urgent Tasks & Action Items
+                  <Zap className="w-4 h-4 text-amber-400" /> Urgent Tasks & Action Items
                 </h3>
                 <p className="text-xs text-slate-400">High priority tasks requiring completion.</p>
               </div>
@@ -390,9 +408,10 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
 
                     <button
                       onClick={() => handleQuickCompleteTask(task.id)}
-                      className="px-2 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-semibold transition shrink-0"
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-semibold transition shrink-0"
                     >
-                      ✓ Done
+                      <Check className="w-3 h-3" />
+                      Done
                     </button>
                   </div>
                 ))}
@@ -402,36 +421,44 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
           {/* Assistant Navigation Hub */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-3">
             <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <span>🎛</span> Direct Module Switcher
+              <LayoutGrid className="w-4 h-4 text-indigo-400" /> Direct Module Switcher
             </h3>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <button
                 onClick={() => onNavigateTab('voice')}
                 className="p-3 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-200 text-left transition"
               >
-                🎙 <strong>Live Voice</strong>
-                <p className="text-[10px] text-slate-400">Speech-to-speech engine</p>
+                <div className="flex items-center gap-1.5 font-semibold">
+                  <Mic className="w-3.5 h-3.5 text-indigo-400" /> Live Voice
+                </div>
+                <p className="text-[10px] text-slate-400 mt-0.5">Speech-to-speech engine</p>
               </button>
               <button
                 onClick={() => onNavigateTab('agent')}
                 className="p-3 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-200 text-left transition"
               >
-                🤖 <strong>Agent Core</strong>
-                <p className="text-[10px] text-slate-400">LangGraph 9-node orchestrator</p>
+                <div className="flex items-center gap-1.5 font-semibold">
+                  <Bot className="w-3.5 h-3.5 text-indigo-400" /> Agent Core
+                </div>
+                <p className="text-[10px] text-slate-400 mt-0.5">LangGraph 9-node orchestrator</p>
               </button>
               <button
                 onClick={() => onNavigateTab('emails')}
                 className="p-3 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-200 text-left transition"
               >
-                ✉ <strong>Gmail Hub</strong>
-                <p className="text-[10px] text-slate-400">Summarization & drafts</p>
+                <div className="flex items-center gap-1.5 font-semibold">
+                  <Mail className="w-3.5 h-3.5 text-rose-400" /> Gmail Hub
+                </div>
+                <p className="text-[10px] text-slate-400 mt-0.5">Summarization & drafts</p>
               </button>
               <button
                 onClick={() => onNavigateTab('memory')}
                 className="p-3 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-200 text-left transition"
               >
-                🧠 <strong>Vector Memory</strong>
-                <p className="text-[10px] text-slate-400">Semantic cosine search</p>
+                <div className="flex items-center gap-1.5 font-semibold">
+                  <Brain className="w-3.5 h-3.5 text-purple-400" /> Vector Memory
+                </div>
+                <p className="text-[10px] text-slate-400 mt-0.5">Semantic cosine search</p>
               </button>
             </div>
           </div>

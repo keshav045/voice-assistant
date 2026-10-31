@@ -6,7 +6,7 @@ Nexus is built to run locally on your workstation as a true daily driver—manag
 
 ---
 
-## 🚀 1. One-Click Quick Start (Windows)
+## 1. One-Click Quick Start (Windows)
 
 Nexus includes native one-click batch scripts so you never have to open multiple terminals:
 
@@ -30,7 +30,7 @@ stop-nexus.bat
 
 ---
 
-## 🔑 2. Setting Up Real Google Workspace Sync (Gmail & Calendar)
+## 2. Setting Up Real Google Workspace Sync (Gmail & Calendar)
 
 Nexus works **100% offline with curated local data** by default. To connect your actual personal or work **Gmail** and **Google Calendar**, follow this 5-minute setup:
 
@@ -76,14 +76,14 @@ GOOGLE_REDIRECT_URI="http://localhost:8000/api/v1/auth/google/callback"
 1. Launch Nexus with `start-nexus.bat`.
 2. Go to the **Gmail** or **Calendar** tab and click **"Connect Google"**.
 3. A secure Google sign-in window will open. Click **Allow**.
-4. Nexus will display **🟢 Gmail Live / Calendar Live** and begin synchronizing your actual inbox and schedule!
+4. Nexus will display **[Live] Gmail Live / Calendar Live** and begin synchronizing your actual inbox and schedule!
 
 > [!NOTE]
 > All OAuth access and refresh tokens are encrypted on disk with Fernet AES-128-CBC encryption derived from your secret key. Nexus automatically refreshes expired tokens in the background.
 
 ---
 
-## 🤖 3. OpenAI API Configuration
+## 3. OpenAI API Configuration
 
 In `backend/.env`:
 ```env
@@ -95,7 +95,7 @@ OPENAI_VOICE_MODEL="gpt-4o-realtime-preview"
 
 ---
 
-## 🎙️ 4. Daily Operations & Real-World Features
+## 4. Daily Operations & Real-World Features
 
 ### 1. Hands-Free Voice Conversation
 * Navigate to the **Voice Assistant** tab.
@@ -113,7 +113,7 @@ OPENAI_VOICE_MODEL="gpt-4o-realtime-preview"
 
 ### 3. Windows Desktop Companion
 * **Application Launcher**: Safely launch daily tools (*Chrome, VS Code, Windows Terminal, File Explorer, Notepad, Calculator, Task Manager*) with approval guardrails.
-* **Instant Screenshots**: Click **"📸 Screenshot"** to capture your active desktop screen. The companion saves high-res PNG files to `desktop-companion/screenshots/` and displays a thumbnail preview immediately in your dashboard.
+* **Instant Screenshots**: Click **"Capture Screenshot"** to capture your active desktop screen. The companion saves high-res PNG files to `desktop-companion/screenshots/` and displays a thumbnail preview immediately in your dashboard.
 * **Smart File Search**: Quickly locate documents, PDFs, code files, and spreadsheets across your `Documents`, `Downloads`, `Desktop`, and project workspace.
 * **Live Hardware Telemetry**: Monitored via native `psutil` (accurate CPU %, RAM %, and Disk capacity).
 
@@ -128,7 +128,7 @@ Nexus follows an uncompromising **Safety First** philosophy:
 
 ---
 
-## 🛠️ 5. Troubleshooting & Health Verification
+## 5. Troubleshooting & Health Verification
 
 | Issue | Resolution |
 | :--- | :--- |
@@ -139,7 +139,7 @@ Nexus follows an uncompromising **Safety First** philosophy:
 
 ---
 
-## 🔒 6. Security Guarantees
+## 6. Security Guarantees
 * **Zero Arbitrary Execution**: Nexus cannot run raw bash/powershell strings or destructive disk commands. All desktop actions are strictly restricted to an approved whitelist.
 * **Encrypted Credentials**: Stored OAuth tokens are symmetrically encrypted before persistence.
 * **Local-First Architecture**: Your tasks, notes, semantic memory, and logs reside on your local machine.

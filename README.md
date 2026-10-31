@@ -4,7 +4,7 @@
 
 ---
 
-## 🏛️ System Architecture
+## System Architecture
 
 ```
 React Dashboard + Voice Client (Port 5173)
@@ -20,7 +20,7 @@ FastAPI Backend (Port 8000)
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 nexus-ai-assistant/
@@ -59,7 +59,7 @@ nexus-ai-assistant/
 
 ---
 
-## 🚀 Quickstart Guide
+## Quickstart Guide
 
 ### 1. Backend Setup
 
@@ -95,7 +95,7 @@ cd backend
 
 ---
 
-## 📅 10-Milestone Roadmap
+## 10-Milestone Roadmap
 
 - [x] **Phase 1 — Foundation & Infrastructure** (Completed)
 - [ ] **Phase 2 — Voice Engine** (OpenAI Realtime API, STT/TTS adapters, VAD)

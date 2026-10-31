@@ -4,7 +4,7 @@ This guide details how to deploy the **Nexus Executive Dashboard** and backend s
 
 ---
 
-## 🌐 Option 1: Cloud Deployment (Vercel / Netlify + Railway / Render)
+## Option 1: Cloud Deployment (Vercel / Netlify + Railway / Render)
 
 Deploying Nexus in the cloud gives you a persistent, shareable URL accessible from any desktop, tablet, or browser.
 
@@ -66,7 +66,7 @@ Nexus includes [frontend/netlify.toml](file:///c:/Users/kesha/OneDrive/Desktop/v
 
 ---
 
-## 🐳 Option 2: Full-Stack Docker Compose Deployment
+## Option 2: Full-Stack Docker Compose Deployment
 
 If you want to host both backend, frontend, PostgreSQL (with pgvector), and Redis on a cloud VPS (Ubuntu, Debian, AWS EC2, DigitalOcean, Hetzner), use the included production Docker Compose file:
 
@@ -96,7 +96,7 @@ docker compose -f docker-compose.prod.yml logs -f
 
 ---
 
-## 💻 Option 3: Local Windows 11 Native Run
+## Option 3: Local Windows 11 Native Run
 
 For everyday personal usage on your local Windows workstation:
 
@@ -115,7 +115,7 @@ For everyday personal usage on your local Windows workstation:
 
 ---
 
-## 🔐 Environment Variables Reference Table
+## Environment Variables Reference Table
 
 | Variable | Required | Default | Purpose |
 | :--- | :--- | :--- | :--- |
@@ -129,9 +129,10 @@ For everyday personal usage on your local Windows workstation:
 
 ---
 
-## 🧪 Production Health & Status Verification
+## Production Health & Status Verification
 
 Once deployed, verify your deployment:
 * **Frontend Dashboard**: Visit your assigned URL (e.g. `https://nexus.vercel.app` or `http://localhost:5173`).
 * **API Health Check**: `GET /health` returns `{ "status": "healthy", "database": { "status": "connected" } }`.
 * **FastAPI Interactive Docs**: Visit `http://your-backend-domain/docs`.
+

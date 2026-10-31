@@ -137,7 +137,7 @@ export function App() {
           if (!remindedIds.has(rem.id)) {
             remindedIds.add(rem.id);
             if ('Notification' in window && Notification.permission === 'granted') {
-              new Notification('🔔 Nexus Reminder Due', {
+              new Notification('Nexus Reminder Due', {
                 body: rem.title,
                 icon: '/vite.svg',
               });
@@ -461,9 +461,9 @@ export function App() {
                 <button
                   onClick={handleConnectGoogle}
                   className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl text-xs font-semibold transition"
-                  title="Connect Google Workspace (Gmail & Calendar)"
+                  title="Connect Google Workspace (Gmail and Calendar)"
                 >
-                  <span>🌐</span> Connect Google
+                  Connect Google Workspace
                 </button>
               )}
 

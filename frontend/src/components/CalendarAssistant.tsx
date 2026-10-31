@@ -1,5 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {
+  Calendar,
+  Globe,
+  RefreshCw,
+  Plus,
+  Search,
+  Clock,
+  MapPin,
+  Shield,
+  CheckCircle2,
+  AlertTriangle,
+  X,
+} from 'lucide-react';
+import {
   fetchCalendarEvents,
   createCalendarEvent,
   checkCalendarAvailability,
@@ -211,7 +224,7 @@ export const CalendarAssistant: React.FC = () => {
         <div>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold">
-              📅
+              <Calendar className="w-5 h-5 text-blue-400" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
@@ -234,10 +247,10 @@ export const CalendarAssistant: React.FC = () => {
               <span>Calendar Live ({googleStatus.email})</span>
               <button
                 onClick={handleDisconnectGoogle}
-                className="text-slate-400 hover:text-rose-400 ml-1 text-xs"
+                className="text-slate-400 hover:text-rose-400 ml-1 p-0.5 rounded"
                 title="Disconnect Google Account"
               >
-                ✕
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
@@ -246,7 +259,8 @@ export const CalendarAssistant: React.FC = () => {
               className="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 hover:border-slate-600 rounded-xl text-xs font-medium transition flex items-center gap-1.5"
               title="Connect Google account for live Calendar sync"
             >
-              <span>🌐</span> Connect Google
+              <Globe className="w-3.5 h-3.5" />
+              <span>Connect Google</span>
             </button>
           )}
 
@@ -255,13 +269,15 @@ export const CalendarAssistant: React.FC = () => {
             disabled={loading}
             className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-sm font-medium transition flex items-center gap-1.5"
           >
-            🔄 Refresh
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Refresh</span>
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-semibold transition shadow-md flex items-center gap-1.5"
           >
-            ➕ Schedule Event
+            <Plus className="w-3.5 h-3.5" />
+            <span>Schedule Event</span>
           </button>
         </div>
       </div>
@@ -288,7 +304,7 @@ export const CalendarAssistant: React.FC = () => {
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div>
               <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <span>🔍</span> Instant Availability & Conflict Inspector
+                <Search className="w-4 h-4 text-blue-400" /> Instant Availability & Conflict Inspector
               </h3>
               <p className="text-xs text-slate-400">
                 Verify whether a requested window overlaps with existing commitments.
@@ -338,7 +354,17 @@ export const CalendarAssistant: React.FC = () => {
             >
               <div className="flex items-center justify-between">
                 <span className="font-bold flex items-center gap-1.5">
-                  {availabilityResult.is_free ? '✓ SLOT AVAILABLE' : '⚠ CONFLICT DETECTED'}
+                  {availabilityResult.is_free ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <span>SLOT AVAILABLE</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-4 h-4 text-rose-400" />
+                      <span>CONFLICT DETECTED</span>
+                    </>
+                  )}
                 </span>
                 <span className="text-[11px] font-mono opacity-80">
                   {availabilityResult.conflict_count} conflict(s)
@@ -364,7 +390,7 @@ export const CalendarAssistant: React.FC = () => {
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div>
               <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <span>⏱</span> Open Availability Gaps
+                <Clock className="w-4 h-4 text-blue-400" /> Open Availability Gaps
               </h3>
               <p className="text-xs text-slate-400">Available free windows during workday (9am-6pm).</p>
             </div>
@@ -453,8 +479,9 @@ export const CalendarAssistant: React.FC = () => {
                     </div>
 
                     {evt.location && (
-                      <div className="text-xs text-slate-300 flex items-center gap-1 truncate">
-                        <span className="text-slate-500">📍</span> {evt.location}
+                      <div className="text-xs text-slate-300 flex items-center gap-1.5 truncate">
+                        <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <span>{evt.location}</span>
                       </div>
                     )}
 
@@ -506,9 +533,9 @@ export const CalendarAssistant: React.FC = () => {
               </div>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="text-slate-400 hover:text-white text-sm"
+                className="text-slate-400 hover:text-white p-1 rounded"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -586,7 +613,7 @@ export const CalendarAssistant: React.FC = () => {
               </div>
 
               <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl text-xs text-amber-300 flex items-start gap-2">
-                <span>🛡</span>
+                <Shield className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <span>
                   <strong>Approval Policy:</strong> Creating or modifying calendar appointments is an
                   external write operation. Confirming will create the event in the schedule.

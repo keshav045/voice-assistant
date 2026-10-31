@@ -200,7 +200,7 @@ async def approval_gate(state: AgentState) -> Dict[str, Any]:
             "workflow_status": "pending_approval",
             "current_tool_call": next_call,
             "final_response": (
-                f"⚠️ Confirmation Required: Nexus proposed to execute '{decision.action_summary}'. "
+                f"[Confirmation Required] Nexus proposed to execute '{decision.action_summary}'. "
                 f"Please review and approve or reject this action."
             ),
         }

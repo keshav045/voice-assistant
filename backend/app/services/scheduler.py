@@ -56,7 +56,7 @@ class ReminderScheduler:
                     "triggered_at": now.isoformat(),
                 }
                 triggered_results.append(triggered_data)
-                logger.info(f"🔔 Reminder triggered: '{rem.title}' (ID: {rem.id})")
+                logger.info(f"[REMINDER] Triggered: '{rem.title}' (ID: {rem.id})")
 
                 # If recurring, automatically spawn the next scheduled occurrence
                 if rem.is_recurring and rem.recurrence_rule:
@@ -72,7 +72,7 @@ class ReminderScheduler:
                         notification_channel=rem.notification_channel,
                     )
                     session.add(next_reminder)
-                    logger.info(f"🔁 Recurring reminder scheduled for {next_time}: '{rem.title}'")
+                    logger.info(f"[RECURRENCE] Scheduled for {next_time}: '{rem.title}'")
 
             await session.commit()
 

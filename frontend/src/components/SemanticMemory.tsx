@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Brain, Trash2, Plus, Zap, X } from 'lucide-react';
 import {
   fetchMemories,
   storeMemory,
@@ -142,7 +143,7 @@ export const SemanticMemory: React.FC = () => {
         <div>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/30 flex items-center justify-center text-violet-400 font-bold">
-              🧠
+              <Brain className="w-5 h-5 text-violet-400" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
@@ -161,15 +162,17 @@ export const SemanticMemory: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={handleWipeAll}
-            className="px-3.5 py-2 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 rounded-xl text-xs font-semibold transition"
+            className="px-3.5 py-2 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
           >
-            🗑 Wipe Memory (GDPR)
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Wipe Memory (GDPR)</span>
           </button>
           <button
             onClick={() => setShowAddModal(true)}
             className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
           >
-            ➕ Store Context
+            <Plus className="w-3.5 h-3.5" />
+            <span>Store Context</span>
           </button>
         </div>
       </div>
@@ -194,7 +197,7 @@ export const SemanticMemory: React.FC = () => {
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div>
             <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <span>⚡</span> Vector Similarity Query Engine
+              <Zap className="w-4 h-4 text-violet-400" /> Vector Similarity Query Engine
             </h3>
             <p className="text-xs text-slate-400">
               Query your knowledge base with natural language. Vector embeddings rank results by cosine distance.
@@ -370,9 +373,9 @@ export const SemanticMemory: React.FC = () => {
               </div>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-slate-400 hover:text-white text-sm"
+                className="text-slate-400 hover:text-white p-1 rounded"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 

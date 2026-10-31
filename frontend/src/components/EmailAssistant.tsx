@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import {
+  Mail,
+  Globe,
+  Sparkles,
+  PenSquare,
+  Shield,
+  Save,
+  Send,
+  RefreshCw,
+  X,
+  Info,
+} from 'lucide-react';
+import {
   searchEmails,
   summarizeEmails,
   fetchEmailDrafts,
@@ -197,7 +209,7 @@ export const EmailAssistant: React.FC = () => {
         <div>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 font-bold">
-              ✉
+              <Mail className="w-5 h-5 text-rose-400" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
@@ -221,10 +233,10 @@ export const EmailAssistant: React.FC = () => {
               <span>Gmail Live ({googleStatus.email})</span>
               <button
                 onClick={handleDisconnectGoogle}
-                className="text-slate-400 hover:text-rose-400 ml-1 text-xs"
+                className="text-slate-400 hover:text-rose-400 ml-1 p-0.5 rounded"
                 title="Disconnect Google Account"
               >
-                ✕
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
@@ -233,7 +245,8 @@ export const EmailAssistant: React.FC = () => {
               className="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 hover:border-slate-600 rounded-xl text-xs font-medium transition flex items-center gap-1.5"
               title="Connect Google account for live Gmail & Google Calendar sync"
             >
-              <span>🌐</span> Connect Google
+              <Globe className="w-3.5 h-3.5" />
+              <span>Connect Google</span>
             </button>
           )}
 
@@ -248,14 +261,18 @@ export const EmailAssistant: React.FC = () => {
                 Analyzing...
               </>
             ) : (
-              <>✨ Generate AI Summary</>
+              <>
+                <Sparkles className="w-4 h-4 mr-1.5" />
+                Generate AI Summary
+              </>
             )}
           </button>
           <button
             onClick={() => setActiveTab('compose')}
             className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-medium transition shadow-md flex items-center gap-1.5"
           >
-            ✏ Compose
+            <PenSquare className="w-4 h-4" />
+            <span>Compose</span>
           </button>
         </div>
       </div>
@@ -280,13 +297,13 @@ export const EmailAssistant: React.FC = () => {
         <div className="bg-gradient-to-r from-purple-950/40 to-slate-900 border border-purple-800/40 p-5 rounded-2xl shadow-xl">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-purple-300 flex items-center gap-2">
-              <span className="text-base">✦</span> AI Inbox Intelligence Brief
+              <Sparkles className="w-4 h-4 text-purple-400" /> AI Inbox Intelligence Brief
             </h3>
             <button
               onClick={() => setAiSummary(null)}
-              className="text-xs text-slate-400 hover:text-white"
+              className="text-xs text-slate-400 hover:text-white flex items-center gap-1"
             >
-              ✕ Close
+              <X className="w-3.5 h-3.5" /> Close
             </button>
           </div>
           <div className="text-sm text-slate-200 whitespace-pre-line leading-relaxed bg-black/30 p-4 rounded-xl border border-purple-900/30 font-mono">
@@ -461,8 +478,9 @@ export const EmailAssistant: React.FC = () => {
                 Prepare drafts or dispatch emails with deterministic approval safeguards.
               </p>
             </div>
-            <div className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-lg">
-              🛡 Policy Protected
+            <div className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-lg flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5" />
+              <span>Policy Protected</span>
             </div>
           </div>
 
@@ -504,7 +522,7 @@ export const EmailAssistant: React.FC = () => {
             </div>
 
             <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-xs text-slate-400 flex items-start gap-3">
-              <span className="text-amber-400 text-base">ℹ</span>
+              <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <div>
                 <strong className="text-slate-300">Approval Policy:</strong> Sending emails is
                 classified as an external sensitive action. Clicking &quot;Send Email&quot; invokes the
@@ -515,16 +533,18 @@ export const EmailAssistant: React.FC = () => {
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="submit"
-                className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-sm font-medium transition"
+                className="px-5 py-2.5 bg-slate-800 hover:bg-slate-750 text-slate-200 rounded-xl text-sm font-medium transition flex items-center gap-1.5"
               >
-                💾 Save as Draft
+                <Save className="w-4 h-4" />
+                <span>Save as Draft</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleDirectSend()}
                 className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-semibold transition shadow-md flex items-center gap-2"
               >
-                🚀 Send Email (Approval Gate)
+                <Send className="w-4 h-4" />
+                <span>Send Email (Approval Gate)</span>
               </button>
             </div>
           </form>
@@ -541,9 +561,10 @@ export const EmailAssistant: React.FC = () => {
             </div>
             <button
               onClick={loadDrafts}
-              className="text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-800/40"
+              className="text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-800/40 flex items-center gap-1.5"
             >
-              🔄 Refresh
+              <RefreshCw className="w-3 h-3" />
+              <span>Refresh</span>
             </button>
           </div>
 

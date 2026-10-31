@@ -416,7 +416,7 @@ async def google_oauth_callback(
                 </head>
                 <body>
                     <div class="card">
-                        <div class="icon">✨</div>
+                        <div class="icon" style="color: #38bdf8; font-weight: bold; font-size: 24px; margin-bottom: 12px;">[SUCCESS]</div>
                         <h2>Google Workspace Connected!</h2>
                         <p>Connected account: <strong>{google_email}</strong></p>
                         <p>Gmail and Google Calendar are now synchronized with your Nexus Agentic AI Assistant.</p>

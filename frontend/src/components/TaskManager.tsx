@@ -629,9 +629,13 @@ export function TaskManager() {
                         )}
                       </div>
                       <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc' }}>{r.title}</div>
-                      <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '2px' }}>
-                        Due: {new Date(r.scheduled_at).toLocaleTimeString()}
-                        {r.is_recurring && ` • 🔁 ${r.recurrence_rule}`}
+                      <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '2px', display: 'flex', alignItems: 'center' }}>
+                        <span>Due: {new Date(r.scheduled_at).toLocaleTimeString()}</span>
+                        {r.is_recurring && (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', marginLeft: '6px' }}>
+                            • <Repeat size={11} style={{ margin: '0 4px' }} /> {r.recurrence_rule}
+                          </span>
+                        )}
                       </div>
                     </div>
                   );

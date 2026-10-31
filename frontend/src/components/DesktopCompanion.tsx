@@ -1,5 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
+  BarChart3,
+  Calculator,
+  Camera,
+  FileText,
+  Folder,
+  Globe,
+  Monitor,
+  RefreshCw,
+  Search,
+  Shield,
+  Terminal,
+  Zap,
+} from 'lucide-react';
+import {
   fetchDesktopStatus,
   executeDesktopCommand,
   type DesktopStatusDto,
@@ -158,7 +172,7 @@ export const DesktopCompanion: React.FC = () => {
         <div>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-bold">
-              💻
+              <Monitor size={18} />
             </div>
             <div>
               <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
@@ -191,9 +205,9 @@ export const DesktopCompanion: React.FC = () => {
           </div>
           <button
             onClick={loadStatus}
-            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium transition"
+            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium transition flex items-center gap-1"
           >
-            🔄 Refresh
+            <RefreshCw size={12} /> Refresh
           </button>
         </div>
       </div>
@@ -235,7 +249,7 @@ export const DesktopCompanion: React.FC = () => {
         <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
           <span className="text-xs text-slate-400 block mb-1">Security Model</span>
           <div className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
-            <span>🛡</span> Strict Allowlist • Zero Shell Exec • Approval Gated
+            <Shield size={14} className="text-emerald-400" /> Strict Allowlist • Zero Shell Exec • Approval Gated
           </div>
         </div>
       </div>
@@ -248,7 +262,7 @@ export const DesktopCompanion: React.FC = () => {
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div>
               <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <span>🚀</span> Approved Application Launcher
+                <Terminal size={14} className="text-indigo-400" /> Approved Application Launcher
               </h3>
               <p className="text-xs text-slate-400">
                 Safe pre-validated executables launched with strict parameters without arbitrary shell invocation.
@@ -261,24 +275,27 @@ export const DesktopCompanion: React.FC = () => {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
-              { id: 'notepad', name: 'Notepad', icon: '📝', exe: 'notepad.exe' },
-              { id: 'calculator', name: 'Calculator', icon: '🧮', exe: 'calc.exe' },
-              { id: 'browser', name: 'Edge Browser', icon: '🌐', exe: 'msedge.exe' },
-              { id: 'explorer', name: 'File Explorer', icon: '📁', exe: 'explorer.exe' },
-              { id: 'terminal', name: 'Windows Terminal', icon: '💻', exe: 'wt.exe' },
-              { id: 'code', name: 'VS Code', icon: '⚡', exe: 'code.cmd' },
-            ].map((app) => (
-              <button
-                key={app.id}
-                onClick={() => handleLaunchApp(app.id)}
-                disabled={actionLoading === app.id}
-                className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-cyan-500/40 hover:bg-slate-800/40 transition flex flex-col items-center justify-center text-center gap-1.5 group disabled:opacity-50"
-              >
-                <span className="text-2xl group-hover:scale-110 transition">{app.icon}</span>
-                <span className="text-xs font-semibold text-slate-200">{app.name}</span>
-                <span className="text-[10px] text-slate-500 font-mono">{app.exe}</span>
-              </button>
-            ))}
+              { id: 'notepad', name: 'Notepad', icon: FileText, exe: 'notepad.exe' },
+              { id: 'calculator', name: 'Calculator', icon: Calculator, exe: 'calc.exe' },
+              { id: 'browser', name: 'Edge Browser', icon: Globe, exe: 'msedge.exe' },
+              { id: 'explorer', name: 'File Explorer', icon: Folder, exe: 'explorer.exe' },
+              { id: 'terminal', name: 'Windows Terminal', icon: Terminal, exe: 'wt.exe' },
+              { id: 'code', name: 'VS Code', icon: Zap, exe: 'code.cmd' },
+            ].map((app) => {
+              const AppIcon = app.icon;
+              return (
+                <button
+                  key={app.id}
+                  onClick={() => handleLaunchApp(app.id)}
+                  disabled={actionLoading === app.id}
+                  className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-cyan-500/40 hover:bg-slate-800/40 transition flex flex-col items-center justify-center text-center gap-1.5 group disabled:opacity-50"
+                >
+                  <AppIcon size={24} className="text-cyan-400 group-hover:scale-110 transition" />
+                  <span className="text-xs font-semibold text-slate-200">{app.name}</span>
+                  <span className="text-[10px] text-slate-500 font-mono">{app.exe}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Quick Reader Actions */}
@@ -286,23 +303,23 @@ export const DesktopCompanion: React.FC = () => {
             <button
               onClick={handleInspectActiveWindow}
               disabled={actionLoading === 'window'}
-              className="flex-1 min-w-[120px] py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition"
+              className="flex-1 min-w-[120px] py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5"
             >
-              {actionLoading === 'window' ? 'Reading...' : '🔍 Inspect Window'}
+              <Search size={13} /> {actionLoading === 'window' ? 'Reading...' : 'Inspect Window'}
             </button>
             <button
               onClick={handleInspectMetrics}
               disabled={actionLoading === 'metrics'}
-              className="flex-1 min-w-[120px] py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition"
+              className="flex-1 min-w-[120px] py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5"
             >
-              {actionLoading === 'metrics' ? 'Querying...' : '📊 Telemetry'}
+              <BarChart3 size={13} /> {actionLoading === 'metrics' ? 'Querying...' : 'Telemetry'}
             </button>
             <button
               onClick={handleTakeScreenshot}
               disabled={actionLoading === 'screenshot'}
-              className="flex-1 min-w-[120px] py-2 bg-cyan-600/30 hover:bg-cyan-600/40 border border-cyan-500/40 text-cyan-300 rounded-xl text-xs font-semibold transition"
+              className="flex-1 min-w-[120px] py-2 bg-cyan-600/30 hover:bg-cyan-600/40 border border-cyan-500/40 text-cyan-300 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5"
             >
-              {actionLoading === 'screenshot' ? 'Capturing...' : '📸 Screenshot'}
+              <Camera size={13} /> {actionLoading === 'screenshot' ? 'Capturing...' : 'Screenshot'}
             </button>
           </div>
 
@@ -317,7 +334,7 @@ export const DesktopCompanion: React.FC = () => {
                 />
               ) : (
                 <div className="w-24 h-14 bg-slate-800 rounded-lg flex items-center justify-center text-xs text-slate-400">
-                  📸 PNG
+                  PNG Preview
                 </div>
               )}
               <div className="overflow-hidden">
@@ -336,7 +353,7 @@ export const DesktopCompanion: React.FC = () => {
           <div className="space-y-3">
             <div className="border-b border-slate-800 pb-3">
               <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <span>🔎</span> Safe Scoped File Search
+                <Search size={14} className="text-cyan-400" /> Safe Scoped File Search
               </h3>
               <p className="text-xs text-slate-400">
                 Search local workspace or documents folder for matching documents.
@@ -391,7 +408,7 @@ export const DesktopCompanion: React.FC = () => {
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-3">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <span>📟</span> Live Action Telemetry & Policy Audit Log
+            <Terminal size={14} className="text-indigo-400" /> Live Action Telemetry & Policy Audit Log
           </h3>
           <span className="text-xs text-slate-400 font-mono">
             {commandLogs.length} events logged
