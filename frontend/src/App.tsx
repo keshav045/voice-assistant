@@ -64,7 +64,7 @@ export function App() {
   const [config, setConfig] = useState<SystemConfig | null>(null);
   const [, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<TabKey>('dashboard');
-  const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(3);
+  const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(0);
   const [googleStatus, setGoogleStatus] = useState<GoogleAuthStatusDto | null>(null);
 
   // Command Palette State (Ctrl+K)
@@ -74,7 +74,7 @@ export function App() {
   const [commandResult, setCommandResult] = useState<string | null>(null);
 
   // Notifications drawer state
-  const [notificationsCount, setNotificationsCount] = useState<number>(4);
+  const [notificationsCount, setNotificationsCount] = useState<number>(0);
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
 
   const loadData = async () => {
@@ -88,7 +88,7 @@ export function App() {
       ]);
       if (healthData) setHealth(healthData);
       if (configData) setConfig(configData);
-      if (approvalsData) setPendingApprovalsCount(approvalsData.length || 3);
+      if (approvalsData) setPendingApprovalsCount(approvalsData.length);
       if (googleData) setGoogleStatus(googleData);
     } catch (err: any) {
       console.warn('System telemetry check error:', err);
@@ -336,14 +336,16 @@ export function App() {
               </button>
             </div>
             <div className="space-y-2 text-xs">
-              <div className="p-2.5 rounded-lg bg-[#18181b] border border-[#27272a]">
-                <div className="font-medium text-white">Autonomous Agent Consensus</div>
-                <div className="text-[11px] text-[#a1a1aa]">3 tasks awaiting human signoff in approvals queue.</div>
-              </div>
-              <div className="p-2.5 rounded-lg bg-[#18181b] border border-[#27272a]">
-                <div className="font-medium text-white">Google Workspace Sync</div>
-                <div className="text-[11px] text-[#a1a1aa]">Calendar collision detected for 14:00 tomorrow.</div>
-              </div>
+              {notificationsCount === 0 ? (
+                <div className="py-6 text-center text-[#71717a] text-xs">
+                  No unread system notifications.
+                </div>
+              ) : (
+                <div className="p-2.5 rounded-lg bg-[#18181b] border border-[#27272a]">
+                  <div className="font-medium text-white">Autonomous Agent Consensus</div>
+                  <div className="text-[11px] text-[#a1a1aa]">{pendingApprovalsCount} tasks awaiting human signoff.</div>
+                </div>
+              )}
             </div>
           </div>
         )}

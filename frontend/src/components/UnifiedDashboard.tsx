@@ -22,6 +22,7 @@ import {
   fetchApprovals,
   submitApprovalDecision,
   type TaskDto,
+  type CalendarEventDto,
   type DesktopStatusDto,
   type ApprovalDto,
 } from '../services/api';
@@ -32,6 +33,7 @@ interface UnifiedDashboardProps {
 
 export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTab }) => {
   const [tasks, setTasks] = useState<TaskDto[]>([]);
+  const [events, setEvents] = useState<CalendarEventDto[]>([]);
   const [desktopStatus, setDesktopStatus] = useState<DesktopStatusDto | null>(null);
   const [approvals, setApprovals] = useState<ApprovalDto[]>([]);
   const [notification, setNotification] = useState<string | null>(null);
@@ -59,12 +61,12 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
       ]);
 
       if (taskRes.status === 'fulfilled') setTasks(taskRes.value);
+      if (evRes.status === 'fulfilled') setEvents(evRes.value);
       if (deskRes.status === 'fulfilled') setDesktopStatus(deskRes.value);
       if (apprRes.status === 'fulfilled') setApprovals(apprRes.value);
       // Ensure all promises are evaluated
       void sumRes;
       void draftRes;
-      void evRes;
     } catch (e) {
       // Ignore background sync errors
     }
@@ -106,8 +108,8 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
           </div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Good afternoon, Alex.</h1>
           <p className="text-sm text-zinc-400 mt-1">
-            Nexus agents are operating autonomously. {tasks.filter((t) => t.status !== 'completed').length || 4} active
-            background routines, {approvals.length || 2} pending human approvals.
+            Nexus agents are operating autonomously. {tasks.filter((t) => t.status !== 'completed').length} active
+            routines, {approvals.length} pending human approvals.
           </p>
         </div>
 
@@ -201,65 +203,41 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
             </div>
 
             <div className="space-y-4">
-              {/* Task 1 */}
-              <div className="p-4 rounded-xl bg-zinc-950/70 border border-zinc-800 space-y-2.5">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <Mail size={14} className="text-zinc-400" />
-                    <span className="font-semibold text-white">Synthesizing Q3 Executive Briefing</span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300">
-                      Email Agent
-                    </span>
-                  </div>
-                  <span className="font-mono text-xs text-white font-bold">85%</span>
+              {tasks.filter((t) => t.status === 'in_progress' || t.status === 'pending').length === 0 ? (
+                <div className="py-10 px-4 rounded-xl border border-dashed border-zinc-800 text-center space-y-2">
+                  <Layers size={22} className="mx-auto text-zinc-600" />
+                  <div className="text-xs font-semibold text-zinc-300">No active delegated workflows</div>
+                  <p className="text-[11px] text-zinc-500">Autonomous agents are standing by. Click "New Autonomous Task" to begin.</p>
                 </div>
-                <div className="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-white h-full rounded-full transition-all duration-500" style={{ width: '85%' }} />
-                </div>
-                <p className="text-[11px] text-zinc-400">
-                  Aggregating 42 emails from board, finance, and engineering threads.
-                </p>
-              </div>
-
-              {/* Task 2 */}
-              <div className="p-4 rounded-xl bg-zinc-950/70 border border-zinc-800 space-y-2.5">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <Monitor size={14} className="text-zinc-400" />
-                    <span className="font-semibold text-white">Scraping competitor API pricing specs</span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300">
-                      Win11 Desktop Agent
-                    </span>
-                  </div>
-                  <span className="font-mono text-xs text-white font-bold">60%</span>
-                </div>
-                <div className="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-white h-full rounded-full transition-all duration-500" style={{ width: '60%' }} />
-                </div>
-                <p className="text-[11px] text-zinc-400">
-                  Navigating headless Chrome; parsing rate tiers into schema.
-                </p>
-              </div>
-
-              {/* Task 3 */}
-              <div className="p-4 rounded-xl bg-zinc-950/70 border border-zinc-800 space-y-2.5">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <Calendar size={14} className="text-zinc-400" />
-                    <span className="font-semibold text-white">Resolving timezone clash with EMEA team</span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300">
-                      Calendar Agent
-                    </span>
-                  </div>
-                  <span className="font-mono text-xs text-white font-bold">100%</span>
-                </div>
-                <div className="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-white h-full rounded-full transition-all duration-500" style={{ width: '100%' }} />
-                </div>
-                <p className="text-[11px] text-zinc-400">
-                  Shifted standup to 15:30 UTC. Both delegates accepted changes.
-                </p>
-              </div>
+              ) : (
+                tasks
+                  .filter((t) => t.status === 'in_progress' || t.status === 'pending')
+                  .map((t) => (
+                    <div key={t.id} className="p-4 rounded-xl bg-zinc-950/70 border border-zinc-800 space-y-2.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <Bot size={14} className="text-zinc-400" />
+                          <span className="font-semibold text-white">{t.title}</span>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300">
+                            {t.priority}
+                          </span>
+                        </div>
+                        <span className="font-mono text-xs text-white font-bold">
+                          {t.status === 'in_progress' ? 'Running' : 'Queued'}
+                        </span>
+                      </div>
+                      <div className="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden">
+                        <div
+                          className="bg-white h-full rounded-full transition-all duration-500"
+                          style={{ width: t.status === 'in_progress' ? '70%' : '20%' }}
+                        />
+                      </div>
+                      <p className="text-[11px] text-zinc-400">
+                        {t.description || 'Executing autonomous sub-steps across connected endpoints.'}
+                      </p>
+                    </div>
+                  ))
+              )}
             </div>
           </div>
 
@@ -270,7 +248,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
                 <ShieldAlert size={16} className="text-white" />
                 <h3 className="text-sm font-bold text-white tracking-wide uppercase">Pending Human Approvals</h3>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white text-black font-extrabold">
-                  {approvals.length || 2} Awaiting Alex
+                  {approvals.length} Awaiting Alex
                 </span>
               </div>
               <button
@@ -284,75 +262,43 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
             <p className="text-xs text-zinc-400">Critical state modifications require explicit human-in-the-loop authorization.</p>
 
             <div className="space-y-3">
-              {/* Approval Card 1 */}
-              <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-white/10 text-white border border-white/20">
-                      High Impact
-                    </span>
-                    <span className="text-zinc-500 text-[11px]">12 min ago</span>
+              {approvals.length === 0 ? (
+                <div className="py-8 px-4 rounded-xl border border-dashed border-zinc-800 text-center space-y-2">
+                  <ShieldAlert size={22} className="mx-auto text-zinc-600" />
+                  <div className="text-xs font-semibold text-zinc-300">Zero pending approvals</div>
+                  <p className="text-[11px] text-zinc-500">All agent actions are currently within autonomous safety limits.</p>
+                </div>
+              ) : (
+                approvals.map((app) => (
+                  <div key={app.id} className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-white/10 text-white border border-white/20">
+                        {app.tool_name}
+                      </span>
+                      <span className="text-[11px] font-mono text-zinc-400">Requires Signoff</span>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-bold text-white">{app.action_summary}</h4>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        onClick={() => handleApprovalAction(app.id, 'approved')}
+                        className="btn-primary-mono py-1.5 px-3 text-xs"
+                      >
+                        Review &amp; Approve
+                      </button>
+                      <button
+                        onClick={() => handleApprovalAction(app.id, 'rejected')}
+                        className="btn-secondary-mono py-1.5 px-3 text-xs"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
                   </div>
-                  <span className="text-[11px] font-mono text-zinc-400">Email Agent</span>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-bold text-white">Email draft to Board of Directors</h4>
-                  <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-                    Nexus drafted the Q3 Performance Deck update. Outbound recipient list: 8 stakeholders.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2 pt-1">
-                  <button
-                    onClick={() => handleApprovalAction('sample-1', 'approved')}
-                    className="btn-primary-mono py-1.5 px-3 text-xs"
-                  >
-                    Review &amp; Approve
-                  </button>
-                  <button
-                    onClick={() => handleApprovalAction('sample-1', 'rejected')}
-                    className="btn-secondary-mono py-1.5 px-3 text-xs"
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              </div>
-
-              {/* Approval Card 2 */}
-              <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-zinc-800 text-zinc-300 border border-zinc-700">
-                      File System
-                    </span>
-                    <span className="text-zinc-500 text-[11px]">28 min ago</span>
-                  </div>
-                  <span className="text-[11px] font-mono text-zinc-400">Win11 Desktop Daemon</span>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-bold text-white">File deletion on Desktop Agent</h4>
-                  <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-                    Agent completed cache extraction and requests purging 3.2 GB of temporary raw web archives.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2 pt-1">
-                  <button
-                    onClick={() => handleApprovalAction('sample-2', 'approved')}
-                    className="btn-primary-mono py-1.5 px-3 text-xs"
-                  >
-                    Authorize Purge
-                  </button>
-                  <button
-                    onClick={() => onNavigateTab('desktop')}
-                    className="btn-secondary-mono py-1.5 px-3 text-xs"
-                  >
-                    Inspect
-                  </button>
-                </div>
-              </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -371,46 +317,9 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
               </button>
             </div>
 
-            <div className="divide-y divide-zinc-800/60 text-xs">
-              <div className="py-3 flex items-center justify-between">
-                <div>
-                  <div className="font-semibold text-white">Synthesized executive brief: &quot;Global Cloud Expansion Q4&quot;</div>
-                  <div className="text-[11px] text-zinc-500 mt-0.5">13:42 &bull; Knowledge Agent &bull; 8 citations indexed</div>
-                </div>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-white/10 text-white border border-white/20">
-                  Success
-                </span>
-              </div>
-
-              <div className="py-3 flex items-center justify-between">
-                <div>
-                  <div className="font-semibold text-white">Extracting Figma token schema via OS headless browser</div>
-                  <div className="text-[11px] text-zinc-500 mt-0.5">13:38 &bull; Desktop Agent &bull; Node: Win11-VM-01</div>
-                </div>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-zinc-800 text-zinc-300 border border-zinc-700">
-                  Running
-                </span>
-              </div>
-
-              <div className="py-3 flex items-center justify-between">
-                <div>
-                  <div className="font-semibold text-white">Calendar draft generated for Design Review with external partners</div>
-                  <div className="text-[11px] text-zinc-500 mt-0.5">13:15 &bull; Calendar Agent &bull; Pending user confirmation</div>
-                </div>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-zinc-900 text-zinc-400 border border-zinc-800">
-                  In Review
-                </span>
-              </div>
-
-              <div className="py-3 flex items-center justify-between">
-                <div>
-                  <div className="font-semibold text-white">Cleared 14 low-priority subscription newsletters from Primary</div>
-                  <div className="text-[11px] text-zinc-500 mt-0.5">12:50 &bull; Email Agent &bull; Rule #04 Applied</div>
-                </div>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-white/10 text-white border border-white/20">
-                  Success
-                </span>
-              </div>
+            <div className="py-8 text-center text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl space-y-1">
+              <div className="font-semibold text-zinc-400">Activity Ledger Standing By</div>
+              <p className="text-[11px] text-zinc-600">Real-time streaming agent executions will append here as tools run.</p>
             </div>
           </div>
         </div>
@@ -435,32 +344,27 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({ onNavigateTa
             <div className="text-[11px] font-mono text-zinc-500">Nexus Conflict Sentinel Active</div>
 
             <div className="space-y-3">
-              <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-mono text-white font-bold">14:30 - 15:15</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 text-white border border-white/20">
-                    No Conflict
-                  </span>
+              {events.length === 0 ? (
+                <div className="py-8 text-center text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl space-y-1">
+                  <div className="font-semibold text-zinc-400">No upcoming events scheduled</div>
+                  <p className="text-[11px] text-zinc-600">Your calendar is open. Click + to add an event.</p>
                 </div>
-                <div className="font-bold text-white text-xs">Sync with Design Systems Team</div>
-                <div className="text-[11px] text-zinc-500">Google Meet &bull; 6 attendees</div>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-mono text-white font-bold">16:00 - 17:00</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
-                    Brief Ready
-                  </span>
-                </div>
-                <div className="font-bold text-white text-xs">Product Roadmap Review</div>
-                <div className="text-[11px] text-zinc-500">Executive Boardroom + Hybrid</div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-zinc-950/60 border border-dashed border-zinc-800 flex items-center justify-between text-xs text-zinc-400">
-                <span>Focus time reserved: 17:00 - 18:30</span>
-                <span className="text-[10px] font-mono uppercase text-zinc-500">Locked</span>
-              </div>
+              ) : (
+                events.map((ev) => (
+                  <div key={ev.id} className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-mono text-white font-bold">
+                        {new Date(ev.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/10 text-white border border-white/20">
+                        Confirmed
+                      </span>
+                    </div>
+                    <div className="font-bold text-white text-xs">{ev.title}</div>
+                    {ev.description && <div className="text-[11px] text-zinc-500">{ev.description}</div>}
+                  </div>
+                ))
+              )}
             </div>
           </div>
 

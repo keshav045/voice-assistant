@@ -1,11 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   CheckCircle2,
-  Layers,
-  Shield,
   Plus,
   MessageSquare,
-  Terminal,
   Calendar as CalendarIcon,
   Mail,
   Monitor,
@@ -13,7 +10,6 @@ import {
   ChevronDown,
   Mic,
   ArrowUp,
-  FileText,
   AlertTriangle,
   Folder,
   Zap,
@@ -39,67 +35,11 @@ export function AgentOrchestrator() {
   const [loading, setLoading] = useState(false);
   const [, setPendingApprovals] = useState<any[]>([]);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
-  const [selectedThread, setSelectedThread] = useState<string>('q3_financial');
+  const [, setSelectedThread] = useState<string>('current');
   const [selectedModel, setSelectedModel] = useState<string>('Nexus Ultra Reasoning');
 
-  // Messages stream initialized to match Image 4 mockup state
-  const [messages, setMessages] = useState<ChatItem[]>([
-    {
-      id: 'msg-1',
-      sender: 'orchestrator',
-      agentName: 'Calendar Sentinel',
-      actionName: 'conflict_scan()',
-      timestamp: '14:02',
-      cardType: 'calendar_collision',
-      content:
-        'Checked availability for 8 core leads for tomorrow (Thursday, Nov 14). Found 1 meeting collision for Marcus Vance & Priya Sen at 14:00. Nexus recommends adjusting slot to 15:30 - 16:15 EST.',
-    },
-    {
-      id: 'msg-2',
-      sender: 'agent',
-      agentName: 'Gmail Agent',
-      actionName: 'generate_executive_replies()',
-      timestamp: '14:05',
-      cardType: 'gmail_drafts',
-      data: {
-        draft1: {
-          id: '1084',
-          type: 'Concise',
-          to: 'Sarah Jenkins (VP Eng)',
-          body: 'Sarah, specs for Q3 mobile integration have been locked and validated locally. We anticipate clean rollout with 0 schema rollbacks.',
-          status: 'staged',
-        },
-        draft2: {
-          id: '1085',
-          type: 'Strategic',
-          to: 'David Chen (VP Strategy)',
-          body: 'David, noted on the board deck milestones. We have incorporated automated agent failovers to mitigate all third-party drift.',
-          status: 'staged',
-        },
-      },
-    },
-    {
-      id: 'msg-3',
-      sender: 'agent',
-      agentName: 'Desktop Agent (Win11 Daemon)',
-      actionName: 'sha256_audit_file()',
-      timestamp: '14:07',
-      cardType: 'desktop_audit',
-      data: {
-        path: 'C:\\Projects\\Nexus\\specs.pdf',
-        size: '4.2 MB',
-        checksum: '8f4c2e11a90b4d... [Synced with Git Tag v2.4-preview]',
-      },
-    },
-    {
-      id: 'msg-4',
-      sender: 'orchestrator',
-      timestamp: '14:08',
-      cardType: 'standard',
-      content:
-        'Would you like me to dispatch both approved emails and lock 15:30 on Google Calendar simultaneously?',
-    },
-  ]);
+  // Clean empty messages stream - no dummy history
+  const [messages, setMessages] = useState<ChatItem[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -255,105 +195,22 @@ export function AgentOrchestrator() {
 
             {/* Thread History Groups */}
             <div className="space-y-4 overflow-y-auto max-h-[500px] pr-1">
-              {/* Group: TODAY */}
-              <div>
-                <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#71717a] mb-2">
-                  <span>Today</span>
-                  <span>2 threads</span>
-                </div>
-                <div className="space-y-1.5">
-                  <div
-                    onClick={() => setSelectedThread('q3_financial')}
-                    className={`p-2.5 rounded-lg border text-xs cursor-pointer transition-colors ${
-                      selectedThread === 'q3_financial'
-                        ? 'bg-[#18181b] border-white text-white'
-                        : 'bg-transparent border-transparent hover:bg-[#121215] text-[#a1a1aa]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between font-medium text-[11px] mb-1">
-                      <div className="flex items-center gap-2 truncate">
-                        <MessageSquare size={13} className="flex-shrink-0" />
-                        <span className="truncate">Q3 Financial Strategy Synthe...</span>
-                      </div>
-                      <span className="w-1.5 h-1.5 rounded-full bg-white flex-shrink-0" />
-                    </div>
-                    <div className="text-[10px] text-[#71717a] ml-5">4 agents • 18 tool executions</div>
-                  </div>
-
-                  <div
-                    onClick={() => setSelectedThread('desktop_auto')}
-                    className={`p-2.5 rounded-lg border text-xs cursor-pointer transition-colors ${
-                      selectedThread === 'desktop_auto'
-                        ? 'bg-[#18181b] border-white text-white'
-                        : 'bg-transparent border-transparent hover:bg-[#121215] text-[#a1a1aa]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between font-medium text-[11px] mb-1">
-                      <div className="flex items-center gap-2 truncate">
-                        <Terminal size={13} className="flex-shrink-0" />
-                        <span className="truncate">Desktop automation script review</span>
-                      </div>
-                    </div>
-                    <div className="text-[10px] text-[#71717a] ml-5">Active Win11 subprocess</div>
-                  </div>
-                </div>
+              <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#71717a] mb-1">
+                <span>Recent Conversations</span>
+                <span>Active</span>
               </div>
-
-              {/* Group: YESTERDAY */}
-              <div>
-                <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#71717a] mb-2">
-                  <span>Yesterday</span>
-                  <span>1 thread</span>
-                </div>
-                <div
-                  onClick={() => setSelectedThread('product_spec')}
-                  className={`p-2.5 rounded-lg border text-xs cursor-pointer transition-colors ${
-                    selectedThread === 'product_spec'
-                      ? 'bg-[#18181b] border-white text-white'
-                      : 'bg-transparent border-transparent hover:bg-[#121215] text-[#a1a1aa]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between font-medium text-[11px] mb-1">
-                    <div className="flex items-center gap-2 truncate">
-                      <FileText size={13} className="flex-shrink-0" />
-                      <span className="truncate">Product spec generation for Mo...</span>
-                    </div>
+              <div
+                onClick={() => setSelectedThread('current')}
+                className="p-2.5 rounded-lg border text-xs cursor-pointer transition-colors bg-[#18181b] border-white text-white"
+              >
+                <div className="flex items-center justify-between font-medium text-[11px] mb-1">
+                  <div className="flex items-center gap-2 truncate">
+                    <MessageSquare size={13} className="flex-shrink-0" />
+                    <span className="truncate">Current Session</span>
                   </div>
-                  <div className="text-[10px] text-[#71717a] ml-5">Completed • 2 drafts</div>
+                  <span className="w-1.5 h-1.5 rounded-full bg-white flex-shrink-0" />
                 </div>
-              </div>
-
-              {/* Group: PREVIOUS 7 DAYS */}
-              <div>
-                <div className="flex items-center justify-between text-[10px] uppercase font-bold text-[#71717a] mb-2">
-                  <span>Previous 7 Days</span>
-                  <span>3 threads</span>
-                </div>
-                <div className="space-y-1.5">
-                  <div className="p-2.5 rounded-lg hover:bg-[#121215] text-[#a1a1aa] text-xs cursor-pointer">
-                    <div className="flex items-center gap-2 font-medium text-[11px] mb-1 truncate">
-                      <Mail size={13} className="flex-shrink-0" />
-                      <span className="truncate">Customer escalate resolution log</span>
-                    </div>
-                    <div className="text-[10px] text-[#71717a] ml-5">3 emails auto-dispatched</div>
-                  </div>
-
-                  <div className="p-2.5 rounded-lg hover:bg-[#121215] text-[#a1a1aa] text-xs cursor-pointer">
-                    <div className="flex items-center gap-2 font-medium text-[11px] mb-1 truncate">
-                      <Layers size={13} className="flex-shrink-0" />
-                      <span className="truncate">Board Deck metrics cross-check</span>
-                    </div>
-                    <div className="text-[10px] text-[#71717a] ml-5">Verified via Snowflake API</div>
-                  </div>
-
-                  <div className="p-2.5 rounded-lg hover:bg-[#121215] text-[#a1a1aa] text-xs cursor-pointer">
-                    <div className="flex items-center gap-2 font-medium text-[11px] mb-1 truncate">
-                      <Shield size={13} className="flex-shrink-0" />
-                      <span className="truncate">Security perimeter permission s...</span>
-                    </div>
-                    <div className="text-[10px] text-[#71717a] ml-5">Desktop Agent signed</div>
-                  </div>
-                </div>
+                <div className="text-[10px] text-[#71717a] ml-5">{messages.length} messages in context</div>
               </div>
             </div>
           </div>
@@ -430,7 +287,18 @@ export function AgentOrchestrator() {
 
             {/* Conversation Stream */}
             <div className="overflow-y-auto max-h-[540px] pr-2 space-y-4">
-              {messages.map((item) => {
+              {messages.length === 0 ? (
+                <div className="py-24 text-center space-y-3 px-4">
+                  <div className="w-12 h-12 rounded-2xl bg-[#18181b] border border-[#27272a] text-white flex items-center justify-center mx-auto shadow-md">
+                    <Sparkles size={22} />
+                  </div>
+                  <h3 className="text-sm font-bold text-white">Nexus Multi-Agent Orchestration Canvas</h3>
+                  <p className="text-xs text-[#a1a1aa] max-w-md mx-auto">
+                    Type an instruction or click a quick dispatch shortcut below. Specialized agents (Gmail, Calendar, Desktop) will stage actions and request approval when required.
+                  </p>
+                </div>
+              ) : (
+                messages.map((item) => {
                 if (item.cardType === 'calendar_collision') {
                   return (
                     <div
@@ -604,7 +472,7 @@ export function AgentOrchestrator() {
                     <p className="font-normal">{item.content}</p>
                   </div>
                 );
-              })}
+              }))}
               <div ref={messagesEndRef} />
             </div>
           </div>

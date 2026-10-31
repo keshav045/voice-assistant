@@ -13,7 +13,6 @@ import {
   Languages,
   Headphones,
   CheckCircle2,
-  Mail,
   FileText,
   Hand,
   PhoneOff,
@@ -39,41 +38,14 @@ export function VoiceAssistant() {
   const [, setSession] = useState<any | null>(null);
   const [voiceState, setVoiceState] = useState<VoiceState>('disconnected');
   const [providerMode] = useState<'modular' | 'realtime'>('modular');
-  const [turns, setTurns] = useState<ChatTurn[]>([
-    {
-      role: 'user',
-      text: 'Nexus, could you check my calendar for this afternoon and summarize Sarah\'s email regarding the launch blockers?',
-      timestamp: '08:34',
-      intent: 'Intent: Query + Action',
-      confidence: 'Confidence: 99.4%',
-    },
-    {
-      role: 'assistant',
-      text: 'Checking right now, Alex. You have two open slots at 3:00 PM and 4:30 PM. Sarah sent two updates: the staging environment deployment is resolved, but design review is pending your confirmation.',
-      timestamp: '08:37',
-      intent: 'Direct & Concise',
-      speed: 'Aura Neural Synth • 220 wpm',
-    },
-    {
-      role: 'user',
-      text: 'Great. Schedule the review with Sarah for 3:00',
-      timestamp: '08:41',
-      intent: 'Intent: Action Dispatch',
-      confidence: 'Confidence: 98.9%',
-    },
-  ]);
+  const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [textInput, setTextInput] = useState('');
-  const [lastMetrics, setLastMetrics] = useState<VoiceMetrics | null>({
-    stt_latency_ms: 12,
-    llm_latency_ms: 18,
-    tts_latency_ms: 8,
-    total_latency_ms: 38,
-  });
+  const [lastMetrics, setLastMetrics] = useState<VoiceMetrics | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [speechOutputEnabled, setSpeechOutputEnabled] = useState(true);
   const [autonomousMode, setAutonomousMode] = useState(true);
-  const [sessionTime, setSessionTime] = useState(525); // 08:45 in seconds
+  const [sessionTime, setSessionTime] = useState(0);
 
   const clientRef = useRef<VoiceClient | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -337,46 +309,58 @@ export function VoiceAssistant() {
 
             {/* Transcription Turns Stream */}
             <div className="overflow-y-auto max-h-[530px] pr-2 space-y-4">
-              {turns.map((turn, idx) => (
-                <div
-                  key={idx}
-                  className={`p-3.5 rounded-xl border text-xs leading-relaxed ${
-                    turn.role === 'user'
-                      ? 'bg-[#18181b] border-[#2e2e33] text-white'
-                      : 'bg-[#121215] border-[#222226] text-[#e4e4e7]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1.5 text-[11px] text-[#a1a1aa]">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`w-1.5 h-1.5 rounded-full ${turn.role === 'user' ? 'bg-white' : 'bg-[#71717a]'}`} />
-                      <span className="font-semibold text-white">
-                        {turn.role === 'user' ? 'Alex Vance' : 'Nexus Voice Agent'}
-                      </span>
-                    </div>
-                    <span className="font-mono text-[10px] text-[#71717a]">{turn.timestamp}</span>
+              {turns.length === 0 ? (
+                <div className="py-24 px-4 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-[#18181b] border border-[#27272a] text-white flex items-center justify-center mx-auto">
+                    <Mic size={20} />
                   </div>
-
-                  <p className="mb-2 font-normal">{turn.text}</p>
-
-                  <div className="flex flex-wrap items-center gap-2 text-[10px]">
-                    {turn.intent && (
-                      <span className="bg-[#27272a] text-[#d4d4d8] px-2 py-0.5 rounded border border-[#38383e]">
-                        {turn.intent}
-                      </span>
-                    )}
-                    {turn.confidence && (
-                      <span className="bg-[#27272a] text-[#a1a1aa] px-2 py-0.5 rounded border border-[#38383e]">
-                        {turn.confidence}
-                      </span>
-                    )}
-                    {turn.speed && (
-                      <span className="bg-[#27272a] text-[#a1a1aa] px-2 py-0.5 rounded border border-[#38383e]">
-                        {turn.speed}
-                      </span>
-                    )}
-                  </div>
+                  <div className="text-xs font-semibold text-white">Voice Session Idle</div>
+                  <p className="text-[11px] text-[#71717a] max-w-xs mx-auto">
+                    Click the AURA LIVE orb in the center or type a prompt below to stream real-time audio.
+                  </p>
                 </div>
-              ))}
+              ) : (
+                turns.map((turn, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-3.5 rounded-xl border text-xs leading-relaxed ${
+                      turn.role === 'user'
+                        ? 'bg-[#18181b] border-[#2e2e33] text-white'
+                        : 'bg-[#121215] border-[#222226] text-[#e4e4e7]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5 text-[11px] text-[#a1a1aa]">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-1.5 h-1.5 rounded-full ${turn.role === 'user' ? 'bg-white' : 'bg-[#71717a]'}`} />
+                        <span className="font-semibold text-white">
+                          {turn.role === 'user' ? 'Alex Vance' : 'Nexus Voice Agent'}
+                        </span>
+                      </div>
+                      <span className="font-mono text-[10px] text-[#71717a]">{turn.timestamp}</span>
+                    </div>
+
+                    <p className="mb-2 font-normal">{turn.text}</p>
+
+                    <div className="flex flex-wrap items-center gap-2 text-[10px]">
+                      {turn.intent && (
+                        <span className="bg-[#27272a] text-[#d4d4d8] px-2 py-0.5 rounded border border-[#38383e]">
+                          {turn.intent}
+                        </span>
+                      )}
+                      {turn.confidence && (
+                        <span className="bg-[#27272a] text-[#a1a1aa] px-2 py-0.5 rounded border border-[#38383e]">
+                          {turn.confidence}
+                        </span>
+                      )}
+                      {turn.speed && (
+                        <span className="bg-[#27272a] text-[#a1a1aa] px-2 py-0.5 rounded border border-[#38383e]">
+                          {turn.speed}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
               <div ref={messagesEndRef} />
             </div>
           </div>
@@ -556,94 +540,61 @@ export function VoiceAssistant() {
                 <h3 className="font-semibold text-sm text-white">Live Tool Reasoning</h3>
               </div>
               <span className="text-[10px] bg-[#18181b] text-white border border-[#3f3f46] px-2 py-0.5 rounded-full font-mono">
-                2 Executing
+                {turns.length > 0 ? 'Active' : 'Idle'}
               </span>
             </div>
 
-            {/* Tool Card 1: Calendar Query */}
-            <div className="p-3.5 rounded-xl bg-[#18181b] border border-[#27272a] text-xs">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 size={14} className="text-white" />
-                  <span className="font-bold text-[11px] uppercase tracking-wider text-white">
-                    Calendar Query Done
-                  </span>
-                </div>
-                <span className="font-mono text-[10px] text-[#71717a]">12ms</span>
-              </div>
-              <p className="text-[11px] text-[#a1a1aa] mb-2.5">
-                Found 2 available slots today for Sarah Chen sync:
-              </p>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between bg-[#121215] border border-[#27272a] px-2.5 py-1.5 rounded text-[11px]">
-                  <span className="font-medium text-white">3:00 - 3:45 PM</span>
-                  <span className="text-[9px] text-[#a1a1aa] border border-[#3f3f46] px-1.5 py-0.5 rounded">
-                    Recommended
-                  </span>
-                </div>
-                <div className="flex items-center justify-between bg-[#121215] border border-[#27272a] px-2.5 py-1.5 rounded text-[11px]">
-                  <span className="font-medium text-white">4:30 - 5:00 PM</span>
-                  <span className="text-[9px] text-[#71717a] border border-[#27272a] px-1.5 py-0.5 rounded">
-                    Near EOD
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Tool Card 2: Gmail Vector Search */}
-            <div className="p-3.5 rounded-xl bg-[#18181b] border border-[#27272a] text-xs">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5">
-                  <Mail size={14} className="text-white" />
-                  <span className="font-bold text-[11px] uppercase tracking-wider text-white">
-                    Gmail Vector Search
-                  </span>
-                </div>
-                <span className="font-mono text-[10px] text-[#71717a]">21ms</span>
-              </div>
-              <p className="text-[11px] text-[#a1a1aa] mb-2">
-                Extracted key blockers from thread <span className="text-white font-medium">"v2.4 Staging Release"</span>
-              </p>
-              <div className="bg-[#121215] border border-[#27272a] p-2 rounded text-[11px]">
-                <div className="flex items-center gap-1.5 text-white font-medium mb-1">
-                  <CheckCircle2 size={12} />
-                  <span>Pending VP Signoff</span>
-                </div>
-                <p className="text-[10px] text-[#71717a]">
-                  Database Index migration completed cleanly.
+            {turns.length === 0 ? (
+              <div className="py-24 px-4 text-center space-y-2">
+                <Sparkles size={22} className="mx-auto text-[#52525b]" />
+                <div className="text-xs font-semibold text-[#a1a1aa]">Tools Standing By</div>
+                <p className="text-[11px] text-[#71717a]">
+                  Autonomous tool executions (Calendar queries, email searches, and drafts) appear here live during conversation.
                 </p>
               </div>
-            </div>
+            ) : (
+              <>
+                {/* Tool Card 1: Calendar Query */}
+                <div className="p-3.5 rounded-xl bg-[#18181b] border border-[#27272a] text-xs">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 size={14} className="text-white" />
+                      <span className="font-bold text-[11px] uppercase tracking-wider text-white">
+                        Calendar Query Done
+                      </span>
+                    </div>
+                    <span className="font-mono text-[10px] text-[#71717a]">12ms</span>
+                  </div>
+                  <p className="text-[11px] text-[#a1a1aa] mb-2.5">
+                    Evaluated available slots for immediate scheduling:
+                  </p>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between bg-[#121215] border border-[#27272a] px-2.5 py-1.5 rounded text-[11px]">
+                      <span className="font-medium text-white">Earliest Open Window</span>
+                      <span className="text-[9px] text-[#a1a1aa] border border-[#3f3f46] px-1.5 py-0.5 rounded">
+                        Recommended
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-            {/* Tool Card 3: Live Drafting Action */}
-            <div className="p-3.5 rounded-xl bg-[#18181b] border border-[#27272a] text-xs">
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="flex items-center gap-1.5">
-                  <FileText size={14} className="text-white" />
-                  <span className="font-bold text-[11px] uppercase tracking-wider text-white">
-                    Live Drafting
-                  </span>
+                {/* Tool Card 2: Live Dispatch */}
+                <div className="p-3.5 rounded-xl bg-[#18181b] border border-[#27272a] text-xs">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <FileText size={14} className="text-white" />
+                      <span className="font-bold text-[11px] uppercase tracking-wider text-white">
+                        Execution Pipeline
+                      </span>
+                    </div>
+                    <span className="font-mono text-[10px] text-[#a1a1aa]">Live</span>
+                  </div>
+                  <p className="text-[11px] text-[#a1a1aa] mb-2">
+                    Grounded to workspace memory and local daemon tools.
+                  </p>
                 </div>
-                <span className="font-mono text-[10px] text-[#a1a1aa]">Mid-sentence</span>
-              </div>
-              <p className="text-[11px] text-[#a1a1aa] mb-2">
-                Preparing Calendar invite + Slack ping to Sarah Chen.
-              </p>
-              <div className="bg-[#121215] border border-[#27272a] p-2 rounded mb-2.5 text-[10px]">
-                <div className="flex justify-between text-[#a1a1aa]">
-                  <span>Invite: Stage Review Sync</span>
-                  <span className="text-white">Today, 3:00 PM</span>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button className="btn-primary-mono !w-full !py-1.5 !text-[11px]">
-                  Confirm Now
-                </button>
-                <button className="btn-secondary-mono !w-full !py-1.5 !text-[11px]">
-                  Edit
-                </button>
-              </div>
-            </div>
+              </>
+            )}
           </div>
 
           {/* Autonomous Mode Switch */}
