@@ -253,14 +253,20 @@ class CalendarService:
 
         # Get all events for the entire day
         events = await cls.get_events_in_range(db, day_start, day_end, user_id=user_id)
-        events.sort(key=lambda e: e.start_time)
+
+        def to_aware(dt: datetime) -> datetime:
+            return dt.replace(tzinfo=tz) if dt.tzinfo is None else dt
+
+        events.sort(key=lambda e: to_aware(e.start_time))
 
         free_slots: List[Dict[str, Any]] = []
         current_cursor = day_start
 
         for event in events:
+            ev_start = to_aware(event.start_time)
+            ev_end = to_aware(event.end_time)
             # Ensure event start is clamped to day_start
-            event_start = max(event.start_time, day_start)
+            event_start = max(ev_start, day_start)
             if event_start > current_cursor:
                 gap = (event_start - current_cursor).total_seconds() / 60
                 if gap >= slot_duration_minutes:
@@ -272,7 +278,7 @@ class CalendarService:
                             "display": f"{current_cursor.strftime('%H:%M')} - {event_start.strftime('%H:%M')} ({int(gap)} min)",
                         }
                     )
-            current_cursor = max(current_cursor, min(event.end_time, day_end))
+            current_cursor = max(current_cursor, min(ev_end, day_end))
 
         # Check remaining gap until work_end_hour
         if current_cursor < day_end:
