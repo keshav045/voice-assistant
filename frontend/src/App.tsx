@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Activity,
   Bot,
+  Calendar,
   CheckCircle2,
   Database,
   ExternalLink,
@@ -28,13 +29,14 @@ import { VoiceAssistant } from './components/VoiceAssistant';
 import { AgentOrchestrator } from './components/AgentOrchestrator';
 import { TaskManager } from './components/TaskManager';
 import { EmailAssistant } from './components/EmailAssistant';
+import { CalendarAssistant } from './components/CalendarAssistant';
 
 export function App() {
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [config, setConfig] = useState<SystemConfig | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'emails' | 'tasks' | 'agent' | 'voice' | 'system' | 'auth' | 'roadmap'>('emails');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'emails' | 'tasks' | 'agent' | 'voice' | 'system' | 'auth' | 'roadmap'>('calendar');
 
   // Auth test state
   const [authEmail, setAuthEmail] = useState<string>('agent.user@nexus.ai');
@@ -226,6 +228,20 @@ export function App() {
           }}
         >
           <button
+            onClick={() => setActiveTab('calendar')}
+            style={{
+              background: activeTab === 'calendar' ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(14, 165, 233, 0.4) 100%)' : 'transparent',
+              color: activeTab === 'calendar' ? '#60a5fa' : '#94a3b8',
+              borderColor: activeTab === 'calendar' ? '#3b82f6' : 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: 700,
+            }}
+          >
+            <Calendar size={16} /> Phase 6 Google Calendar
+          </button>
+          <button
             onClick={() => setActiveTab('emails')}
             style={{
               background: activeTab === 'emails' ? 'linear-gradient(135deg, rgba(244, 63, 94, 0.4) 0%, rgba(168, 85, 247, 0.4) 100%)' : 'transparent',
@@ -342,6 +358,9 @@ export function App() {
             </div>
           </div>
         )}
+
+        {/* TAB: GOOGLE CALENDAR ASSISTANT (PHASE 6) */}
+        {activeTab === 'calendar' && <CalendarAssistant />}
 
         {/* TAB: GMAIL & EMAIL INTELLIGENCE (PHASE 5) */}
         {activeTab === 'emails' && <EmailAssistant />}
@@ -704,17 +723,17 @@ export function App() {
                   phase: 6,
                   title: 'Google Calendar Assistant',
                   days: 'Days 23–26',
-                  status: 'NEXT UP',
+                  status: 'COMPLETE',
                   desc: 'Event inspection, free/busy availability check, conflict resolution, proposed schedules with user confirmation.',
-                  color: '#6366f1',
+                  color: '#10b981',
                 },
                 {
                   phase: 7,
                   title: 'Windows Desktop Companion Agent',
                   days: 'Days 27–32',
-                  status: 'PLANNED',
+                  status: 'NEXT UP',
                   desc: 'Local Python companion, outbound secure WebSocket, strict action allowlists, application control, and file search.',
-                  color: '#64748b',
+                  color: '#6366f1',
                 },
                 {
                   phase: 8,

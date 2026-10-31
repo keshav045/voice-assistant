@@ -403,3 +403,111 @@ export async function sendEmail(payload: EmailSendPayload): Promise<{ success: b
   return res.json();
 }
 
+// --- Phase 6 Google Calendar DTOs & API Calls ---
+export interface CalendarEventDto {
+  id: string;
+  user_id?: string;
+  title: string;
+  description?: string;
+  location?: string;
+  start_time: string;
+  end_time: string;
+  is_all_day: boolean;
+  status: 'confirmed' | 'tentative' | 'cancelled';
+  google_event_id?: string;
+  attendees?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CalendarEventCreatePayload {
+  title: string;
+  start_time: string;
+  end_time: string;
+  description?: string;
+  location?: string;
+  attendees?: string[];
+}
+
+export interface AvailabilityDto {
+  is_free: boolean;
+  start_time: string;
+  end_time: string;
+  conflict_count: number;
+  conflicts: Array<{
+    id: string;
+    title: string;
+    start_time: string;
+    end_time: string;
+    location?: string;
+  }>;
+  message: string;
+}
+
+export interface FreeSlotDto {
+  start_time: string;
+  end_time: string;
+  duration_minutes: number;
+  display: string;
+}
+
+export async function fetchCalendarEvents(start?: string, end?: string): Promise<CalendarEventDto[]> {
+  const params = new URLSearchParams();
+  if (start) params.append('start', start);
+  if (end) params.append('end', end);
+  const query = params.toString() ? `?${params.toString()}` : '';
+
+  const res = await fetch(`${API_BASE}/api/v1/calendar/events${query}`, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to fetch calendar events');
+  return res.json();
+}
+
+export async function createCalendarEvent(payload: CalendarEventCreatePayload): Promise<CalendarEventDto> {
+  const res = await fetch(`${API_BASE}/api/v1/calendar/events`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to create calendar event' }));
+    throw new Error(err.detail || 'Failed to create calendar event');
+  }
+  return res.json();
+}
+
+export async function checkCalendarAvailability(startTime: string, endTime: string): Promise<AvailabilityDto> {
+  const params = new URLSearchParams({
+    start_time: startTime,
+    end_time: endTime,
+  });
+  const res = await fetch(`${API_BASE}/api/v1/calendar/availability?${params.toString()}`, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Availability check failed' }));
+    throw new Error(err.detail || 'Availability check failed');
+  }
+  return res.json();
+}
+
+export async function fetchFreeSlots(date?: string, duration: number = 30): Promise<FreeSlotDto[]> {
+  const params = new URLSearchParams({ duration: duration.toString() });
+  if (date) params.append('date', date);
+  const res = await fetch(`${API_BASE}/api/v1/calendar/free-slots?${params.toString()}`, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to fetch free slots');
+  return res.json();
+}
+
+export async function deleteCalendarEvent(eventId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/v1/calendar/events/${eventId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to delete calendar event');
+}
+
+

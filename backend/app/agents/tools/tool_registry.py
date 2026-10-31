@@ -71,6 +71,81 @@ def send_email(recipient: str, subject: str, body: str) -> Dict[str, Any]:
     }
 
 
+# --- Calendar Tool Handlers (Phase 6) ---
+_CALENDAR_STORE: Dict[str, Dict[str, Any]] = {
+    "evt-001": {
+        "id": "evt-001",
+        "title": "Nexus Architecture Review",
+        "start_time": "2026-10-31T10:00:00Z",
+        "end_time": "2026-10-31T11:00:00Z",
+        "location": "Google Meet",
+        "status": "confirmed",
+    },
+    "evt-002": {
+        "id": "evt-002",
+        "title": "Daily Product Standup",
+        "start_time": "2026-10-31T11:30:00Z",
+        "end_time": "2026-10-31T12:00:00Z",
+        "location": "Discord Engineering Channel",
+        "status": "confirmed",
+    },
+}
+
+
+def list_calendar_events(start_date: str = "", end_date: str = "") -> Dict[str, Any]:
+    """List calendar events from schedule."""
+    events = list(_CALENDAR_STORE.values())
+    return {
+        "success": True,
+        "count": len(events),
+        "events": events,
+    }
+
+
+def check_calendar_availability(start_time: str, end_time: str) -> Dict[str, Any]:
+    """Check if time slot has conflicting events."""
+    conflicts = []
+    for evt in _CALENDAR_STORE.values():
+        if evt["status"] != "cancelled":
+            if max(start_time, evt["start_time"]) < min(end_time, evt["end_time"]):
+                conflicts.append(evt)
+    is_free = len(conflicts) == 0
+    return {
+        "success": True,
+        "is_free": is_free,
+        "conflicts": conflicts,
+        "message": "Time slot is available." if is_free else f"Conflict detected with {len(conflicts)} event(s).",
+    }
+
+
+def create_calendar_event(title: str, start_time: str, end_time: str, description: str = "", location: str = "") -> Dict[str, Any]:
+    """Create a new calendar event (Sensitive operation)."""
+    evt_id = f"evt-{uuid.uuid4().hex[:6]}"
+    evt = {
+        "id": evt_id,
+        "title": title,
+        "start_time": start_time,
+        "end_time": end_time,
+        "description": description,
+        "location": location,
+        "status": "confirmed",
+    }
+    _CALENDAR_STORE[evt_id] = evt
+    return {
+        "success": True,
+        "event": evt,
+        "message": f"Calendar event '{title}' scheduled from {start_time} to {end_time}.",
+    }
+
+
+def delete_calendar_event(event_id: str) -> Dict[str, Any]:
+    """Remove/cancel a calendar event (Sensitive operation)."""
+    if event_id in _CALENDAR_STORE:
+        _CALENDAR_STORE[event_id]["status"] = "cancelled"
+        return {"success": True, "message": f"Calendar event '{event_id}' has been cancelled."}
+    return {"success": False, "error": f"Event '{event_id}' not found."}
+
+
 # Available tools map
 TOOLS_CATALOG: Dict[str, Callable[..., Any]] = {
     # Task tools
@@ -83,6 +158,11 @@ TOOLS_CATALOG: Dict[str, Callable[..., Any]] = {
     "summarize_emails": summarize_emails,
     "create_email_draft": create_email_draft,
     "send_email": send_email,
+    # Calendar tools (Phase 6)
+    "list_calendar_events": list_calendar_events,
+    "check_calendar_availability": check_calendar_availability,
+    "create_calendar_event": create_calendar_event,
+    "delete_calendar_event": delete_calendar_event,
 }
 
 # OpenAI-compatible function schemas
@@ -200,6 +280,67 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
                     "body": {"type": "string", "description": "Body content of the email"},
                 },
                 "required": ["recipient", "subject", "body"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_calendar_events",
+            "description": "List scheduled calendar events within an optional time frame.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "start_date": {"type": "string", "description": "Optional ISO start date"},
+                    "end_date": {"type": "string", "description": "Optional ISO end date"},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "check_calendar_availability",
+            "description": "Check if a requested time window is free from conflicts.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "start_time": {"type": "string", "description": "Start ISO datetime"},
+                    "end_time": {"type": "string", "description": "End ISO datetime"},
+                },
+                "required": ["start_time", "end_time"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "create_calendar_event",
+            "description": "Schedule a new meeting or event (REQUIRES explicit human approval).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "Title of the calendar event"},
+                    "start_time": {"type": "string", "description": "Start ISO datetime"},
+                    "end_time": {"type": "string", "description": "End ISO datetime"},
+                    "description": {"type": "string", "description": "Optional notes or agenda"},
+                    "location": {"type": "string", "description": "Meeting link or physical location"},
+                },
+                "required": ["title", "start_time", "end_time"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "delete_calendar_event",
+            "description": "Cancel or delete a calendar event (REQUIRES explicit human approval).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "event_id": {"type": "string", "description": "ID of the event to cancel"},
+                },
+                "required": ["event_id"],
             },
         },
     },

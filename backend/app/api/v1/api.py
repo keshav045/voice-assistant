@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from app.api.v1.endpoints import (
     approvals,
     auth,
+    calendar,
     chat,
     conversations,
     emails,
@@ -26,4 +27,5 @@ api_router.include_router(conversations.router, prefix="/conversations", tags=["
 api_router.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
 api_router.include_router(reminders.router, prefix="/reminders", tags=["reminders"])
 api_router.include_router(emails.router, prefix="/emails", tags=["emails"])
+api_router.include_router(calendar.router, prefix="/calendar", tags=["calendar"])
 
