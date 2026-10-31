@@ -86,6 +86,16 @@ async def root_health() -> Dict[str, Any]:
 # Include API v1 router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
+# Mount Static Showcase Website
+import os
+from fastapi.staticfiles import StaticFiles
+
+root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+website_dir = os.path.join(root_dir, "website")
+if os.path.exists(website_dir):
+    app.mount("/website", StaticFiles(directory=website_dir, html=True), name="website")
+    app.mount("/landing", StaticFiles(directory=website_dir, html=True), name="landing")
+
 # Direct root WebSocket route for voice streaming matching /ws/voice/{session_id}
 from app.api.v1.endpoints.voice import voice_websocket_channel
 from app.api.v1.endpoints.desktop import companion_websocket_endpoint

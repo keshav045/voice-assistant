@@ -4,6 +4,7 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
+  ExternalLink,
   LayoutDashboard,
   Mail,
   Mic,
@@ -300,6 +301,17 @@ export function App() {
               <Mic size={13} />
               <span>Voice Session</span>
             </button>
+
+            {/* Static Website Showcase Button */}
+            <a
+              href="http://127.0.0.1:8000/website/"
+              target="_blank"
+              rel="noreferrer"
+              className="btn-secondary-mono !px-3 !py-1.5 !text-xs !rounded-xl hidden sm:flex items-center gap-1.5 cursor-pointer text-[#a1a1aa] hover:text-white"
+            >
+              <span>Product Site</span>
+              <ExternalLink size={12} />
+            </a>
 
             {/* Profile Circle with Pro badge */}
             <div className="flex items-center gap-1.5 pl-1">
