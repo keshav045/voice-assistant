@@ -49,6 +49,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+from app.core.rate_limiter import RateLimitMiddleware, SlidingWindowRateLimiter
+
+# In-memory rate limiter: 150 req/min default
+rate_limiter = SlidingWindowRateLimiter(default_limit=150, window_seconds=60)
+app.add_middleware(RateLimitMiddleware, limiter=rate_limiter)
+
 # Configure CORS
 origins = settings.BACKEND_CORS_ORIGINS
 if not origins:

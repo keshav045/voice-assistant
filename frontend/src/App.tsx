@@ -812,9 +812,9 @@ export function App() {
                   phase: 10,
                   title: 'Testing, Hardening & Deployment',
                   days: 'Days 42–46',
-                  status: 'NEXT UP',
+                  status: 'COMPLETE',
                   desc: 'End-to-end evaluation suite, rate limiting, error tracking, Docker containerization, cloud deployment, and audit logging.',
-                  color: '#6366f1',
+                  color: '#10b981',
                 },
               ].map((m) => (
                 <div
