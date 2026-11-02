@@ -258,3 +258,4 @@ Example payload:
 - [x] **Credential Protection**: Passwords hashed using salted SHA-256 (`db/models.py`). Session tokens are cryptographically random 256-bit hexadecimal strings.
 - [x] **Dynamic Port Binding**: Application responds dynamically to `$PORT` passed by cloud container providers.
 - [x] **Graceful Fallbacks**: Web-based launcher and clipboard messaging fallback gracefully when desktop applications or GUI displays are unavailable.
+

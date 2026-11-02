@@ -12,10 +12,12 @@ Covers:
 import os
 import pytest
 import yaml
+import tempfile
 from pathlib import Path
 
-# Set test environment
-os.environ["SQLITE_DB_PATH"] = "nexus_test.db"
+# Set test environment to isolated temporary directory
+TEST_DB_FILE = os.path.join(tempfile.gettempdir(), f"nexus_test_{uuid.uuid4().hex[:6]}.db")
+os.environ["SQLITE_DB_PATH"] = TEST_DB_FILE
 os.environ["DEFAULT_TIMEZONE"] = "Asia/Kolkata"
 
 from db.models import (

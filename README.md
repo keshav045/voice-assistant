@@ -67,7 +67,7 @@ voice-assistant/
 │   ├── test_launcher.py     # App launcher and browser fallback tests
 │   ├── test_whatsapp.py     # WhatsApp messaging automation tests
 │   ├── test_voice.py        # Voice pipeline and audio transcription tests
-│   └── test_phase1.py       # Math calculator and session tests
+│   └── test_calc_and_session.py # Math calculator and session tests
 ├── Dockerfile               # Production multi-platform container image (appuser, curl healthcheck)
 ├── docker-compose.yml       # Production container orchestration with persistent volume
 ├── run_server.py            # Production server launcher with dynamic port binding
@@ -152,7 +152,7 @@ All 45+ unit and integration tests run in under 30 seconds, testing:
 - Authentication, health checks, and session-grouped history (`test_auth_and_history.py`)
 - Tool execution and agentic reasoning (`test_agent.py`)
 - Voice synthesis and transcription cleanup (`test_voice.py`)
-- Calculator and memory persistence (`test_phase1.py`)
+- Calculator and memory persistence (`test_calc_and_session.py`)
 
 ---
 

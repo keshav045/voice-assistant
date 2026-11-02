@@ -1,2 +1,0 @@
-"""Nexus External Services package."""
-

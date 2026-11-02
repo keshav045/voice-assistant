@@ -1,2 +1,0 @@
-"""Nexus Specialist Agents package."""
-
