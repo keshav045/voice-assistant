@@ -13,6 +13,8 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
     status,
+    UploadFile,
+    File,
 )
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -21,6 +23,8 @@ from app.database.session import AsyncSessionLocal, get_db
 from app.models.voice import VoiceSession
 from app.services.voice.base import AudioData, AudioFormat
 from app.services.voice.modular_pipeline import ModularVoicePipeline
+from app.services.voice.stt_service import get_stt_service
+from app.services.voice.tts_service import get_tts_service
 
 router = APIRouter()
 logger = logging.getLogger("nexus.api.voice")
@@ -39,6 +43,51 @@ class VoiceSessionResponse(BaseModel):
     ws_url: str
     started_at: datetime
     metrics: Dict[str, Any]
+
+
+class STTResponse(BaseModel):
+    text: str
+    language: str
+    latency_ms: float
+
+
+class TTSRequest(BaseModel):
+    text: str
+    voice: Optional[str] = "alloy"
+    speed: Optional[float] = 1.0
+
+
+class TTSResponse(BaseModel):
+    audio_base64: str
+    format: str
+    latency_ms: float
+    character_count: int
+
+
+# --- Direct STT and TTS REST Endpoints ---
+@router.post("/stt", response_model=STTResponse)
+async def speech_to_text(file: UploadFile = File(...)) -> Any:
+    """Transcribe uploaded audio file to text using STT provider."""
+    stt_service = get_stt_service()
+    content = await file.read()
+    fmt = AudioFormat.WAV if "wav" in (file.filename or "") else AudioFormat.WEBM
+    audio_data = AudioData(data=content, format=fmt)
+    result = await stt_service.transcribe(audio_data)
+    return STTResponse(text=result.text, language=result.language, latency_ms=result.latency_ms)
+
+
+@router.post("/tts", response_model=TTSResponse)
+async def text_to_speech(payload: TTSRequest) -> Any:
+    """Synthesize text into speech audio bytes using TTS provider."""
+    tts_service = get_tts_service()
+    result = await tts_service.synthesize(text=payload.text, voice=payload.voice, speed=payload.speed or 1.0)
+    b64 = base64.b64encode(result.audio_bytes).decode("utf-8")
+    return TTSResponse(
+        audio_base64=b64,
+        format=result.format.value,
+        latency_ms=result.latency_ms,
+        character_count=result.character_count,
+    )
 
 
 # --- REST Endpoints ---

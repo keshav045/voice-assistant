@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Nexus AI — Personal Voice Assistant</title>
+  <!-- Material Symbols & Geist Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet"/>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#3525cd",
+            "primary-container": "#4f46e5",
+            "on-primary": "#ffffff",
+            "surface": "#faf8ff",
+            "surface-container": "#eaedff",
+            "surface-container-low": "#f2f3ff",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-high": "#e2e7ff",
+            "surface-container-highest": "#dae2fd",
+            "on-surface": "#131b2e",
+            "on-surface-variant": "#464555",
+            "secondary": "#712ae2",
+          },
+          fontFamily: {
+            sans: ["Geist", "sans-serif"],
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body class="bg-surface font-sans text-on-surface antialiased h-screen w-screen flex overflow-hidden">
+
+  <!-- Mobile Sidebar Backdrop -->
+  <div id="sidebar-backdrop" onclick="toggleMobileSidebar()" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-30 md:hidden transition-opacity"></div>
+
+  <!-- LEFT SIDEBAR: History + New Chat + Auth at Bottom -->
+  <aside id="sidebar" class="fixed md:static inset-y-0 left-0 w-80 h-full bg-surface-container-lowest border-r border-surface-container flex flex-col justify-between shrink-0 select-none z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out shadow-lg md:shadow-none">
+    
+    <!-- Sidebar Top: Branding + Status + New Chat -->
+    <div class="p-4 border-b border-surface-container flex flex-col gap-3 shrink-0">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-sm shadow-sm">
+            N
+          </div>
+          <div class="flex flex-col">
+            <span class="font-bold text-sm text-on-surface tracking-tight leading-tight">Nexus AI</span>
+            <span class="text-[10px] text-on-surface-variant">Voice & Real-Time Assistant</span>
+          </div>
+        </div>
+
+        <!-- Live Status Pill -->
+        <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-container-low border border-surface-container" title="System Online">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span class="text-[10px] text-emerald-700 font-semibold">Online</span>
+        </div>
+      </div>
+
+      <!-- New Chat Button -->
+      <button onclick="startNewChat()" class="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-semibold shadow-sm hover:shadow transition-all group">
+        <span class="material-symbols-outlined text-[16px] group-hover:rotate-90 transition-transform">add</span>
+        <span>New Chat</span>
+      </button>
+    </div>
+
+    <!-- Sidebar Middle: Search History per Logged-in User -->
+    <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <!-- History Header -->
+      <div class="px-4 py-2.5 flex items-center justify-between border-b border-surface-container/60 bg-surface-container-low/40 shrink-0">
+        <div class="flex items-center gap-1.5 text-on-surface">
+          <span class="material-symbols-outlined text-primary text-[17px]">forum</span>
+          <span class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Chat History</span>
+          <span id="history-count-badge" class="ml-1 px-1.5 py-0.2 rounded-full bg-surface-container text-on-surface text-[10px] font-semibold">0</span>
+        </div>
+        <button onclick="clearHistory()" id="clear-history-btn" class="text-[11px] font-medium text-on-surface-variant hover:text-red-600 transition-colors" title="Clear all conversations">
+          Clear
+        </button>
+      </div>
+
+      <!-- Scrollable History List -->
+      <div id="history-items-container" class="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
+        <!-- Rendered dynamically via renderHistory() in app.js -->
+        <div class="flex flex-col items-center justify-center py-12 text-center text-on-surface-variant">
+          <span class="material-symbols-outlined text-[36px] text-surface-container-high mb-2">history_toggle_off</span>
+          <p class="text-xs font-semibold">No conversations yet</p>
+          <p class="text-[11px] text-on-surface-variant/70 mt-1 max-w-[200px]">
+            Ask questions or speak to see your conversations saved here.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Bottom: Login & Signup / User Profile -->
+    <div id="sidebar-auth-section" class="p-3 border-t border-surface-container bg-surface-container-low/60 shrink-0">
+      
+      <!-- Logged Out State (Guest User) -->
+      <div id="sidebar-auth-logged-out" class="flex flex-col gap-2.5">
+        <div class="flex items-center gap-2.5 px-1">
+          <div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant shrink-0">
+            <span class="material-symbols-outlined text-[18px]">person_outline</span>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="text-xs font-bold text-on-surface">Guest User</span>
+            <span class="text-[10px] text-on-surface-variant truncate">Sign in to save searches</span>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="openAuthModal('login')" class="flex items-center justify-center gap-1 py-1.5 px-3 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface text-xs font-semibold border border-surface-container transition-colors shadow-xs">
+            <span class="material-symbols-outlined text-[14px]">login</span>
+            <span>Sign In</span>
+          </button>
+          <button onclick="openAuthModal('signup')" class="flex items-center justify-center gap-1 py-1.5 px-3 rounded-lg bg-primary hover:bg-primary-container text-white text-xs font-bold shadow-xs transition-colors">
+            <span class="material-symbols-outlined text-[14px]">person_add</span>
+            <span>Sign Up</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Logged In State (Personal User Profile) -->
+      <div id="sidebar-auth-logged-in" class="hidden flex items-center justify-between p-2 rounded-xl bg-surface-container-lowest border border-surface-container shadow-xs">
+        <div class="flex items-center gap-2.5 overflow-hidden">
+          <div class="relative w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+            <span id="user-avatar-initial">U</span>
+            <span class="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 border border-white"></span>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span id="user-display-name" class="text-xs font-bold text-on-surface truncate">Username</span>
+            <span class="text-[10px] text-emerald-600 font-medium">Logged In</span>
+          </div>
+        </div>
+        <button onclick="logoutUser()" class="p-1.5 rounded-lg text-on-surface-variant hover:text-red-600 hover:bg-red-50 transition-colors shrink-0" title="Sign out">
+          <span class="material-symbols-outlined text-[18px]">logout</span>
+        </button>
+      </div>
+
+    </div>
+
+  </aside>
+
+  <!-- RIGHT MAIN VIEW: Clean Chat Interface -->
+  <div class="flex-1 h-full flex flex-col overflow-hidden bg-surface">
+    
+    <!-- Top Action Bar -->
+    <header class="w-full h-14 bg-surface-container-lowest/80 backdrop-blur-md border-b border-surface-container px-4 md:px-8 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-3">
+        <!-- Mobile Sidebar Toggle -->
+        <button onclick="toggleMobileSidebar()" class="md:hidden p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" title="Toggle history sidebar">
+          <span class="material-symbols-outlined text-[20px]">menu</span>
+        </button>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold text-on-surface">Nexus Assistant</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Voice Spoken Output Toggle -->
+        <button onclick="toggleAudioOutput()" id="audio-toggle-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-low text-on-surface text-xs font-medium hover:bg-surface-container transition-colors border border-surface-container" title="Toggle audio spoken replies">
+          <span class="material-symbols-outlined text-[16px]" id="audio-toggle-icon">volume_up</span>
+          <span id="audio-toggle-label">Voice: ON</span>
+        </button>
+
+        <!-- API Interactive Docs -->
+        <a href="/docs" target="_blank" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container text-xs transition-colors" title="Open FastAPI Interactive API Documentation">
+          <span class="material-symbols-outlined text-[16px]">api</span>
+          <span class="hidden sm:inline font-medium">Docs</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-1 overflow-hidden max-w-4xl w-full mx-auto p-4 md:p-6 flex flex-col justify-between">
+      
+      <!-- Chat Messages Transcript -->
+      <div id="chat-messages" class="flex-1 flex flex-col gap-4 overflow-y-auto rounded-2xl p-4 md:p-5 bg-surface-container-lowest border border-surface-container shadow-sm mb-3">
+        <!-- Welcome Message -->
+        <div class="flex items-start gap-3 max-w-[85%] self-start">
+          <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5 shadow-sm">
+            AI
+          </div>
+          <div class="flex flex-col gap-1">
+            <span class="text-[10px] text-on-surface-variant font-medium">Nexus Assistant</span>
+            <div class="px-4 py-3 rounded-2xl rounded-tl-sm bg-surface-container-low text-on-surface text-sm leading-relaxed shadow-sm">
+              Hello! I am your AI assistant. You can type your request or click the mic button below to talk.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stop Speaking Floating Button (Appears when AI is speaking) -->
+      <div id="stop-speaking-pill" class="hidden flex items-center justify-center mb-2 shrink-0 transition-all duration-200">
+        <button onclick="stopSpeaking()" class="flex items-center gap-2 px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95 group" title="Stop speaking">
+          <span class="material-symbols-outlined text-[18px]">stop_circle</span>
+          <span>Stop Speaking</span>
+          <div class="flex items-center gap-0.5 h-3 ml-1">
+            <span class="w-0.5 bg-white rounded-full animate-[pulse_0.4s_infinite] h-2"></span>
+            <span class="w-0.5 bg-white rounded-full animate-[pulse_0.6s_infinite_0.1s] h-3"></span>
+            <span class="w-0.5 bg-white rounded-full animate-[pulse_0.5s_infinite_0.2s] h-2"></span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Chat Input Section with Integrated Mic Button -->
+      <div class="flex flex-col gap-2 shrink-0">
+        <div class="flex items-center gap-2 p-2 rounded-2xl bg-surface-container-lowest border border-surface-container shadow-sm focus-within:border-primary transition-all">
+          
+          <!-- Mic Button inside the search box -->
+          <button onclick="toggleMicrophone()" id="mic-btn" class="w-10 h-10 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface flex items-center justify-center transition-all shrink-0 border border-surface-container/60" title="Click to speak">
+            <span class="material-symbols-outlined text-[20px] text-primary" id="mic-icon">mic</span>
+          </button>
+
+          <!-- Input Box -->
+          <input id="chat-input" class="flex-1 bg-transparent px-3 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none" placeholder="Ask anything or use mic..." type="text" onkeydown="handleChatInput(event)"/>
+          
+          <!-- Send Button -->
+          <button onclick="submitChatTurn()" class="w-10 h-10 rounded-xl bg-primary hover:bg-primary-container text-white flex items-center justify-center transition-all shadow-sm shrink-0" title="Send message">
+            <span class="material-symbols-outlined text-[20px]">send</span>
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between px-2 text-on-surface-variant text-[11px]">
+          <span class="text-on-surface-variant/70 text-[10px]">Press Enter to send or click the mic to speak</span>
+          <span id="turn-latency-label" class="text-on-surface-variant/70 text-[10px]">Model: GPT-4o</span>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- Auth Modal (Sign In / Sign Up) -->
+  <div id="auth-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div onclick="closeAuthModal()" class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div class="relative w-full max-w-sm rounded-2xl bg-surface-container-lowest border border-surface-container p-6 shadow-2xl z-10 flex flex-col gap-4">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+            N
+          </div>
+          <span class="font-bold text-base text-on-surface" id="auth-modal-title">Sign In to Nexus</span>
+        </div>
+        <button onclick="closeAuthModal()" class="p-1 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="flex rounded-xl bg-surface-container-low p-1 border border-surface-container">
+        <button id="tab-login-btn" onclick="switchAuthTab('login')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all bg-surface-container-lowest text-on-surface shadow-xs">
+          Sign In
+        </button>
+        <button id="tab-signup-btn" onclick="switchAuthTab('signup')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all text-on-surface-variant hover:text-on-surface">
+          Sign Up
+        </button>
+      </div>
+
+      <!-- Error / Notice Box -->
+      <div id="auth-error-box" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 leading-snug"></div>
+
+      <!-- Auth Form -->
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="flex flex-col gap-3">
+        <div>
+          <label class="block text-[11px] font-semibold text-on-surface-variant mb-1">Username</label>
+          <input id="auth-username" required type="text" placeholder="Enter username" class="w-full px-3.5 py-2 rounded-xl bg-surface-container-low border border-surface-container text-xs text-on-surface focus:outline-none focus:border-primary"/>
+        </div>
+
+        <div id="email-field-group" class="hidden">
+          <label class="block text-[11px] font-semibold text-on-surface-variant mb-1">Email (Optional)</label>
+          <input id="auth-email" type="email" placeholder="name@example.com" class="w-full px-3.5 py-2 rounded-xl bg-surface-container-low border border-surface-container text-xs text-on-surface focus:outline-none focus:border-primary"/>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-on-surface-variant mb-1">Password</label>
+          <input id="auth-password" required type="password" placeholder="At least 6 characters" class="w-full px-3.5 py-2 rounded-xl bg-surface-container-low border border-surface-container text-xs text-on-surface focus:outline-none focus:border-primary"/>
+        </div>
+
+        <button type="submit" id="auth-submit-btn" class="w-full mt-2 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-bold transition-all shadow-sm">
+          Sign In
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

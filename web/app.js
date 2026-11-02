@@ -1,0 +1,778 @@
+/**
+ * Nexus Personal Voice Assistant - Web Client
+ * Features:
+ * - Persistent left sidebar with search history per user
+ * - Bottom-left user login & signup profile controls
+ * - Live cricket scores, web search, calculator, Python runner, and reasoning
+ * - Voice Speech Recognition & Spoken TTS output
+ */
+
+let audioOutputEnabled = true;
+let isListening = false;
+let recognition = null;
+let currentAuthTab = "login";
+let authToken = localStorage.getItem("nexus_auth_token") || "";
+let currentUser = null;
+let currentSessionId = "web-" + Math.random().toString(36).substring(2, 9);
+let mobileSidebarOpen = false;
+let currentAudio = null;
+let isSpeaking = false;
+
+// --- Initialization ---
+document.addEventListener("DOMContentLoaded", () => {
+  initSpeechRecognition();
+  checkAuthStatus();
+  loadHistory();
+});
+
+// --- User Authentication ---
+async function checkAuthStatus() {
+  if (!authToken) {
+    updateAuthUI(null);
+    return;
+  }
+  try {
+    const res = await fetch("/api/auth/me", {
+      headers: { "Authorization": `Bearer ${authToken}` }
+    });
+    const data = await res.json();
+    if (data.authenticated && data.user) {
+      currentUser = data.user;
+      updateAuthUI(currentUser);
+    } else {
+      localStorage.removeItem("nexus_auth_token");
+      authToken = "";
+      currentUser = null;
+      updateAuthUI(null);
+    }
+  } catch (err) {
+    console.warn("Could not verify auth:", err);
+    updateAuthUI(null);
+  }
+}
+
+function updateAuthUI(user) {
+  const loggedOutCard = document.getElementById("sidebar-auth-logged-out");
+  const loggedInCard = document.getElementById("sidebar-auth-logged-in");
+  const displayName = document.getElementById("user-display-name");
+  const avatarInitial = document.getElementById("user-avatar-initial");
+
+  if (user) {
+    if (loggedOutCard) loggedOutCard.classList.add("hidden");
+    if (loggedInCard) loggedInCard.classList.remove("hidden");
+    if (displayName) displayName.innerText = user.username;
+    if (avatarInitial) avatarInitial.innerText = (user.username || "U")[0].toUpperCase();
+  } else {
+    if (loggedOutCard) loggedOutCard.classList.remove("hidden");
+    if (loggedInCard) loggedInCard.classList.add("hidden");
+  }
+}
+
+function openAuthModal(tab = "login") {
+  const modal = document.getElementById("auth-modal");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  switchAuthTab(tab);
+  hideAuthError();
+  // Focus username input
+  setTimeout(() => {
+    const uInput = document.getElementById("auth-username");
+    if (uInput) uInput.focus();
+  }, 100);
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById("auth-modal");
+  if (modal) modal.classList.add("hidden");
+  hideAuthError();
+}
+
+function switchAuthTab(tab) {
+  currentAuthTab = tab;
+  const loginTab = document.getElementById("tab-login-btn");
+  const signupTab = document.getElementById("tab-signup-btn");
+  const title = document.getElementById("auth-modal-title");
+  const submitBtn = document.getElementById("auth-submit-btn");
+  const emailGroup = document.getElementById("email-field-group");
+
+  hideAuthError();
+
+  if (tab === "signup") {
+    if (signupTab) signupTab.className = "flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all bg-surface-container-lowest text-on-surface shadow-xs";
+    if (loginTab) loginTab.className = "flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all text-on-surface-variant hover:text-on-surface";
+    if (title) title.innerText = "Create Nexus Account";
+    if (submitBtn) submitBtn.innerText = "Create Account";
+    if (emailGroup) emailGroup.classList.remove("hidden");
+  } else {
+    if (loginTab) loginTab.className = "flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all bg-surface-container-lowest text-on-surface shadow-xs";
+    if (signupTab) signupTab.className = "flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all text-on-surface-variant hover:text-on-surface";
+    if (title) title.innerText = "Sign In to Nexus";
+    if (submitBtn) submitBtn.innerText = "Sign In";
+    if (emailGroup) emailGroup.classList.add("hidden");
+  }
+}
+
+function showAuthError(msg) {
+  const errBox = document.getElementById("auth-error-box");
+  if (errBox) {
+    errBox.innerText = msg;
+    errBox.classList.remove("hidden");
+  }
+}
+
+function hideAuthError() {
+  const errBox = document.getElementById("auth-error-box");
+  if (errBox) errBox.classList.add("hidden");
+}
+
+async function handleAuthSubmit(event) {
+  event.preventDefault();
+  const username = document.getElementById("auth-username").value.trim();
+  const password = document.getElementById("auth-password").value;
+  const email = document.getElementById("auth-email").value.trim();
+
+  const url = currentAuthTab === "signup" ? "/api/auth/signup" : "/api/auth/login";
+  const payload = { username, password };
+  if (currentAuthTab === "signup" && email) payload.email = email;
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      showAuthError(data.detail || "Authentication failed. Please check your credentials.");
+      return;
+    }
+
+    // Success
+    authToken = data.token;
+    currentUser = data.user;
+    localStorage.setItem("nexus_auth_token", authToken);
+    updateAuthUI(currentUser);
+    closeAuthModal();
+
+    // Reload search history for this newly signed-in user
+    loadHistory();
+
+  } catch (err) {
+    showAuthError("Network error. Please try again.");
+  }
+}
+
+async function logoutUser() {
+  try {
+    if (authToken) {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${authToken}` }
+      });
+    }
+  } catch (e) {
+    // Continue
+  }
+  authToken = "";
+  currentUser = null;
+  localStorage.removeItem("nexus_auth_token");
+  updateAuthUI(null);
+  loadHistory();
+}
+
+// --- History Management (Left Sidebar: Grouped by Conversation Session) ---
+async function loadHistory() {
+  try {
+    const headers = {};
+    if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+    const res = await fetch("/api/history", { headers });
+    const data = await res.json();
+    if (data.success) {
+      const sessions = data.sessions || [];
+      renderHistory(sessions);
+      updateHistoryCountBadge(sessions.length);
+    }
+  } catch (e) {
+    console.warn("Could not load history:", e);
+  }
+}
+
+function updateHistoryCountBadge(count) {
+  const badge = document.getElementById("history-count-badge");
+  if (!badge) return;
+  badge.innerText = count > 99 ? "99+" : count;
+}
+
+function renderHistory(sessions) {
+  const container = document.getElementById("history-items-container");
+  if (!container) return;
+
+  if (sessions.length === 0) {
+    container.innerHTML = `
+      <div class="flex flex-col items-center justify-center py-12 text-center text-on-surface-variant">
+        <span class="material-symbols-outlined text-[36px] text-surface-container-high mb-2">history_toggle_off</span>
+        <p class="text-xs font-semibold">No chat history yet</p>
+        <p class="text-[11px] text-on-surface-variant/70 mt-1 max-w-[200px]">
+          Ask questions or speak to see your conversations saved here.
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = sessions.map(session => {
+    const timeAgo = formatTimeAgo(session.last_active);
+    const isActive = session.session_id === currentSessionId;
+    const msgCount = session.turn_count || 1;
+    const countLabel = msgCount === 1 ? "1 message" : `${msgCount} messages`;
+
+    const activeClasses = isActive
+      ? "bg-primary/10 border-primary shadow-xs ring-1 ring-primary/20"
+      : "bg-surface-container-low/70 hover:bg-surface-container-low border-surface-container hover:border-surface-container-high";
+
+    return `
+      <div class="group relative flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${activeClasses}" onclick="openChatSession('${session.session_id}')">
+        <div class="flex items-start gap-2.5 min-w-0 flex-1 pr-1">
+          <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">chat_bubble_outline</span>
+          <div class="flex flex-col min-w-0 flex-1">
+            <span class="text-xs font-semibold text-on-surface truncate group-hover:text-primary transition-colors">
+              ${escapeHtml(session.title)}
+            </span>
+            <div class="flex items-center gap-1.5 text-[10px] text-on-surface-variant/70 mt-0.5">
+              <span>${countLabel}</span>
+              <span>•</span>
+              <span>${timeAgo}</span>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="deleteChatSession('${session.session_id}', event)" class="opacity-0 group-hover:opacity-100 p-1 text-on-surface-variant hover:text-red-600 rounded-lg hover:bg-red-50 transition-all shrink-0" title="Delete conversation">
+          <span class="material-symbols-outlined text-[15px]">delete</span>
+        </button>
+      </div>
+    `;
+  }).join("");
+}
+
+async function openChatSession(sessionId) {
+  if (sessionId === currentSessionId && document.getElementById("chat-messages").children.length > 1) {
+    // Already in this session
+    if (window.innerWidth < 768 && mobileSidebarOpen) {
+      toggleMobileSidebar();
+    }
+    return;
+  }
+
+  stopSpeaking();
+  currentSessionId = sessionId;
+
+  try {
+    const headers = {};
+    if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+    const res = await fetch(`/api/history/${sessionId}`, { headers });
+    const data = await res.json();
+
+    const container = document.getElementById("chat-messages");
+    if (container && data.success && data.turns) {
+      container.innerHTML = "";
+      if (data.turns.length === 0) {
+        container.innerHTML = `
+          <div class="flex items-start gap-3 max-w-[85%] self-start">
+            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5 shadow-sm">
+              AI
+            </div>
+            <div class="flex flex-col gap-1">
+              <span class="text-[10px] text-on-surface-variant font-medium">Nexus Assistant</span>
+              <div class="px-4 py-3 rounded-2xl rounded-tl-sm bg-surface-container-low text-on-surface text-sm leading-relaxed shadow-sm">
+                Conversation loaded. Ask a question or use mic to continue!
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        data.turns.forEach(turn => {
+          appendUserBubble(turn.user_message);
+          appendAssistantBubble(turn.spoken_reply, turn.tool_calls);
+        });
+      }
+      container.scrollTop = container.scrollHeight;
+    }
+  } catch (err) {
+    console.warn("Could not load session turns:", err);
+  }
+
+  loadHistory();
+
+  if (window.innerWidth < 768 && mobileSidebarOpen) {
+    toggleMobileSidebar();
+  }
+}
+
+async function deleteChatSession(sessionId, event) {
+  if (event) event.stopPropagation();
+  if (!confirm("Are you sure you want to delete this conversation?")) return;
+
+  try {
+    const headers = {};
+    if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+    await fetch(`/api/history/${sessionId}`, { method: "DELETE", headers });
+
+    if (sessionId === currentSessionId) {
+      startNewChat();
+    }
+    loadHistory();
+  } catch (e) {
+    console.warn("Error deleting chat session:", e);
+  }
+}
+
+async function clearHistory() {
+  if (!confirm("Are you sure you want to clear all conversations?")) return;
+  try {
+    const headers = {};
+    if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+    await fetch("/api/history", { method: "DELETE", headers });
+    startNewChat();
+    loadHistory();
+  } catch (e) {
+    console.warn("Error clearing history:", e);
+  }
+}
+
+function startNewChat() {
+  stopSpeaking();
+  currentSessionId = "web-" + Math.random().toString(36).substring(2, 9);
+  const container = document.getElementById("chat-messages");
+  if (container) {
+    container.innerHTML = `
+      <div class="flex items-start gap-3 max-w-[85%] self-start">
+        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5 shadow-sm">
+          AI
+        </div>
+        <div class="flex flex-col gap-1">
+          <span class="text-[10px] text-on-surface-variant font-medium">Nexus Assistant</span>
+          <div class="px-4 py-3 rounded-2xl rounded-tl-sm bg-surface-container-low text-on-surface text-sm leading-relaxed shadow-sm">
+            Started a new chat session! You can type your request or click the mic button below to talk.
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  const input = document.getElementById("chat-input");
+  if (input) {
+    input.value = "";
+    input.focus();
+  }
+  loadHistory();
+  if (window.innerWidth < 768 && mobileSidebarOpen) {
+    toggleMobileSidebar();
+  }
+}
+
+function toggleMobileSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const backdrop = document.getElementById("sidebar-backdrop");
+  if (!sidebar) return;
+
+  mobileSidebarOpen = !mobileSidebarOpen;
+  if (mobileSidebarOpen) {
+    sidebar.classList.remove("-translate-x-full");
+    if (backdrop) backdrop.classList.remove("hidden");
+  } else {
+    sidebar.classList.add("-translate-x-full");
+    if (backdrop) backdrop.classList.add("hidden");
+  }
+}
+
+function quickFill(text) {
+  const input = document.getElementById("chat-input");
+  if (input) {
+    input.value = text;
+    input.focus();
+  }
+}
+
+function formatTimeAgo(isoStr) {
+  if (!isoStr) return "";
+  try {
+    const date = new Date(isoStr);
+    const now = new Date();
+    const diffSec = Math.floor((now - date) / 1000);
+    if (diffSec < 60) return "Just now";
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+    return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  } catch (e) {
+    return "";
+  }
+}
+
+function escapeJs(str) {
+  if (!str) return "";
+  return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+// --- Speech Recognition ---
+function initSpeechRecognition() {
+  if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
+    const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechClass();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => {
+      isListening = true;
+      stopSpeaking();
+      updateMicUI(true);
+    };
+
+    recognition.onresult = (event) => {
+      const text = event.results[0][0].transcript;
+      const input = document.getElementById("chat-input");
+      if (input) input.value = text;
+      submitChatTurn(text);
+    };
+
+    recognition.onerror = (event) => {
+      console.warn("Speech recognition error:", event.error);
+      stopMicrophone();
+    };
+
+    recognition.onend = () => {
+      stopMicrophone();
+    };
+  } else {
+    console.info("Web Speech API not supported in this browser.");
+  }
+}
+
+function toggleMicrophone() {
+  if (!recognition) {
+    alert("Speech recognition is not supported in this browser. Please use Chrome or Edge, or type your message.");
+    return;
+  }
+  if (isListening) {
+    recognition.stop();
+  } else {
+    try {
+      recognition.start();
+    } catch (e) {
+      console.warn("Could not start recognition:", e);
+    }
+  }
+}
+
+function stopMicrophone() {
+  isListening = false;
+  updateMicUI(false);
+}
+
+function updateMicUI(listening) {
+  const micBtn = document.getElementById("mic-btn");
+  const micIcon = document.getElementById("mic-icon");
+  const chatInput = document.getElementById("chat-input");
+
+  if (!micBtn) return;
+
+  if (listening) {
+    micBtn.className = "w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center transition-all shadow-md animate-pulse shrink-0";
+    if (micIcon) {
+      micIcon.innerText = "mic";
+      micIcon.className = "material-symbols-outlined text-[20px] text-white";
+    }
+    if (chatInput) chatInput.placeholder = "Listening... Speak now";
+  } else {
+    micBtn.className = "w-10 h-10 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface flex items-center justify-center transition-all shrink-0 border border-surface-container/60";
+    if (micIcon) {
+      micIcon.innerText = "mic";
+      micIcon.className = "material-symbols-outlined text-[20px] text-primary";
+    }
+    if (chatInput) chatInput.placeholder = "Ask anything or use mic...";
+  }
+}
+
+// --- Audio Spoken Output Toggle ---
+function toggleAudioOutput() {
+  audioOutputEnabled = !audioOutputEnabled;
+  if (!audioOutputEnabled) {
+    stopSpeaking();
+  }
+  const label = document.getElementById("audio-toggle-label");
+  const icon = document.getElementById("audio-toggle-icon");
+  if (label) label.innerText = audioOutputEnabled ? "Voice: ON" : "Voice: OFF";
+  if (icon) icon.innerText = audioOutputEnabled ? "volume_up" : "volume_off";
+}
+
+// --- Chat Input & Execution ---
+function handleChatInput(event) {
+  if (event.key === "Escape") {
+    stopSpeaking();
+    return;
+  }
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    submitChatTurn();
+  }
+}
+
+// Global Escape key listener to stop speaking immediately
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && isSpeaking) {
+    stopSpeaking();
+  }
+});
+
+async function submitChatTurn(textOverride) {
+  stopSpeaking();
+  const inputEl = document.getElementById("chat-input");
+  const userText = (textOverride || (inputEl ? inputEl.value : "")).trim();
+  if (!userText) return;
+
+  if (inputEl) inputEl.value = "";
+
+  appendUserBubble(userText);
+
+  const thinkingId = appendThinkingBubble();
+
+  try {
+    const headers = { "Content-Type": "application/json" };
+    if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
+    const resp = await fetch("/api/chat", {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify({ message: userText, session_id: currentSessionId })
+    });
+
+    const data = await resp.json();
+    removeMessage(thinkingId);
+
+    appendAssistantBubble(data.spoken_reply, data.tool_calls_executed);
+
+    const latLabel = document.getElementById("turn-latency-label");
+    if (latLabel && data.latency_ms) {
+      latLabel.innerText = `Turn: ${data.latency_ms}ms • Model: GPT-4o`;
+    }
+
+    if (audioOutputEnabled && data.spoken_reply) {
+      playSpokenAudio(data.spoken_reply);
+    }
+
+    // Refresh history in left sidebar
+    loadHistory();
+
+  } catch (err) {
+    console.error("Chat turn error:", err);
+    removeMessage(thinkingId);
+    appendAssistantBubble("I encountered an error processing your request. Please try again.");
+  }
+}
+
+// --- Spoken Audio Controls & Playback ---
+function setSpeakingState(speaking) {
+  isSpeaking = speaking;
+  const stopPill = document.getElementById("stop-speaking-pill");
+  if (stopPill) {
+    if (speaking) {
+      stopPill.classList.remove("hidden");
+    } else {
+      stopPill.classList.add("hidden");
+    }
+  }
+}
+
+function stopSpeaking() {
+  if (currentAudio) {
+    try {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    } catch (e) {}
+    currentAudio = null;
+  }
+  if ("speechSynthesis" in window) {
+    try {
+      window.speechSynthesis.cancel();
+    } catch (e) {}
+  }
+  setSpeakingState(false);
+}
+
+async function playSpokenAudio(text) {
+  if (!text || !audioOutputEnabled) return;
+
+  stopSpeaking();
+
+  // 1. Try server TTS first
+  try {
+    const res = await fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text, voice: "alloy" })
+    });
+    const data = await res.json();
+    if (data.success && data.audio_base64) {
+      const audio = new Audio("data:audio/mp3;base64," + data.audio_base64);
+      currentAudio = audio;
+
+      audio.onplay = () => {
+        setSpeakingState(true);
+      };
+
+      audio.onended = () => {
+        if (currentAudio === audio) {
+          currentAudio = null;
+          setSpeakingState(false);
+        }
+      };
+
+      audio.onerror = () => {
+        if (currentAudio === audio) {
+          currentAudio = null;
+          setSpeakingState(false);
+        }
+      };
+
+      audio.onpause = () => {
+        if (currentAudio === audio && audio.ended) {
+          setSpeakingState(false);
+        }
+      };
+
+      setSpeakingState(true);
+      await audio.play();
+      return;
+    }
+  } catch (e) {
+    console.warn("Server TTS playback issue, falling back to browser synthesis:", e);
+  }
+
+  // 2. Fallback to browser Web Speech Synthesis
+  if ("speechSynthesis" in window) {
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+
+      utterance.onstart = () => {
+        setSpeakingState(true);
+      };
+      utterance.onend = () => {
+        setSpeakingState(false);
+      };
+      utterance.onerror = () => {
+        setSpeakingState(false);
+      };
+
+      setSpeakingState(true);
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      setSpeakingState(false);
+    }
+  }
+}
+
+// --- DOM Chat Bubbles ---
+function appendUserBubble(text) {
+  const container = document.getElementById("chat-messages");
+  if (!container) return;
+
+  const bubble = document.createElement("div");
+  bubble.className = "flex items-start gap-3 max-w-[85%] self-end flex-row-reverse";
+  bubble.innerHTML = `
+    <div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface text-xs font-bold shrink-0 mt-0.5 border border-surface-container-high">
+      You
+    </div>
+    <div class="flex flex-col gap-1 items-end">
+      <span class="text-[10px] text-on-surface-variant font-medium">You</span>
+      <div class="px-4 py-2.5 rounded-2xl rounded-tr-sm bg-primary text-white text-sm leading-relaxed shadow-sm">
+        ${escapeHtml(text)}
+      </div>
+    </div>
+  `;
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendAssistantBubble(text, toolCalls) {
+  const container = document.getElementById("chat-messages");
+  if (!container) return;
+
+  const bubble = document.createElement("div");
+  bubble.className = "flex items-start gap-3 max-w-[85%] self-start";
+
+  let toolBadgeHtml = "";
+  if (toolCalls && toolCalls.length > 0) {
+    const names = toolCalls.map(tc => {
+      if (tc.tool === "send_whatsapp_message") {
+        const cName = tc.result?.contact || (tc.args && tc.args.contact_name) || "Contact";
+        return `WhatsApp: ${cName}`;
+      }
+      if (tc.tool === "open_app") {
+        const tgt = tc.result?.target || (tc.args && tc.args.name) || "App";
+        return `Launched: ${tgt}`;
+      }
+      if (tc.tool === "web_search") return "Live Cricket & Web Search";
+      if (tc.tool === "calculator") return "Math Calculator";
+      if (tc.tool === "run_python_code") return "Python Code Runner";
+      if (tc.tool === "get_current_time") return "Current Time";
+      return tc.tool;
+    }).join(", ");
+    toolBadgeHtml = `
+      <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container text-[11px] text-on-surface-variant font-medium mt-1 w-fit border border-surface-container-high">
+        <span class="material-symbols-outlined text-[14px] text-primary">bolt</span>
+        <span>Called: ${escapeHtml(names)}</span>
+      </div>
+    `;
+  }
+
+  bubble.innerHTML = `
+    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5 shadow-sm">
+      AI
+    </div>
+    <div class="flex flex-col gap-1">
+      <span class="text-[10px] text-on-surface-variant font-medium">Nexus Assistant</span>
+      <div class="px-4 py-3 rounded-2xl rounded-tl-sm bg-surface-container-low text-on-surface text-sm leading-relaxed shadow-sm">
+        ${escapeHtml(text)}
+      </div>
+      ${toolBadgeHtml}
+    </div>
+  `;
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendThinkingBubble() {
+  const container = document.getElementById("chat-messages");
+  if (!container) return null;
+
+  const id = "thinking-" + Math.random().toString(36).substring(2, 7);
+  const bubble = document.createElement("div");
+  bubble.id = id;
+  bubble.className = "flex items-start gap-3 max-w-[85%] self-start";
+  bubble.innerHTML = `
+    <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold shrink-0 mt-0.5">
+      AI
+    </div>
+    <div class="flex items-center gap-2 px-4 py-3 rounded-2xl rounded-tl-sm bg-surface-container-low text-on-surface-variant text-sm">
+      <span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+      <span class="text-xs font-medium">Searching & processing...</span>
+    </div>
+  `;
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+  return id;
+}
+
+function removeMessage(id) {
+  if (!id) return;
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}

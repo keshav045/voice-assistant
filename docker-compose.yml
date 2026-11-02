@@ -1,48 +1,30 @@
+version: '3.8'
+
 services:
-  postgres:
-    image: pgvector/pgvector:pg16
-    container_name: nexus-postgres
+  nexus-voice-assistant:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nexus_voice_assistant
     restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrespassword
-      POSTGRES_DB: nexus
-    ports:
-      - "5432:5432"
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+      - PORT=8000
+      - HOST=0.0.0.0
+      - DB_PATH=/app/data/voice_assistant.db
+      - LOG_LEVEL=${LOG_LEVEL:-info}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./database/init:/docker-entrypoint-initdb.d
+      - assistant-data:/app/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d nexus"]
-      interval: 5s
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
       timeout: 5s
-      retries: 5
-    networks:
-      - nexus-network
-
-  redis:
-    image: redis:7-alpine
-    container_name: nexus-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - nexus-network
-
-networks:
-  nexus-network:
-    driver: bridge
+      retries: 3
+      start_period: 5s
 
 volumes:
-  postgres-data:
+  assistant-data:
     driver: local
-  redis-data:
-    driver: local
-

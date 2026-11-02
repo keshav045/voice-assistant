@@ -1,0 +1,106 @@
+# Test Scenarios for Personal Voice Assistant
+# Each scenario defines user input, expected tool to be called, expected confirmation requirements, or key response attributes.
+
+scenarios:
+  - id: current_time
+    name: "Query current time"
+    input: "What time is it right now?"
+    expected_tool: "get_current_time"
+    requires_confirmation: false
+
+  - id: web_search_general
+    name: "General web search"
+    input: "Search the web for the latest SpaceX Starship launch"
+    expected_tool: "web_search"
+    requires_confirmation: false
+
+  - id: web_search_question
+    name: "Direct question requiring search"
+    input: "What is the capital of Australia?"
+    expected_tool: "web_search"
+    requires_confirmation: false
+
+  - id: list_calendar_events
+    name: "Check calendar events"
+    input: "What do I have on my calendar today?"
+    expected_tool: "list_events"
+    requires_confirmation: false
+
+  - id: find_free_slot
+    name: "Find free calendar slot"
+    input: "Find a free 30 minute slot tomorrow morning"
+    expected_tool: "find_free_slot"
+    requires_confirmation: false
+
+  - id: create_event_confirmation
+    name: "Schedule event requires confirmation"
+    input: "Schedule a meeting with David tomorrow at 2 PM"
+    expected_tool: "create_event"
+    requires_confirmation: true
+    follow_up:
+      input: "Yes, go ahead and schedule it"
+      expected_action: "execute_pending"
+
+  - id: add_task
+    name: "Add a new task"
+    input: "Add a task to submit the expense report by Friday"
+    expected_tool: "add_task"
+    requires_confirmation: false
+
+  - id: list_tasks
+    name: "List active tasks"
+    input: "What tasks are on my to-do list?"
+    expected_tool: "list_tasks"
+    requires_confirmation: false
+
+  - id: complete_task
+    name: "Complete a task"
+    input: "Mark the task expense report as completed"
+    expected_tool: "complete_task"
+    requires_confirmation: false
+
+  - id: search_email
+    name: "Search emails"
+    input: "Search my emails for project updates from Sarah"
+    expected_tool: "search_email"
+    requires_confirmation: false
+
+  - id: summarize_email
+    name: "Summarize email thread"
+    input: "Summarize the latest emails about Q4 goals"
+    expected_tool: "summarize_email"
+    requires_confirmation: false
+
+  - id: draft_reply
+    name: "Draft email reply"
+    input: "Draft a reply to Sarah saying the review is done"
+    expected_tool: "draft_reply"
+    requires_confirmation: false
+
+  - id: send_email_confirmation
+    name: "Sending email requires confirmation"
+    input: "Send an email to sarah@example.com with subject Review and body Looks good"
+    expected_tool: "send_email"
+    requires_confirmation: true
+    follow_up:
+      input: "No, cancel that email"
+      expected_action: "cancel_pending"
+
+  - id: remember_fact
+    name: "Store semantic memory fact"
+    input: "Remember that my sister's birthday is on August 14th"
+    expected_tool: "remember"
+    requires_confirmation: false
+
+  - id: recall_fact
+    name: "Recall semantic memory fact"
+    input: "When is my sister's birthday?"
+    expected_memory_lookup: true
+    requires_confirmation: false
+
+  - id: search_docs
+    name: "Search personal documents"
+    input: "Search my documents for onboarding guidelines"
+    expected_tool: "search_my_docs"
+    requires_confirmation: false
+
