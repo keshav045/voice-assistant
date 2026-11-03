@@ -3,7 +3,7 @@
 from typing import Any, Callable, Dict, List
 from agent.tools.search import web_search, get_current_time
 from agent.tools.calendar import list_events, find_free_slot, create_event
-from agent.tools.email import search_email, summarize_email, draft_reply, send_email
+from agent.tools.email import search_email, summarize_email, draft_reply, send_email  # send_email does real SMTP
 from agent.tools.tasks import add_task, list_tasks, complete_task
 from agent.tools.docs import search_my_docs
 from agent.tools.memory_tools import remember, forget
@@ -280,13 +280,41 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "send_email",
-            "description": "Send a drafted email. Requires explicit confirmation.",
+            "description": (
+                "Compose and send a real email on behalf of the user. "
+                "The AI will auto-generate a professional subject and body from the user's plain-language description. "
+                "Use whenever the user says 'send an email to ...', 'mail ... that ...', 'email ... about ...'. "
+                "Example: 'send an email to priya@gmail.com saying the meeting is shifted to Friday'."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "draft_id": {"type": "string", "description": "ID of the draft to send"},
+                    "to": {
+                        "type": "string",
+                        "description": "Recipient's email address, e.g. 'john@example.com'.",
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": (
+                            "Plain-language description of what to say in the email. "
+                            "The AI will turn this into a polished subject and body. "
+                            "E.g. 'tell him the meeting is moved to Friday 3pm'."
+                        ),
+                    },
+                    "recipient_name": {
+                        "type": "string",
+                        "description": "Optional name of the recipient used to personalise the greeting, e.g. 'Priya'.",
+                    },
+                    "subject": {
+                        "type": "string",
+                        "description": "Optional explicit subject line (overrides AI generation).",
+                    },
+                    "body": {
+                        "type": "string",
+                        "description": "Optional explicit email body (overrides AI generation).",
+                    },
                 },
-                "required": ["draft_id"],
+                "required": ["to", "description"],
             },
         },
     },

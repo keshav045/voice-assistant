@@ -10,6 +10,7 @@ Covers:
 """
 
 import os
+import uuid
 import pytest
 import yaml
 import tempfile

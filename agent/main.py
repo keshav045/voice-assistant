@@ -124,7 +124,7 @@ def _clean_spoken_text(text: str) -> str:
     return re.sub(r"\s+", " ", t).strip()
 
 
-ACTIVE_TOOL_NAMES = {"web_search", "calculator", "run_python_code", "get_current_time", "open_app", "send_whatsapp_message"}
+ACTIVE_TOOL_NAMES = {"web_search", "calculator", "run_python_code", "get_current_time", "open_app", "send_whatsapp_message", "send_email"}
 ACTIVE_TOOL_SCHEMAS = [s for s in TOOL_SCHEMAS if s.get("function", {}).get("name") in ACTIVE_TOOL_NAMES]
 
 
