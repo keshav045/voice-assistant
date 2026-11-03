@@ -162,7 +162,7 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                     tools=ACTIVE_TOOL_SCHEMAS,
                     tool_choice="auto",
                     temperature=0.3,
-                    max_tokens=300,
+                    max_tokens=600,
                 )
 
                 msg = response.choices[0].message

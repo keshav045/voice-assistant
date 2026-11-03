@@ -41,7 +41,13 @@ SMTP_PORT = 587
 
 
 def _get_smtp_creds() -> tuple[str, str]:
-    """Return (sender_email, app_password) from environment."""
+    """Return (sender_email, app_password) from environment, dynamically checking .env."""
+    if "PYTEST_CURRENT_TEST" not in os.environ:
+        try:
+            from dotenv import load_dotenv
+            load_dotenv(override=True)
+        except Exception:
+            pass
     sender = os.environ.get("SENDER_EMAIL", "").strip()
     password = os.environ.get("SENDER_APP_PASSWORD", "").strip()
     return sender, password
@@ -378,7 +384,7 @@ def _send_smtp(to_email: str, subject: str, body: str) -> Dict[str, Any]:
             server.sendmail(sender_email, to_email, msg.as_string())
 
     last_err: Exception | None = None
-    for attempt in (_try_587, _try_465):
+    for attempt in (_try_465, _try_587):
         try:
             attempt()
             logger.info(f"Email sent to {to_email} | subject: {subject}")
