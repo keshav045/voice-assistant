@@ -107,7 +107,7 @@ Respond ONLY with valid JSON in this exact format (no markdown, no extra text):
 # --------------------------------------------------------------------------- #
 
 def _send_smtp(to_email: str, subject: str, body: str) -> Dict[str, Any]:
-    """Send email via Gmail SMTP with TLS. Returns result dict."""
+    """Send email via Gmail SMTP. Tries port 587 (STARTTLS) then 465 (SSL)."""
     sender_email, app_password = _get_smtp_creds()
 
     if not sender_email or not app_password:
@@ -115,8 +115,24 @@ def _send_smtp(to_email: str, subject: str, body: str) -> Dict[str, Any]:
             "success": False,
             "error": "SMTP not configured",
             "spoken": (
-                "Email not configured. Please add your SENDER_EMAIL and "
-                "SENDER_APP_PASSWORD to the dot-env file and restart the assistant."
+                "Email is not configured yet. Please open the dot-env file, "
+                "set SENDER_EMAIL to your Gmail address, and set SENDER_APP_PASSWORD "
+                "to a 16-character Gmail App Password. "
+                "You can generate one at myaccount.google.com slash security under App Passwords."
+            ),
+        }
+
+    # Gmail App Passwords are 16 chars (displayed with spaces — strip them)
+    clean_password = app_password.replace(" ", "")
+    if len(clean_password) != 16:
+        return {
+            "success": False,
+            "error": f"App password has {len(clean_password)} chars, expected 16.",
+            "spoken": (
+                f"The Gmail App Password in your dot-env file looks incorrect — "
+                f"it has {len(clean_password)} characters but should be exactly 16. "
+                "Please go to myaccount.google.com slash security, open App Passwords, "
+                "generate a new one, and paste it into the SENDER_APP_PASSWORD field."
             ),
         }
 
@@ -132,29 +148,55 @@ def _send_smtp(to_email: str, subject: str, body: str) -> Dict[str, Any]:
     html_body = f"<html><body><p>{body.replace(chr(10), '<br>')}</p></body></html>"
     msg.attach(MIMEText(html_body, "html", "utf-8"))
 
-    try:
-        context = ssl.create_default_context()
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+    context = ssl.create_default_context()
+
+    # Try port 587 (STARTTLS) first, then fall back to port 465 (SSL)
+    def _try_587() -> None:
+        with smtplib.SMTP(SMTP_HOST, 587, timeout=15) as server:
             server.ehlo()
             server.starttls(context=context)
             server.ehlo()
-            server.login(sender_email, app_password)
+            server.login(sender_email, clean_password)
             server.sendmail(sender_email, to_email, msg.as_string())
-        logger.info(f"Email sent to {to_email} | subject: {subject}")
-        return {"success": True, "to": to_email, "subject": subject}
-    except smtplib.SMTPAuthenticationError:
-        return {
-            "success": False,
-            "error": "Authentication failed",
-            "spoken": (
-                "Gmail authentication failed. Please check your SENDER_APP_PASSWORD. "
-                "Make sure you are using a Gmail App Password, not your regular password."
-            ),
-        }
-    except smtplib.SMTPException as e:
-        return {"success": False, "error": str(e), "spoken": f"SMTP error: {e}"}
-    except Exception as e:
-        return {"success": False, "error": str(e), "spoken": f"Failed to send email: {e}"}
+
+    def _try_465() -> None:
+        with smtplib.SMTP_SSL(SMTP_HOST, 465, context=context, timeout=15) as server:
+            server.ehlo()
+            server.login(sender_email, clean_password)
+            server.sendmail(sender_email, to_email, msg.as_string())
+
+    last_err: Exception | None = None
+    for attempt in (_try_587, _try_465):
+        try:
+            attempt()
+            logger.info(f"Email sent to {to_email} | subject: {subject}")
+            return {"success": True, "to": to_email, "subject": subject}
+        except smtplib.SMTPAuthenticationError as e:
+            return {
+                "success": False,
+                "error": "Authentication failed",
+                "spoken": (
+                    "Gmail authentication failed. Your App Password was rejected. "
+                    "Make sure you are using a 16-character Gmail App Password "
+                    "(not your regular Gmail password). "
+                    "Go to myaccount.google.com, enable 2-Step Verification, "
+                    "then generate a new App Password under Security settings."
+                ),
+            }
+        except Exception as e:
+            last_err = e
+            logger.warning(f"SMTP attempt failed ({attempt.__name__}): {e}")
+            continue
+
+    return {
+        "success": False,
+        "error": str(last_err),
+        "spoken": (
+            "Could not connect to Gmail's mail server. "
+            "Please check your internet connection and make sure your SENDER_APP_PASSWORD "
+            "is a valid 16-character Gmail App Password."
+        ),
+    }
 
 
 # --------------------------------------------------------------------------- #
