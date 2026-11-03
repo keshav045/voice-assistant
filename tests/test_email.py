@@ -109,6 +109,94 @@ class TestSendEmailOffline:
         assert "authentication" in result["spoken"].lower() or "failed" in result["spoken"].lower()
 
     # ------------------------------------------------------------------ #
+    # Bulk & CSV Sending Tests
+    # ------------------------------------------------------------------ #
+
+    def test_bulk_comma_and_separated_recipients(self):
+        """Should detect multiple email addresses separated by commas and 'and'."""
+        from agent.tools import email as email_mod
+        fake_compose = {"subject": "Sprint Review", "body": "Hello team, review is on Friday."}
+        sent_calls = []
+
+        def mock_send(to_email, subject, body):
+            sent_calls.append(to_email)
+            return {"success": True, "to": to_email, "subject": subject}
+
+        with patch.dict(os.environ, {"SENDER_EMAIL": "test@gmail.com", "SENDER_APP_PASSWORD": "a" * 16}), \
+             patch.object(email_mod, "_compose_email", return_value=fake_compose), \
+             patch.object(email_mod, "_send_smtp", side_effect=mock_send):
+            result = email_mod.send_email(
+                to="rahul@gmail.com, priya@gmail.com and amit@yahoo.com",
+                description="Sprint review is on Friday",
+            )
+
+        assert result["success"] is True
+        assert result["total"] == 3
+        assert result["sent_count"] == 3
+        assert set(sent_calls) == {"rahul@gmail.com", "priya@gmail.com", "amit@yahoo.com"}
+        assert "Successfully sent all 3 emails" in result["spoken"]
+
+    def test_bulk_csv_file_sending(self, tmp_path):
+        """Should load contacts from a CSV file and deliver emails."""
+        from agent.tools import email as email_mod
+        csv_file = tmp_path / "test_contacts.csv"
+        csv_file.write_text("name,email\nAlice,alice@example.com\nBob,bob@example.com\n", encoding="utf-8")
+
+        sent_recipients = []
+
+        def mock_send(to_email, subject, body):
+            sent_recipients.append(to_email)
+            return {"success": True, "to": to_email, "subject": subject}
+
+        with patch.dict(os.environ, {"SENDER_EMAIL": "test@gmail.com", "SENDER_APP_PASSWORD": "a" * 16}), \
+             patch.object(email_mod, "_compose_email", return_value={"subject": "Announcement", "body": "Hello {name}"}), \
+             patch.object(email_mod, "_send_smtp", side_effect=mock_send):
+            result = email_mod.send_email(
+                to="contacts.csv",
+                csv_path=str(csv_file),
+                description="Send the announcement",
+            )
+
+        assert result["success"] is True
+        assert result["total"] == 2
+        assert result["sent_count"] == 2
+        assert set(sent_recipients) == {"alice@example.com", "bob@example.com"}
+
+    def test_bulk_partial_failure_reporting(self):
+        """If one recipient fails, report count and failed email."""
+        from agent.tools import email as email_mod
+
+        def mock_send(to_email, subject, body):
+            if "fail" in to_email:
+                return {"success": False, "error": "Mailbox unavailable"}
+            return {"success": True, "to": to_email, "subject": subject}
+
+        with patch.dict(os.environ, {"SENDER_EMAIL": "test@gmail.com", "SENDER_APP_PASSWORD": "a" * 16}), \
+             patch.object(email_mod, "_compose_email", return_value={"subject": "S", "body": "B"}), \
+             patch.object(email_mod, "_send_smtp", side_effect=mock_send):
+            result = email_mod.send_email(
+                to="ok@example.com, fail@example.com",
+                description="Test partial failure",
+            )
+
+        assert result["success"] is True
+        assert result["sent_count"] == 1
+        assert result["failed_count"] == 1
+        assert "Sent 1 of 2 emails successfully" in result["spoken"]
+        assert "fail@example.com" in result["spoken"]
+
+    def test_csv_file_not_found_returns_error(self):
+        from agent.tools import email as email_mod
+        with patch.dict(os.environ, {"SENDER_EMAIL": "test@gmail.com", "SENDER_APP_PASSWORD": "a" * 16}):
+            result = email_mod.send_email(
+                to="nonexistent_contacts.csv",
+                csv_path="nonexistent_contacts_xyz.csv",
+                description="Test missing csv",
+            )
+        assert result["success"] is False
+        assert "could not find csv" in result["spoken"].lower()
+
+    # ------------------------------------------------------------------ #
     # Legacy stubs still work
     # ------------------------------------------------------------------ #
 
@@ -129,3 +217,4 @@ class TestSendEmailOffline:
         r = draft_reply(id="test@ex.com", points="Key points here")
         assert r["success"] is True
         assert r["draft_id"].startswith("draft-")
+

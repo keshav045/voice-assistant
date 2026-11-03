@@ -1,4 +1,5 @@
 """Email tools — real SMTP sending via Gmail + AI subject/body composer.
+Supports single recipients, multiple comma/and-separated recipients, and bulk sending via CSV files.
 
 Setup (one-time):
   1. Go to Google Account > Security > 2-Step Verification > App Passwords
@@ -9,20 +10,25 @@ Setup (one-time):
 
 Voice usage examples:
   "Send an email to john@example.com about the project deadline"
-  "Mail Priya at priya@gmail.com that the meeting is shifted to Friday 3pm"
-  "Send a professional email to boss@company.com saying I will be late today"
+  "Send email to rahul@gmail.com, priya@gmail.com and amit@yahoo.com saying the meeting is shifted to Friday 3pm"
+  "Send an email to contacts.csv saying tomorrow's workshop starts at 10 AM"
+  "Send an email from csv with subject Launch and description Ready for release"
 """
 
 from __future__ import annotations
 
+import csv
 import logging
 import os
+import re
 import smtplib
 import ssl
+import time
 import uuid
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Any, Dict, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 logger = logging.getLogger("voice_assistant.email")
 
@@ -47,6 +53,122 @@ def _smtp_configured() -> bool:
 
 
 # --------------------------------------------------------------------------- #
+# Contact & CSV Parsing Helpers
+# --------------------------------------------------------------------------- #
+
+def _load_contacts_from_csv(csv_path: Optional[str] = None) -> Tuple[List[Dict[str, str]], Optional[str]]:
+    """Read recipient contacts from a CSV file.
+    
+    Accepts CSVs with columns such as:
+      - 'email', 'e-mail', 'mail', 'to'
+      - 'name', 'full_name', 'first_name', 'contact'
+    
+    Returns:
+      (list_of_contacts, error_message_or_None)
+    """
+    target_path = (csv_path or "contacts.csv").strip()
+    
+    # Try current directory or absolute path
+    resolved_path = Path(target_path)
+    if not resolved_path.is_file():
+        # Check workspace root
+        resolved_path = Path(os.getcwd()) / target_path
+    
+    if not resolved_path.is_file():
+        return [], f"Could not find CSV file at '{target_path}'. Please make sure the file exists."
+    
+    contacts: List[Dict[str, str]] = []
+    try:
+        with open(resolved_path, mode="r", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            if not reader.fieldnames:
+                return [], f"The CSV file '{target_path}' is empty."
+            
+            # Identify email and name column headers
+            email_col = None
+            name_col = None
+            for col in reader.fieldnames:
+                col_clean = col.strip().lower()
+                if col_clean in ["email", "e-mail", "mail", "recipient", "to", "email_address"]:
+                    email_col = col
+                elif col_clean in ["name", "full_name", "first_name", "contact", "recipient_name"]:
+                    name_col = col
+            
+            for row in reader:
+                # Find email
+                raw_email = row.get(email_col, "").strip() if email_col else ""
+                if not raw_email:
+                    # Scan any column containing an '@'
+                    for v in row.values():
+                        if v and "@" in v:
+                            raw_email = v.strip()
+                            break
+                
+                # Validate email format
+                if raw_email and "@" in raw_email:
+                    contact_name = row.get(name_col, "").strip() if name_col else ""
+                    contacts.append({"email": raw_email, "name": contact_name})
+                    
+        if not contacts:
+            return [], f"No valid email addresses were found in '{target_path}'."
+        return contacts, None
+    except Exception as e:
+        return [], f"Failed to read contacts CSV: {e}"
+
+
+def _parse_recipients(
+    to: Optional[Union[str, List[str]]] = None,
+    csv_path: Optional[str] = None,
+) -> Tuple[List[Dict[str, str]], Optional[str]]:
+    """Parse one or more recipients from strings, lists, or CSV references."""
+    to_str = str(to or "").strip()
+    
+    # Check if CSV mode requested
+    is_csv_target = (
+        bool(csv_path)
+        or to_str.lower().endswith(".csv")
+        or to_str.lower() in ["csv", "contacts", "contacts.csv", "team.csv"]
+        or "from csv" in to_str.lower()
+        or "contacts.csv" in to_str.lower()
+    )
+    
+    if is_csv_target:
+        effective_path = csv_path
+        if not effective_path and to_str.lower().endswith(".csv"):
+            effective_path = to_str
+        return _load_contacts_from_csv(effective_path)
+    
+    # List of recipients provided
+    if isinstance(to, (list, tuple)):
+        results: List[Dict[str, str]] = []
+        for item in to:
+            if isinstance(item, dict) and "email" in item:
+                results.append({"email": str(item["email"]).strip(), "name": str(item.get("name", "")).strip()})
+            else:
+                s = str(item).strip()
+                matches = re.findall(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', s)
+                for em in matches:
+                    results.append({"email": em, "name": ""})
+        if not results:
+            return [], "No valid email addresses were found in the recipient list."
+        return results, None
+    
+    # String provided — extract all email addresses
+    # Handles: "a@x.com, b@y.com and c@z.com" or "John <john@example.com>"
+    emails_found = re.findall(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', to_str)
+    if emails_found:
+        results = []
+        for em in emails_found:
+            results.append({"email": em, "name": ""})
+        return results, None
+    
+    # If no email addresses could be parsed
+    if not to_str:
+        return [], "I need a valid email address or CSV contact list to send the mail."
+    return [], f"'{to_str}' is not a valid email address. Please provide a valid email or CSV file."
+
+
+# --------------------------------------------------------------------------- #
 # AI subject + body composer (uses OpenAI synchronously — light call)
 # --------------------------------------------------------------------------- #
 
@@ -56,7 +178,6 @@ def _compose_email(description: str, recipient_name: str = "") -> Dict[str, str]
     """
     api_key = os.environ.get("OPENAI_API_KEY", "")
     if not api_key or api_key.startswith("your-"):
-        # Simple fallback without AI
         subject = f"Message{' for ' + recipient_name if recipient_name else ''}"
         body = description
         return {"subject": subject, "body": body}
@@ -87,7 +208,6 @@ Respond ONLY with valid JSON in this exact format (no markdown, no extra text):
 
         import json
         raw = (response.choices[0].message.content or "").strip()
-        # Strip markdown code fences if present
         raw = raw.strip("```json").strip("```").strip()
         result = json.loads(raw)
         return {
@@ -103,7 +223,7 @@ Respond ONLY with valid JSON in this exact format (no markdown, no extra text):
 
 
 # --------------------------------------------------------------------------- #
-# Core sending function
+# Core sending function (Single recipient dispatch)
 # --------------------------------------------------------------------------- #
 
 def _send_smtp(to_email: str, subject: str, body: str) -> Dict[str, Any]:
@@ -117,12 +237,10 @@ def _send_smtp(to_email: str, subject: str, body: str) -> Dict[str, Any]:
             "spoken": (
                 "Email is not configured yet. Please open the dot-env file, "
                 "set SENDER_EMAIL to your Gmail address, and set SENDER_APP_PASSWORD "
-                "to a 16-character Gmail App Password. "
-                "You can generate one at myaccount.google.com slash security under App Passwords."
+                "to a 16-character Gmail App Password."
             ),
         }
 
-    # Gmail App Passwords are 16 chars (displayed with spaces — strip them)
     clean_password = app_password.replace(" ", "")
     if len(clean_password) != 16:
         return {
@@ -130,9 +248,7 @@ def _send_smtp(to_email: str, subject: str, body: str) -> Dict[str, Any]:
             "error": f"App password has {len(clean_password)} chars, expected 16.",
             "spoken": (
                 f"The Gmail App Password in your dot-env file looks incorrect — "
-                f"it has {len(clean_password)} characters but should be exactly 16. "
-                "Please go to myaccount.google.com slash security, open App Passwords, "
-                "generate a new one, and paste it into the SENDER_APP_PASSWORD field."
+                f"it has {len(clean_password)} characters but should be exactly 16."
             ),
         }
 
@@ -144,13 +260,12 @@ def _send_smtp(to_email: str, subject: str, body: str) -> Dict[str, Any]:
     # Plain-text part
     msg.attach(MIMEText(body, "plain", "utf-8"))
 
-    # Optional HTML part (just wrap body in a simple <p>)
+    # HTML part
     html_body = f"<html><body><p>{body.replace(chr(10), '<br>')}</p></body></html>"
     msg.attach(MIMEText(html_body, "html", "utf-8"))
 
     context = ssl.create_default_context()
 
-    # Try port 587 (STARTTLS) first, then fall back to port 465 (SSL)
     def _try_587() -> None:
         with smtplib.SMTP(SMTP_HOST, 587, timeout=15) as server:
             server.ehlo()
@@ -171,17 +286,11 @@ def _send_smtp(to_email: str, subject: str, body: str) -> Dict[str, Any]:
             attempt()
             logger.info(f"Email sent to {to_email} | subject: {subject}")
             return {"success": True, "to": to_email, "subject": subject}
-        except smtplib.SMTPAuthenticationError as e:
+        except smtplib.SMTPAuthenticationError:
             return {
                 "success": False,
                 "error": "Authentication failed",
-                "spoken": (
-                    "Gmail authentication failed. Your App Password was rejected. "
-                    "Make sure you are using a 16-character Gmail App Password "
-                    "(not your regular Gmail password). "
-                    "Go to myaccount.google.com, enable 2-Step Verification, "
-                    "then generate a new App Password under Security settings."
-                ),
+                "spoken": "Gmail authentication failed. Please verify your SENDER_APP_PASSWORD.",
             }
         except Exception as e:
             last_err = e
@@ -191,78 +300,149 @@ def _send_smtp(to_email: str, subject: str, body: str) -> Dict[str, Any]:
     return {
         "success": False,
         "error": str(last_err),
-        "spoken": (
-            "Could not connect to Gmail's mail server. "
-            "Please check your internet connection and make sure your SENDER_APP_PASSWORD "
-            "is a valid 16-character Gmail App Password."
-        ),
+        "spoken": f"Could not send email to {to_email}: {last_err}",
     }
 
 
 # --------------------------------------------------------------------------- #
-# Public tool: send_email — the one registered in TOOLS_REGISTRY
+# Public tool: send_email — Single, Multi-Recipient & Bulk CSV
 # --------------------------------------------------------------------------- #
 
 def send_email(
-    to: str,
+    to: Optional[Union[str, List[str]]] = None,
     description: Optional[str] = None,
     subject: Optional[str] = None,
     body: Optional[str] = None,
     recipient_name: Optional[str] = None,
+    csv_path: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Send a real email to a recipient.
+    """Compose and send emails to a single recipient, multiple recipients, or bulk contacts via CSV.
 
-    The AI will auto-generate a professional subject and body from the
-    user's plain-language description if subject/body are not supplied.
+    The AI will automatically compose a professional subject and body from the
+    user's natural description if subject and body are not explicitly provided.
 
     Args:
-        to:             Recipient email address (required).
-        description:    Natural-language description of what to say, e.g.
-                        "Tell him the meeting is moved to Friday 3pm".
+        to:             Recipient email, multiple emails separated by commas or 'and',
+                        a list of emails, or 'contacts.csv' / 'csv'.
+        description:    Plain-language description of what to say, e.g.
+                        "tell them the meeting is rescheduled to Friday 3pm".
         subject:        Optional explicit subject line (overrides AI generation).
         body:           Optional explicit email body (overrides AI generation).
-        recipient_name: Optional name used to personalise the AI-composed email.
+        recipient_name: Optional name for greeting personalization.
+        csv_path:       Optional path to a CSV contacts file (defaults to 'contacts.csv').
 
     Returns:
-        dict with keys: success (bool), spoken (str), to, subject.
+        Dictionary with dispatch status, counts, and spoken message.
     """
-    to = (to or "").strip()
-    if not to or "@" not in to:
+    # 1. Parse Recipients (single, multi, or CSV)
+    recipients, parse_err = _parse_recipients(to=to, csv_path=csv_path)
+    if parse_err or not recipients:
+        spoken_msg = parse_err if parse_err and "csv" in parse_err.lower() else "I need a valid email address to send the mail. Could you provide the recipient's email?"
         return {
             "success": False,
-            "spoken": "I need a valid email address to send the mail. Could you provide the recipient's email?",
+            "error": parse_err or "No valid recipients found",
+            "spoken": spoken_msg,
         }
 
-    # Determine subject + body
+    # 2. Validate Description / Content
+    if not description and not (subject and body):
+        return {
+            "success": False,
+            "spoken": "Please describe what you want to say in the email.",
+        }
+
+    # 3. Determine Subject & Base Body
     if subject and body:
         final_subject = subject
-        final_body = body
+        base_body = body
     elif description:
         composed = _compose_email(description, recipient_name or "")
         final_subject = subject or composed["subject"]
-        final_body = body or composed["body"]
+        base_body = body or composed["body"]
     else:
         return {
             "success": False,
             "spoken": "Please describe what you want to say in the email.",
         }
 
-    result = _send_smtp(to_email=to, subject=final_subject, body=final_body)
+    # ----------------------------------------------------------------------- #
+    # Case A: Single Recipient
+    # ----------------------------------------------------------------------- #
+    if len(recipients) == 1:
+        target_email = recipients[0]["email"]
+        target_name = recipient_name or recipients[0]["name"]
+        
+        result = _send_smtp(to_email=target_email, subject=final_subject, body=base_body)
+        if result["success"]:
+            name_part = f" to {target_name}" if target_name else f" to {target_email}"
+            result["spoken"] = (
+                f"Done! I've sent the email{name_part} with the subject \"{final_subject}\"."
+            )
+            result["subject"] = final_subject
+            result["body"] = base_body
+            result["to"] = target_email
+        return result
 
-    if result["success"]:
-        name_part = f" to {recipient_name}" if recipient_name else f" to {to}"
-        result["spoken"] = (
-            f"Done! I've sent the email{name_part} with the subject \"{final_subject}\"."
+    # ----------------------------------------------------------------------- #
+    # Case B: Multiple / Bulk Recipients (via Commas, 'and', or CSV)
+    # ----------------------------------------------------------------------- #
+    successful: List[str] = []
+    failed: List[Dict[str, str]] = []
+
+    for idx, r in enumerate(recipients):
+        em = r["email"]
+        nm = r["name"]
+        
+        # Personalized greeting if name available
+        recipient_body = base_body
+        if nm and ("Dear" in base_body or "Hi" in base_body or "Hello" in base_body):
+            # Replace generic greeting with recipient's name
+            recipient_body = re.sub(r'^(Dear|Hi|Hello)\s+[A-Za-z]+,', f'\\1 {nm},', base_body, flags=re.MULTILINE)
+
+        send_res = _send_smtp(to_email=em, subject=final_subject, body=recipient_body)
+        if send_res.get("success"):
+            successful.append(em)
+        else:
+            failed.append({"email": em, "error": send_res.get("error", "Failed")})
+
+        # Safe rate-limiting delay between deliveries
+        if idx < len(recipients) - 1:
+            time.sleep(0.3)
+
+    total_count = len(recipients)
+    success_count = len(successful)
+    is_overall_success = success_count > 0
+
+    if success_count == total_count:
+        if total_count <= 3:
+            recip_list = ", ".join(successful)
+            spoken = f"Done! Successfully sent all {total_count} emails to {recip_list} with the subject \"{final_subject}\"."
+        else:
+            spoken = f"Done! Successfully sent all {total_count} emails to your contacts with the subject \"{final_subject}\"."
+    elif success_count > 0:
+        failed_list = ", ".join([f["email"] for f in failed])
+        spoken = (
+            f"Sent {success_count} of {total_count} emails successfully with subject \"{final_subject}\". "
+            f"Failed for: {failed_list}."
         )
-        result["subject"] = final_subject
-        result["body"] = final_body
-        result["to"] = to
+    else:
+        spoken = f"Failed to deliver emails to all {total_count} recipients. Please check your Gmail connection."
 
-    return result
+    return {
+        "success": is_overall_success,
+        "total": total_count,
+        "sent_count": success_count,
+        "failed_count": len(failed),
+        "recipients": successful,
+        "failed": failed,
+        "subject": final_subject,
+        "body": base_body,
+        "spoken": spoken,
+    }
 
 
 # --------------------------------------------------------------------------- #
-# Legacy stub functions (kept so existing imports in test_agent.py don't break)
+# Legacy stub functions (retained for test compatibility)
 # --------------------------------------------------------------------------- #
 
 _SAMPLE_EMAILS: Dict[str, Dict[str, Any]] = {
@@ -270,7 +450,7 @@ _SAMPLE_EMAILS: Dict[str, Dict[str, Any]] = {
         "id": "msg-1",
         "sender": "sarah.chen@company.com",
         "subject": "Launch blockers for v2.4",
-        "snippet": "Database migration completed. Staging resolved, awaiting design signoff.",
+        "snippet": "Database migration completed cleanly.",
         "date": "Today, 08:30 AM",
         "unread": True,
     },
@@ -324,5 +504,5 @@ def draft_reply(
         "success": True,
         "draft_id": draft_id,
         "draft": draft,
-        "spoken": f"Created a draft reply to {target_to}. You can review or ask me to send it.",
+        "spoken": f"Created a draft reply to {target_to}.",
     }

@@ -281,25 +281,32 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
         "function": {
             "name": "send_email",
             "description": (
-                "Compose and send a real email on behalf of the user. "
+                "Compose and send single or bulk emails via Gmail. "
+                "Supports multiple recipients separated by commas or 'and', as well as bulk mailing via a CSV contacts file (e.g. 'contacts.csv'). "
                 "The AI will auto-generate a professional subject and body from the user's plain-language description. "
-                "Use whenever the user says 'send an email to ...', 'mail ... that ...', 'email ... about ...'. "
-                "Example: 'send an email to priya@gmail.com saying the meeting is shifted to Friday'."
+                "Examples: "
+                "'send an email to priya@gmail.com saying the meeting is shifted to Friday', "
+                "'send email to rahul@gmail.com, priya@gmail.com and amit@yahoo.com saying the workshop starts at 10 AM', "
+                "'send email to contacts.csv saying project updates are ready'."
             ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "to": {
                         "type": "string",
-                        "description": "Recipient's email address, e.g. 'john@example.com'.",
+                        "description": "Recipient email address, multiple comma/and-separated emails (e.g. 'a@x.com, b@y.com and c@z.com'), or 'contacts.csv' / 'csv'.",
                     },
                     "description": {
                         "type": "string",
                         "description": (
                             "Plain-language description of what to say in the email. "
                             "The AI will turn this into a polished subject and body. "
-                            "E.g. 'tell him the meeting is moved to Friday 3pm'."
+                            "E.g. 'tell them the meeting is moved to Friday 3pm'."
                         ),
+                    },
+                    "csv_path": {
+                        "type": "string",
+                        "description": "Optional explicit path to contacts CSV file (defaults to 'contacts.csv' if sending in bulk from file).",
                     },
                     "recipient_name": {
                         "type": "string",
