@@ -484,6 +484,68 @@ def db_delete_chat_session(user_id: str, session_id: str) -> bool:
         return cur.rowcount > 0
 
 
+# --- OAuth Token Storage (Google / Gmail Integrations) ---
+def db_save_user_oauth(
+    user_id: str,
+    email: str,
+    access_token: str,
+    refresh_token: Optional[str] = None,
+    provider: str = "google",
+    token_expiry: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Store or update OAuth credentials for a user."""
+    now = datetime.now(timezone.utc).isoformat()
+    with get_db_connection() as conn:
+        # Check existing
+        cur = conn.execute(
+            "SELECT id, refresh_token FROM user_oauth_tokens WHERE user_id = ? AND provider = ?",
+            (user_id, provider),
+        )
+        row = cur.fetchone()
+        if row:
+            oauth_id = row["id"]
+            # Preserve existing refresh token if not provided in refresh grant
+            final_refresh = refresh_token or row["refresh_token"]
+            conn.execute(
+                """UPDATE user_oauth_tokens 
+                   SET email = ?, access_token = ?, refresh_token = ?, token_expiry = ?, updated_at = ? 
+                   WHERE id = ?""",
+                (email, access_token, final_refresh, token_expiry, now, oauth_id),
+            )
+        else:
+            oauth_id = f"oath-{uuid.uuid4().hex[:8]}"
+            conn.execute(
+                """INSERT INTO user_oauth_tokens 
+                   (id, user_id, provider, email, access_token, refresh_token, token_expiry, created_at, updated_at) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (oauth_id, user_id, provider, email, access_token, refresh_token, token_expiry, now, now),
+            )
+        conn.commit()
+    return {"id": oauth_id, "user_id": user_id, "provider": provider, "email": email}
+
+
+def db_get_user_oauth(user_id: str, provider: str = "google") -> Optional[Dict[str, Any]]:
+    """Retrieve stored OAuth credentials for a user."""
+    with get_db_connection() as conn:
+        cur = conn.execute(
+            "SELECT * FROM user_oauth_tokens WHERE user_id = ? AND provider = ?",
+            (user_id, provider),
+        )
+        row = cur.fetchone()
+        return dict(row) if row else None
+
+
+def db_delete_user_oauth(user_id: str, provider: str = "google") -> bool:
+    """Disconnect / delete OAuth credentials for a user."""
+    with get_db_connection() as conn:
+        cur = conn.execute(
+            "DELETE FROM user_oauth_tokens WHERE user_id = ? AND provider = ?",
+            (user_id, provider),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+
+
 # Auto-initialize database on import
 init_db()
 

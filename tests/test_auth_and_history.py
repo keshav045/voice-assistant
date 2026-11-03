@@ -186,3 +186,40 @@ def test_session_grouped_history_endpoints():
     assert s1 not in remaining_ids
     assert s2 in remaining_ids
 
+
+def test_google_oauth_endpoints():
+    from fastapi.testclient import TestClient
+    from agent.main import app
+    from db.models import db_save_user_oauth, db_get_user_oauth, db_delete_user_oauth
+
+    client = TestClient(app)
+    # 1. Unconfigured state
+    res_url = client.get("/api/auth/google/url")
+    assert res_url.status_code == 200
+    assert "configured" in res_url.json()
+
+    # 2. Status endpoint
+    res_status = client.get("/api/auth/google/status")
+    assert res_status.status_code == 200
+    assert res_status.json()["connected"] is False
+
+    # 3. Simulate connected state
+    uid = f"usr_{uuid.uuid4().hex[:6]}"
+    saved = db_save_user_oauth(
+        user_id=uid,
+        email="test_user@gmail.com",
+        access_token="fake_access_token",
+        refresh_token="fake_refresh_token",
+    )
+    assert saved["email"] == "test_user@gmail.com"
+
+    rec = db_get_user_oauth(uid)
+    assert rec is not None
+    assert rec["email"] == "test_user@gmail.com"
+    assert rec["refresh_token"] == "fake_refresh_token"
+
+    # 4. Disconnect
+    deleted = db_delete_user_oauth(uid)
+    assert deleted is True
+    assert db_get_user_oauth(uid) is None
+

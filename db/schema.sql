@@ -136,4 +136,17 @@ CREATE TABLE IF NOT EXISTS chat_history (
     created_at TEXT NOT NULL
 );
 
+-- Google OAuth & Third-party Integrations
+CREATE TABLE IF NOT EXISTS user_oauth_tokens (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    provider TEXT NOT NULL DEFAULT 'google',
+    email TEXT,
+    access_token TEXT,
+    refresh_token TEXT,
+    token_expiry TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
 

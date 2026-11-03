@@ -128,17 +128,20 @@ ACTIVE_TOOL_NAMES = {"web_search", "calculator", "run_python_code", "get_current
 ACTIVE_TOOL_SCHEMAS = [s for s in TOOL_SCHEMAS if s.get("function", {}).get("name") in ACTIVE_TOOL_NAMES]
 
 
-async def process_user_turn(user_text: str, session_id: str) -> Dict[str, Any]:
+async def process_user_turn(user_text: str, session_id: str, user_id: Optional[str] = "guest") -> Dict[str, Any]:
     """Execute voice turn equipped with active tools:
     - web_search (live cricket scores, latest breaking news, real-time facts)
     - calculator (math expressions, arithmetic, percentages, powers, square roots)
     - run_python_code (execute basic Python code snippets, test algorithms, logic)
     - get_current_time (time and date)
+    - send_email (Gmail REST API via OAuth or SMTP fallback)
+    - open_app & send_whatsapp_message
     - LLM internal reasoning & general knowledge
     """
     start_time = time.perf_counter()
     clean_text = user_text.strip()
     session_id = session_id or f"sess-{uuid.uuid4().hex[:8]}"
+    effective_user_id = user_id or "guest"
 
     spoken = ""
     executed_tools: List[Dict[str, Any]] = []
@@ -180,6 +183,9 @@ async def process_user_turn(user_text: str, session_id: str) -> Dict[str, Any]:
                         t_args = json.loads(tc.function.arguments)
                     except Exception:
                         t_args = {}
+
+                    if t_name == "send_email" and "user_id" not in t_args:
+                        t_args["user_id"] = effective_user_id
 
                     handler = TOOLS_REGISTRY.get(t_name)
                     if handler:
@@ -377,6 +383,147 @@ def auth_logout(authorization: Optional[str] = Header(None)):
     return {"success": True}
 
 
+# --- Google OAuth (Connect Gmail) Endpoints ---
+@app.get("/api/auth/google/url")
+def get_google_auth_url(authorization: Optional[str] = Header(None)):
+    """Generate official Google OAuth 2.0 authorization URL for connecting Gmail."""
+    user = get_current_user_optional(authorization)
+    user_id = user["id"] if user else "guest"
+
+    client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+    redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/auth/google/callback").strip()
+
+    if not client_id:
+        return {
+            "configured": False,
+            "message": "Google OAuth is not configured yet. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env.",
+        }
+
+    scopes = [
+        "https://www.googleapis.com/auth/gmail.send",
+        "https://www.googleapis.com/auth/userinfo.email",
+    ]
+    state_payload = json.dumps({"user_id": user_id})
+    state_b64 = base64.urlsafe_b64encode(state_payload.encode("utf-8")).decode("utf-8")
+
+    from urllib.parse import urlencode
+    params = {
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": " ".join(scopes),
+        "access_type": "offline",
+        "prompt": "consent",
+        "state": state_b64,
+    }
+    auth_url = f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}"
+    return {"configured": True, "url": auth_url}
+
+
+@app.get("/api/auth/google/callback")
+def google_auth_callback(code: Optional[str] = None, state: Optional[str] = None, error: Optional[str] = None):
+    """Handle redirect from Google OAuth consent screen."""
+    if error or not code:
+        err_msg = error or "Authorization code not provided by Google."
+        return HTMLResponse(f"<html><body><h3>Google connection cancelled or failed: {err_msg}</h3><script>setTimeout(() => window.close(), 3000);</script></body></html>")
+
+    client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+    client_secret = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
+    redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/auth/google/callback").strip()
+
+    user_id = "guest"
+    if state:
+        try:
+            state_data = json.loads(base64.urlsafe_b64decode(state.encode("utf-8")).decode("utf-8"))
+            user_id = state_data.get("user_id", "guest")
+        except Exception:
+            pass
+
+    import httpx
+    try:
+        token_resp = httpx.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": code,
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "redirect_uri": redirect_uri,
+                "grant_type": "authorization_code",
+            },
+            timeout=15.0,
+        )
+        if token_resp.status_code != 200:
+            return HTMLResponse(f"<html><body><h3>Failed to exchange token with Google: {token_resp.text}</h3></body></html>")
+
+        tokens = token_resp.json()
+        access_token = tokens["access_token"]
+        refresh_token = tokens.get("refresh_token")
+
+        info_resp = httpx.get(
+            "https://www.googleapis.com/oauth2/v2/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=10.0,
+        )
+        user_email = ""
+        if info_resp.status_code == 200:
+            user_email = info_resp.json().get("email", "")
+
+        from db.models import db_save_user_oauth
+        db_save_user_oauth(
+            user_id=user_id,
+            email=user_email,
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
+
+        return HTMLResponse(f"""
+        <!DOCTYPE html>
+        <html>
+        <head><title>Gmail Connected</title></head>
+        <body style="font-family:sans-serif; text-align:center; padding: 50px;">
+          <h2 style="color: #16a34a;">✓ Gmail Connected Successfully!</h2>
+          <p>Linked account: <strong>{user_email}</strong></p>
+          <p>This window will close automatically...</p>
+          <script>
+            if (window.opener) {{
+              window.opener.postMessage({{ type: 'GMAIL_CONNECTED', email: '{user_email}' }}, '*');
+              setTimeout(() => window.close(), 1500);
+            }} else {{
+              setTimeout(() => {{ window.location.href = '/?gmail_connected=1'; }}, 1500);
+            }}
+          </script>
+        </body>
+        </html>
+        """)
+    except Exception as e:
+        return HTMLResponse(f"<html><body><h3>Error during Google connection: {e}</h3></body></html>")
+
+
+@app.get("/api/auth/google/status")
+def google_auth_status(authorization: Optional[str] = Header(None)):
+    """Check if the current user has connected their Gmail account."""
+    user = get_current_user_optional(authorization)
+    user_id = user["id"] if user else "guest"
+    from db.models import db_get_user_oauth
+    record = db_get_user_oauth(user_id=user_id, provider="google")
+    client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+    return {
+        "oauth_configured": bool(client_id),
+        "connected": bool(record and (record.get("refresh_token") or record.get("access_token"))),
+        "email": record.get("email") if record else None,
+    }
+
+
+@app.post("/api/auth/google/disconnect")
+def google_auth_disconnect(authorization: Optional[str] = Header(None)):
+    """Disconnect / unlink Gmail account."""
+    user = get_current_user_optional(authorization)
+    user_id = user["id"] if user else "guest"
+    from db.models import db_delete_user_oauth
+    deleted = db_delete_user_oauth(user_id=user_id, provider="google")
+    return {"success": deleted}
+
+
 # --- Chat History Endpoints ---
 @app.get("/api/history")
 def get_chat_history(
@@ -441,7 +588,7 @@ async def chat_endpoint(req: ChatRequest, authorization: Optional[str] = Header(
     user_id = user["id"] if user else (req.user_id or "guest")
     sess_id = req.session_id or f"sess-{uuid.uuid4().hex[:8]}"
 
-    result = await process_user_turn(user_text=req.message, session_id=sess_id)
+    result = await process_user_turn(user_text=req.message, session_id=sess_id, user_id=user_id)
 
     # Save to user's permanent history
     db_save_chat_turn(

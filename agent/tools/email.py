@@ -226,6 +226,103 @@ Respond ONLY with valid JSON in this exact format (no markdown, no extra text):
 # Core sending function (Single recipient dispatch)
 # --------------------------------------------------------------------------- #
 
+# --------------------------------------------------------------------------- #
+# Core sending functions: Gmail REST API (OAuth) & SMTP Fallback
+# --------------------------------------------------------------------------- #
+
+def _send_gmail_api(to_email: str, subject: str, body: str, access_token: str, sender_email: str) -> Dict[str, Any]:
+    """Send an email using official Google Gmail REST API (users.messages.send)."""
+    import base64
+    import httpx
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = sender_email
+    msg["To"] = to_email
+
+    # Plain-text and HTML versions
+    msg.attach(MIMEText(body, "plain", "utf-8"))
+    html_body = f"<html><body><p>{body.replace(chr(10), '<br>')}</p></body></html>"
+    msg.attach(MIMEText(html_body, "html", "utf-8"))
+
+    raw_bytes = base64.urlsafe_b64encode(msg.as_bytes()).decode("utf-8")
+
+    url = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+    }
+    payload = {"raw": raw_bytes}
+
+    try:
+        response = httpx.post(url, headers=headers, json=payload, timeout=20.0)
+        if response.status_code == 200:
+            logger.info(f"Gmail REST API: Email sent to {to_email} | subject: {subject}")
+            return {"success": True, "to": to_email, "subject": subject}
+        else:
+            err_msg = response.text
+            try:
+                err_data = response.json()
+                err_msg = err_data.get("error", {}).get("message", response.text)
+            except Exception:
+                pass
+            logger.error(f"Gmail REST API error: {err_msg}")
+            return {"success": False, "error": err_msg, "spoken": f"Gmail API error: {err_msg}"}
+    except Exception as e:
+        logger.error(f"Gmail REST API request failed: {e}")
+        return {"success": False, "error": str(e), "spoken": f"Gmail delivery failed: {e}"}
+
+
+def _get_fresh_google_access_token(user_id: str) -> Optional[Tuple[str, str]]:
+    """Retrieve fresh Google access token using stored refresh token.
+    Returns (access_token, user_email) or None.
+    """
+    from db.models import db_get_user_oauth, db_save_user_oauth
+    import httpx
+
+    record = db_get_user_oauth(user_id=user_id, provider="google")
+    if not record:
+        return None
+
+    client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+    client_secret = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
+    refresh_token = record.get("refresh_token")
+    user_email = record.get("email") or ""
+    current_token = record.get("access_token")
+
+    # If we have refresh credentials, refresh access token
+    if client_id and client_secret and refresh_token:
+        try:
+            token_url = "https://oauth2.googleapis.com/token"
+            resp = httpx.post(
+                token_url,
+                data={
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                    "refresh_token": refresh_token,
+                    "grant_type": "refresh_token",
+                },
+                timeout=10.0,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                fresh_access_token = data.get("access_token")
+                if fresh_access_token:
+                    db_save_user_oauth(
+                        user_id=user_id,
+                        email=user_email,
+                        access_token=fresh_access_token,
+                        refresh_token=refresh_token,
+                    )
+                    return fresh_access_token, user_email
+        except Exception as e:
+            logger.warning(f"Could not refresh Google token: {e}")
+
+    if current_token:
+        return current_token, user_email
+    return None
+
+
 def _send_smtp(to_email: str, subject: str, body: str) -> Dict[str, Any]:
     """Send email via Gmail SMTP. Tries port 587 (STARTTLS) then 465 (SSL)."""
     sender_email, app_password = _get_smtp_creds()
@@ -315,25 +412,15 @@ def send_email(
     body: Optional[str] = None,
     recipient_name: Optional[str] = None,
     csv_path: Optional[str] = None,
+    user_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Compose and send emails to a single recipient, multiple recipients, or bulk contacts via CSV.
 
-    The AI will automatically compose a professional subject and body from the
-    user's natural description if subject and body are not explicitly provided.
-
-    Args:
-        to:             Recipient email, multiple emails separated by commas or 'and',
-                        a list of emails, or 'contacts.csv' / 'csv'.
-        description:    Plain-language description of what to say, e.g.
-                        "tell them the meeting is rescheduled to Friday 3pm".
-        subject:        Optional explicit subject line (overrides AI generation).
-        body:           Optional explicit email body (overrides AI generation).
-        recipient_name: Optional name for greeting personalization.
-        csv_path:       Optional path to a CSV contacts file (defaults to 'contacts.csv').
-
-    Returns:
-        Dictionary with dispatch status, counts, and spoken message.
+    Uses the user's connected Google Account (via Gmail REST API) if linked,
+    or falls back to Gmail SMTP credentials from .env.
     """
+    effective_user_id = user_id or "guest"
+
     # 1. Parse Recipients (single, multi, or CSV)
     recipients, parse_err = _parse_recipients(to=to, csv_path=csv_path)
     if parse_err or not recipients:
@@ -365,6 +452,14 @@ def send_email(
             "spoken": "Please describe what you want to say in the email.",
         }
 
+    # Internal dispatcher: checks Google OAuth first, then SMTP
+    def _deliver(to_em: str, subj: str, bdy: str) -> Dict[str, Any]:
+        token_info = _get_fresh_google_access_token(user_id=effective_user_id) if effective_user_id else None
+        if token_info:
+            access_tok, sender_em = token_info
+            return _send_gmail_api(to_email=to_em, subject=subj, body=bdy, access_token=access_tok, sender_email=sender_em)
+        return _send_smtp(to_email=to_em, subject=subj, body=bdy)
+
     # ----------------------------------------------------------------------- #
     # Case A: Single Recipient
     # ----------------------------------------------------------------------- #
@@ -372,7 +467,7 @@ def send_email(
         target_email = recipients[0]["email"]
         target_name = recipient_name or recipients[0]["name"]
         
-        result = _send_smtp(to_email=target_email, subject=final_subject, body=base_body)
+        result = _deliver(to_em=target_email, subj=final_subject, bdy=base_body)
         if result["success"]:
             name_part = f" to {target_name}" if target_name else f" to {target_email}"
             result["spoken"] = (
@@ -396,16 +491,14 @@ def send_email(
         # Personalized greeting if name available
         recipient_body = base_body
         if nm and ("Dear" in base_body or "Hi" in base_body or "Hello" in base_body):
-            # Replace generic greeting with recipient's name
             recipient_body = re.sub(r'^(Dear|Hi|Hello)\s+[A-Za-z]+,', f'\\1 {nm},', base_body, flags=re.MULTILINE)
 
-        send_res = _send_smtp(to_email=em, subject=final_subject, body=recipient_body)
+        send_res = _deliver(to_em=em, subj=final_subject, bdy=recipient_body)
         if send_res.get("success"):
             successful.append(em)
         else:
             failed.append({"email": em, "error": send_res.get("error", "Failed")})
 
-        # Safe rate-limiting delay between deliveries
         if idx < len(recipients) - 1:
             time.sleep(0.3)
 

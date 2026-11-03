@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initSpeechRecognition();
   checkAuthStatus();
   loadHistory();
+  checkGmailStatus();
 });
 
 // --- User Authentication ---
@@ -66,6 +67,7 @@ function updateAuthUI(user) {
     if (loggedOutCard) loggedOutCard.classList.remove("hidden");
     if (loggedInCard) loggedInCard.classList.add("hidden");
   }
+  checkGmailStatus();
 }
 
 function openAuthModal(tab = "login") {
@@ -776,3 +778,83 @@ function escapeHtml(str) {
   if (!str) return "";
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+
+// --- Google OAuth (Connect Gmail) Client Handlers ---
+async function checkGmailStatus() {
+  const pill = document.getElementById("gmail-status-pill");
+  const unlinkedBox = document.getElementById("gmail-unlinked-state");
+  const linkedBox = document.getElementById("gmail-linked-state");
+  const emailSpan = document.getElementById("gmail-linked-email");
+
+  try {
+    const res = await fetch("/api/auth/google/status", {
+      headers: authToken ? { "Authorization": `Bearer ${authToken}` } : {},
+    });
+    const data = await res.json();
+
+    if (data.connected && data.email) {
+      if (pill) {
+        pill.innerText = "Linked";
+        pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800";
+      }
+      if (unlinkedBox) unlinkedBox.classList.add("hidden");
+      if (linkedBox) linkedBox.classList.remove("hidden");
+      if (emailSpan) emailSpan.innerText = data.email;
+    } else {
+      if (pill) {
+        pill.innerText = data.oauth_configured ? "Not Linked" : "Ready";
+        pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-surface-container text-on-surface-variant";
+      }
+      if (unlinkedBox) unlinkedBox.classList.remove("hidden");
+      if (linkedBox) linkedBox.classList.add("hidden");
+    }
+  } catch (err) {
+    console.warn("Could not check Gmail status:", err);
+  }
+}
+
+async function connectGmailAccount() {
+  try {
+    const res = await fetch("/api/auth/google/url", {
+      headers: authToken ? { "Authorization": `Bearer ${authToken}` } : {},
+    });
+    const data = await res.json();
+    if (!data.configured) {
+      alert("Google OAuth 2.0 Credentials Setup:\n\nTo enable production 1-click Google sign-in:\n1. Open Google Cloud Console (console.cloud.google.com)\n2. Create an OAuth 2.0 Client ID (Web Application)\n3. Set Redirect URI: http://localhost:8000/api/auth/google/callback\n4. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your .env file.\n\n(In the meantime, the assistant will seamlessly use the fallback Gmail SMTP configured in .env!)");
+      return;
+    }
+    // Open Google OAuth consent popup
+    const width = 500;
+    const height = 650;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
+    window.open(
+      data.url,
+      "google_oauth_popup",
+      `width=${width},height=${height},top=${top},left=${left},status=no,resizable=yes`
+    );
+  } catch (err) {
+    alert("Could not start Google connection: " + err.message);
+  }
+}
+
+async function disconnectGmailAccount() {
+  if (!confirm("Are you sure you want to disconnect your Gmail account?")) return;
+  try {
+    const res = await fetch("/api/auth/google/disconnect", {
+      method: "POST",
+      headers: authToken ? { "Authorization": `Bearer ${authToken}` } : {},
+    });
+    await res.json();
+    checkGmailStatus();
+  } catch (err) {
+    alert("Could not disconnect Gmail: " + err.message);
+  }
+}
+
+// Window listener for OAuth popup completion
+window.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "GMAIL_CONNECTED") {
+    checkGmailStatus();
+  }
+});
