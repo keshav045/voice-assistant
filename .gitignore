@@ -52,6 +52,9 @@ pnpm-debug.log*
 # Database & persistence
 *.sqlite3
 *.db
+*.db-shm
+*.db-wal
+*.db-journal
 postgres-data/
 pgdata/
 
