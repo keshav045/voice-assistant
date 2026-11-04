@@ -20,7 +20,7 @@ try:
     import pyautogui
     import pyperclip
     AUTOMATION_AVAILABLE = True
-except ImportError:
+except (ImportError, Exception):
     AUTOMATION_AVAILABLE = False
 
 

@@ -207,15 +207,22 @@ Tested areas include:
 
 ---
 
-## Production & Docker
+## Deployment Options
 
-To deploy with Docker Compose:
+### 1. Deploy on Vercel (Recommended for Cloud)
+This project is configured out of the box for Vercel with `api/index.py` and `vercel.json`:
+1. Push your code to GitHub.
+2. Go to [Vercel Dashboard](https://vercel.com/dashboard) and click **"Add New Project"**.
+3. Select your `voice-assistant` repository.
+4. Add your `OPENAI_API_KEY` under Environment Variables.
+5. Click **"Deploy"** — you get a fast, global HTTPS URL in seconds.
 
+### 2. Deploy with Docker
 ```bash
 docker-compose up -d --build
 ```
 
-The container includes health checks on `/health` and stores the database on a persistent volume. See [DEPLOYMENT.md](DEPLOYMENT.md) for deploying to Railway, Render, Fly.io, or an Ubuntu VPS.
+The container includes automated health checks on `/health` and stores the database on a persistent volume. See [DEPLOYMENT.md](DEPLOYMENT.md) for full deployment instructions (Vercel, Railway, Render, Fly.io, or VPS).
 
 ---
 

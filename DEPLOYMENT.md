@@ -151,6 +151,40 @@ gcloud run deploy nexus-assistant \
 
 ---
 
+### Option D: Vercel Serverless Deployment (1-Click & Zero-Maintenance)
+
+Nexus AI includes out-of-the-box configuration for Vercel Serverless deployment using `@vercel/python`, `api/index.py`, and `vercel.json`.
+
+#### 1. Push Your Code to GitHub
+Ensure your repository is pushed to GitHub:
+```bash
+git push -u origin main
+```
+
+#### 2. Import into Vercel
+1. Navigate to your [Vercel Dashboard](https://vercel.com/dashboard) and click **"Add New..." > "Project"**.
+2. Select your repository: **`keshav045/voice-assistant`**.
+3. Under **Framework Preset**, select **"Other"** (or leave as default).
+4. Root Directory: `./` (leave default).
+
+#### 3. Add Environment Variables
+In the Vercel Project Settings, expand **Environment Variables** and add:
+- `OPENAI_API_KEY`: Your OpenAI API key (`sk-...`)
+- `OPENAI_MODEL`: `gpt-4o`
+- `SENDER_EMAIL`: *(Optional)* Your Gmail address for sending emails
+- `SENDER_APP_PASSWORD`: *(Optional)* 16-character Gmail App Password
+- `GOOGLE_CLIENT_ID`: *(Optional)* For Google OAuth 2.0 Connect Gmail feature
+- `GOOGLE_CLIENT_SECRET`: *(Optional)* For Google OAuth 2.0 Connect Gmail feature
+
+#### 4. Deploy
+Click **"Deploy"**.
+Vercel will:
+- Install dependencies from `requirements.txt`.
+- Bundle FastAPI, static web dashboard, and serverless SQLite.
+- Provide a global SSL HTTPS URL (e.g., `https://voice-assistant-keshav.vercel.app`).
+
+---
+
 ### Option C: Bare-Metal / Linux VPS (Ubuntu/Debian)
 
 For deployment on dedicated servers, AWS EC2, or DigitalOcean Droplets using **systemd** and **Nginx**.

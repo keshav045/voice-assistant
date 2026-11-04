@@ -730,6 +730,22 @@ function appendAssistantBubble(text, toolCalls) {
     `;
   }
 
+  let actionLinkHtml = "";
+  if (toolCalls && toolCalls.length > 0) {
+    for (const tc of toolCalls) {
+      if ((tc.tool === "open_app" || tc.tool === "send_whatsapp_message") && tc.result && tc.result.url) {
+        const label = tc.tool === "open_app" ? `Open ${(tc.result.target || "App")}` : "Open WhatsApp Chat";
+        actionLinkHtml += `
+          <a href="${escapeHtml(tc.result.url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary-container transition-all shadow-xs mt-1 w-fit">
+            <span>${escapeHtml(label)}</span>
+            <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+          </a>
+        `;
+        try { window.open(tc.result.url, "_blank"); } catch (e) {}
+      }
+    }
+  }
+
   bubble.innerHTML = `
     <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5 shadow-sm">
       AI
@@ -740,6 +756,7 @@ function appendAssistantBubble(text, toolCalls) {
         ${escapeHtml(text)}
       </div>
       ${toolBadgeHtml}
+      ${actionLinkHtml}
     </div>
   `;
   container.appendChild(bubble);
