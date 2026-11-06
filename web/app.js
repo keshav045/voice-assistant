@@ -875,3 +875,160 @@ window.addEventListener("message", (event) => {
     checkGmailStatus();
   }
 });
+
+// ============================================================================
+// LiveKit WebRTC Voice Engine Integration
+// ============================================================================
+let activeAudioEngine = "webspeech"; // "webspeech" | "livekit"
+let livekitRoom = null;
+let isLiveKitConnecting = false;
+
+function switchAudioEngine(engine) {
+  activeAudioEngine = engine;
+  const webSpeechBtn = document.getElementById("engine-btn-webspeech");
+  const livekitBtn = document.getElementById("engine-btn-livekit");
+  const controls = document.getElementById("livekit-controls");
+  const pill = document.getElementById("livekit-status-pill");
+
+  if (engine === "livekit") {
+    if (webSpeechBtn) webSpeechBtn.className = "py-1 rounded-md text-on-surface-variant hover:text-on-surface transition-all text-center";
+    if (livekitBtn) livekitBtn.className = "py-1 rounded-md bg-white text-primary shadow-xs transition-all text-center";
+    if (controls) controls.classList.remove("hidden");
+    if (pill) {
+      pill.innerText = livekitRoom ? "Connected" : "LiveKit Ready";
+      pill.className = livekitRoom
+        ? "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800"
+        : "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-primary/10 text-primary";
+    }
+  } else {
+    if (livekitBtn) livekitBtn.className = "py-1 rounded-md text-on-surface-variant hover:text-on-surface transition-all text-center";
+    if (webSpeechBtn) webSpeechBtn.className = "py-1 rounded-md bg-white text-primary shadow-xs transition-all text-center";
+    if (controls) controls.classList.add("hidden");
+    if (pill) {
+      pill.innerText = "Web Speech";
+      pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-surface-container text-on-surface-variant";
+    }
+  }
+}
+
+async function toggleLiveKitConnection() {
+  if (livekitRoom) {
+    await disconnectLiveKit();
+  } else {
+    await connectLiveKit();
+  }
+}
+
+async function connectLiveKit() {
+  if (typeof LivekitClient === "undefined") {
+    alert("LiveKit client library is loading. Please check your internet connection and try again.");
+    return;
+  }
+
+  const btn = document.getElementById("livekit-connect-btn");
+  const btnLabel = document.getElementById("livekit-connect-btn-label");
+  const pill = document.getElementById("livekit-status-pill");
+  const latency = document.getElementById("livekit-latency-indicator");
+
+  try {
+    isLiveKitConnecting = true;
+    if (btnLabel) btnLabel.innerText = "Fetching Room Token...";
+    if (pill) {
+      pill.innerText = "Connecting...";
+      pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-amber-100 text-amber-800";
+    }
+
+    // 1. Fetch room token from backend
+    const res = await fetch("/api/livekit/token", {
+      headers: authToken ? { "Authorization": `Bearer ${authToken}` } : {},
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      alert("LiveKit WebRTC Configuration Required:\n\n" + (data.message || "Please configure LIVEKIT_URL, LIVEKIT_API_KEY, and LIVEKIT_API_SECRET in your .env file.\n\nThen start the LiveKit Agent worker with:\npython run_livekit.py dev"));
+      resetLiveKitUI();
+      return;
+    }
+
+    if (btnLabel) btnLabel.innerText = "Connecting WebRTC...";
+
+    // 2. Initialize LiveKit Room
+    livekitRoom = new LivekitClient.Room({
+      adaptiveStream: true,
+      dynacast: true,
+      audioCaptureDefaults: {
+        autoGainControl: true,
+        echoCancellation: true,
+        noiseSuppression: true,
+      },
+    });
+
+    // Handle remote assistant audio tracks
+    livekitRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+      if (track.kind === LivekitClient.Track.Kind.Audio) {
+        const audioElement = track.attach();
+        audioElement.id = `audio-${participant.identity}`;
+        document.body.appendChild(audioElement);
+      }
+    });
+
+    // Handle disconnect event
+    livekitRoom.on(LivekitClient.RoomEvent.Disconnected, () => {
+      resetLiveKitUI();
+    });
+
+    // 3. Connect to room & publish local microphone
+    await livekitRoom.connect(data.url, data.token);
+    await livekitRoom.localParticipant.setMicrophoneEnabled(true);
+
+    // Update UI
+    if (btn) {
+      btn.className = "w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-all shadow-xs group";
+    }
+    if (btnLabel) btnLabel.innerText = "Disconnect Stream";
+    if (pill) {
+      pill.innerText = "Connected";
+      pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800";
+    }
+    if (latency) latency.classList.remove("hidden");
+
+    appendAssistantBubble(
+      "LiveKit WebRTC audio stream connected! Speak into your microphone for sub-second real-time voice response.",
+      [{ tool: "livekit_webrtc", result: { status: "connected" } }]
+    );
+  } catch (err) {
+    console.error("LiveKit connection error:", err);
+    alert("Could not connect to LiveKit WebRTC room: " + err.message);
+    resetLiveKitUI();
+  } finally {
+    isLiveKitConnecting = false;
+  }
+}
+
+async function disconnectLiveKit() {
+  if (livekitRoom) {
+    try {
+      await livekitRoom.disconnect();
+    } catch (e) {}
+    livekitRoom = null;
+  }
+  resetLiveKitUI();
+}
+
+function resetLiveKitUI() {
+  livekitRoom = null;
+  const btn = document.getElementById("livekit-connect-btn");
+  const btnLabel = document.getElementById("livekit-connect-btn-label");
+  const pill = document.getElementById("livekit-status-pill");
+  const latency = document.getElementById("livekit-latency-indicator");
+
+  if (btn) {
+    btn.className = "w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-all shadow-xs group";
+  }
+  if (btnLabel) btnLabel.innerText = "Connect WebRTC Stream";
+  if (pill) {
+    pill.innerText = activeAudioEngine === "livekit" ? "LiveKit Ready" : "Web Speech";
+    pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-surface-container text-on-surface-variant";
+  }
+  if (latency) latency.classList.add("hidden");
+}

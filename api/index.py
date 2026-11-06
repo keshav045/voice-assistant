@@ -21,3 +21,4 @@ try:
     handler = Mangum(app, lifespan="off")
 except ImportError:
     handler = app
+

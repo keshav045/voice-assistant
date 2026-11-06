@@ -524,6 +524,71 @@ def google_auth_disconnect(authorization: Optional[str] = Header(None)):
     return {"success": deleted}
 
 
+# --- LiveKit WebRTC Real-Time Endpoints ---
+@app.get("/api/livekit/status")
+def livekit_status():
+    """Check if LiveKit WebRTC is configured."""
+    url = os.environ.get("LIVEKIT_URL", "").strip()
+    key = os.environ.get("LIVEKIT_API_KEY", "").strip()
+    secret = os.environ.get("LIVEKIT_API_SECRET", "").strip()
+    return {
+        "configured": bool(url and key and secret),
+        "url": url if url else None,
+    }
+
+
+@app.get("/api/livekit/token")
+def livekit_token(
+    room: Optional[str] = None,
+    identity: Optional[str] = None,
+    name: Optional[str] = None,
+    authorization: Optional[str] = Header(None),
+):
+    """Mint a WebRTC access token for LiveKit client."""
+    url = os.environ.get("LIVEKIT_URL", "").strip()
+    key = os.environ.get("LIVEKIT_API_KEY", "").strip()
+    secret = os.environ.get("LIVEKIT_API_SECRET", "").strip()
+
+    if not (url and key and secret):
+        return {
+            "success": False,
+            "error": "LiveKit credentials not configured",
+            "message": "Please configure LIVEKIT_URL, LIVEKIT_API_KEY, and LIVEKIT_API_SECRET in your .env file.",
+        }
+
+    user = get_current_user_optional(authorization)
+    user_id = user["id"] if user else None
+    user_name = user["username"] if user else (name or "User")
+
+    room_name = room or (f"nexus-room-{user_id}" if user_id else "nexus-room")
+    participant_id = identity or (f"user-{user_id}" if user_id else f"guest-{uuid.uuid4().hex[:6]}")
+
+    try:
+        from livekit import api
+        token = (
+            api.AccessToken(key, secret)
+            .with_identity(participant_id)
+            .with_name(user_name)
+            .with_grants(api.VideoGrants(room_join=True, room=room_name))
+            .to_jwt()
+        )
+        return {
+            "success": True,
+            "token": token,
+            "url": url,
+            "room": room_name,
+            "identity": participant_id,
+            "name": user_name,
+        }
+    except Exception as e:
+        logger.error(f"Failed to generate LiveKit token: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "message": f"Could not create LiveKit token: {e}",
+        }
+
+
 # --- Chat History Endpoints ---
 @app.get("/api/history")
 def get_chat_history(

@@ -102,6 +102,42 @@
       </div>
     </div>
 
+    <!-- LiveKit WebRTC Audio Engine Card -->
+    <div id="sidebar-livekit-section" class="p-3 border-t border-surface-container bg-surface-container-lowest shrink-0">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-primary text-[17px]">graphic_eq</span>
+          <span class="text-[11px] font-bold text-on-surface">Voice Engine</span>
+        </div>
+        <span id="livekit-status-pill" class="text-[9px] px-2 py-0.5 rounded-full font-semibold bg-surface-container text-on-surface-variant">Web Speech</span>
+      </div>
+
+      <!-- Engine Selector Tabs -->
+      <div class="grid grid-cols-2 gap-1 p-1 bg-surface-container-low rounded-lg mb-2 text-[11px] font-semibold">
+        <button id="engine-btn-webspeech" onclick="switchAudioEngine('webspeech')" class="py-1 rounded-md bg-white text-primary shadow-xs transition-all text-center">
+          Web Speech
+        </button>
+        <button id="engine-btn-livekit" onclick="switchAudioEngine('livekit')" class="py-1 rounded-md text-on-surface-variant hover:text-on-surface transition-all text-center">
+          LiveKit WebRTC
+        </button>
+      </div>
+
+      <!-- LiveKit WebRTC Connect / Disconnect Action Button -->
+      <div id="livekit-controls" class="hidden flex flex-col gap-1.5">
+        <button id="livekit-connect-btn" onclick="toggleLiveKitConnection()" class="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-all shadow-xs group">
+          <span class="material-symbols-outlined text-[16px]">podcasts</span>
+          <span id="livekit-connect-btn-label">Connect WebRTC Stream</span>
+        </button>
+        <div id="livekit-latency-indicator" class="hidden flex items-center justify-between px-1 text-[10px] text-on-surface-variant">
+          <span>Latency: <strong id="livekit-rtt" class="text-emerald-700 font-bold">&lt;150ms</strong></span>
+          <span class="flex items-center gap-1 text-emerald-600 font-semibold">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Streaming
+          </span>
+        </div>
+      </div>
+    </div>
+
     <!-- Gmail Integration Card (OAuth) -->
     <div id="sidebar-gmail-section" class="p-3 border-t border-surface-container bg-surface-container-lowest shrink-0">
       <div class="flex items-center justify-between mb-2">
@@ -332,6 +368,8 @@
     </div>
   </div>
 
+  <!-- LiveKit WebRTC Client SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>

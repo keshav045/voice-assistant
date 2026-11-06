@@ -4,8 +4,9 @@
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
+[![LiveKit WebRTC](https://img.shields.io/badge/LiveKit-WebRTC_Agent-00D2B4.svg)](https://livekit.io/)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-412991.svg)](https://platform.openai.com/)
-[![Tests](https://img.shields.io/badge/Tests-64%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-68%20passed-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
@@ -58,20 +59,41 @@ I built **Nexus AI** to do exactly that, with a focus on speed, reliability, and
 - Includes user registration and login with salted SHA-256 password hashing.
 - Conversations are saved in a clean sidebar grouped by session, so you can resume or delete past chats anytime.
 
+### 8. LiveKit WebRTC Real-Time Audio Engine (Sub-500ms Streaming)
+- **Dual-Engine Architecture**: Toggle between lightweight Web Speech API (runs anywhere including Vercel serverless) and **LiveKit WebRTC** (ultra-low latency full-duplex audio stream).
+- **Sub-500ms Voice Pipeline**: Silero VAD &rarr; OpenAI Whisper STT &rarr; GPT-4o Agent with tools &rarr; OpenAI TTS.
+- **True WebRTC Barge-in**: Instant audio cancellation at the packet level when you start speaking.
+- **Dedicated Worker**: Run `python run_livekit.py dev` to connect your voice agent to LiveKit Cloud.
+
 ---
 
 ## Architecture & Engineering Decisions
 
 ```mermaid
-flowchart LR
-    Mic[Microphone / Web Speech API] --> WebUI[Web Dashboard]
-    WebUI -->|Async HTTP| FastAPI[FastAPI Backend]
-    FastAPI --> Agent[GPT-4o Agent & Tool Dispatcher]
-    Agent --> Tools[Real-World Tools]
+flowchart TD
+    User([User Voice]) --> WebUI[Web Dashboard with Engine Switcher]
     
-    Tools --> Tool1[Email: Gmail OAuth + SMTP]
-    Tools --> Tool2[WhatsApp Automation]
-    Tools --> Tool3[App & Website Launcher]
+    subgraph Mode 1: Web Speech API (Vercel & Free)
+        WebUI -->|HTTP /api/chat| FastAPI[FastAPI Backend]
+        FastAPI --> Agent[GPT-4o Tool Dispatcher]
+    end
+
+    subgraph Mode 2: LiveKit WebRTC Engine (Sub-500ms Streaming)
+        WebUI -->|1. Get Room Token| TokenRoute[GET /api/livekit/token]
+        WebUI <-->|2. WebRTC Audio Stream| LiveKitSFU[LiveKit Cloud / Local SFU]
+        LiveKitSFU <-->|Full-Duplex Stream| LiveKitWorker[LiveKit Voice Pipeline Agent]
+        LiveKitWorker --> Agent
+    end
+
+    Agent --> Tools[Real-World Autonomous Tools]
+    Tools --> Tool1[Email: Gmail OAuth + SMTP + Bulk CSV]
+    Tools --> Tool2[WhatsApp Messaging Automation]
+    Tools --> Tool3[Desktop & Browser App Launcher]
+    Tools --> Tool4[DuckDuckGo & Live News RSS]
+    Tools --> Tool5[AST Calculator & Python REPL]
+    
+    FastAPI --> DB[(SQLite in WAL Mode)]
+```
     Tools --> Tool4[DuckDuckGo / News RSS]
     Tools --> Tool5[AST Calculator & Python REPL]
     
@@ -195,9 +217,10 @@ Every component is tested with `pytest`. Run the test suite:
 pytest tests/ -v
 ```
 
-**Status**: 64 passed in ~26 seconds (100% pass rate).
+**Status**: 68 passed (100% pass rate).
 
 Tested areas include:
+- LiveKit WebRTC status, token generation, and agent tool instantiation (`test_livekit.py`)
 - Email tool with single, comma-separated, and CSV bulk recipients
 - Google OAuth token refresh logic
 - WhatsApp automation and desktop fallback

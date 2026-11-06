@@ -19,3 +19,4 @@ desktop-companion
 *.db-journal
 .env
 *.log
+
