@@ -60,9 +60,9 @@ I built **Nexus AI** to do exactly that, with a focus on speed, reliability, and
 - Conversations are saved in a clean sidebar grouped by session, so you can resume or delete past chats anytime.
 
 ### 8. LiveKit WebRTC Real-Time Audio Engine (Sub-500ms Streaming)
-- **Dual-Engine Architecture**: Toggle between lightweight Web Speech API (runs anywhere including Vercel serverless) and **LiveKit WebRTC** (ultra-low latency full-duplex audio stream).
+- **LiveKit WebRTC Voice Engine**: Dedicated full-duplex real-time WebRTC audio streaming directly between the browser and LiveKit Cloud.
 - **Sub-500ms Voice Pipeline**: Silero VAD &rarr; OpenAI Whisper STT &rarr; GPT-4o Agent with tools &rarr; OpenAI TTS.
-- **True WebRTC Barge-in**: Instant audio cancellation at the packet level when you start speaking.
+- **True WebRTC Barge-in**: Instant audio cancellation at the packet level the millisecond you begin speaking.
 - **Dedicated Worker**: Run `python run_livekit.py dev` to connect your voice agent to LiveKit Cloud.
 
 ---
@@ -71,18 +71,18 @@ I built **Nexus AI** to do exactly that, with a focus on speed, reliability, and
 
 ```mermaid
 flowchart TD
-    User([User Voice]) --> WebUI[Web Dashboard with Engine Switcher]
+    User([User Voice]) <-->|Full-Duplex WebRTC| WebUI[Web Dashboard]
     
-    subgraph Mode 1: Web Speech API (Vercel & Free)
-        WebUI -->|HTTP /api/chat| FastAPI[FastAPI Backend]
-        FastAPI --> Agent[GPT-4o Tool Dispatcher]
-    end
-
-    subgraph Mode 2: LiveKit WebRTC Engine (Sub-500ms Streaming)
+    subgraph LiveKit WebRTC Voice Pipeline
         WebUI -->|1. Get Room Token| TokenRoute[GET /api/livekit/token]
         WebUI <-->|2. WebRTC Audio Stream| LiveKitSFU[LiveKit Cloud / Local SFU]
         LiveKitSFU <-->|Full-Duplex Stream| LiveKitWorker[LiveKit Voice Pipeline Agent]
-        LiveKitWorker --> Agent
+        LiveKitWorker --> Agent[GPT-4o Tool Dispatcher]
+    end
+
+    subgraph Text & History API
+        WebUI -->|HTTP /api/chat| FastAPI[FastAPI Backend]
+        FastAPI --> Agent
     end
 
     Agent --> Tools[Real-World Autonomous Tools]
@@ -94,17 +94,12 @@ flowchart TD
     
     FastAPI --> DB[(SQLite in WAL Mode)]
 ```
-    Tools --> Tool4[DuckDuckGo / News RSS]
-    Tools --> Tool5[AST Calculator & Python REPL]
-    
-    FastAPI --> DB[(SQLite in WAL Mode)]
-```
 
 ### Why these choices?
 - **FastAPI over Django/Flask**: Asynchronous by design, minimal memory footprint, and native OpenAPI documentation.
 - **Vanilla HTML5 + ES6 JavaScript**: Instead of a bloated Node.js/React frontend with hundreds of megabytes of `node_modules`, the frontend is clean vanilla web code. It loads in under 50ms and runs right out of FastAPI's static file handler.
 - **SQLite in WAL Mode**: Write-Ahead Logging gives high concurrency, immediate read/write access, and zero external database setup required.
-- **Web Speech API**: Uses the browser's built-in speech engine for zero-cost, near-instant speech recognition without requiring external paid speech APIs.
+- **LiveKit WebRTC**: Dedicated real-time voice streaming with sub-500ms latency, neural VAD, and true barge-in interruption.
 
 ---
 
@@ -131,9 +126,9 @@ voice-assistant/
 │   └── models.py          # Database queries & WAL mode connection manager
 ├── web/
 │   ├── index.html         # Dashboard UI with sidebar and mic button
-│   ├── app.js             # Speech recognition, audio cancel, and chat handling
+│   ├── app.js             # LiveKit WebRTC client, audio stream, and chat handling
 │   └── style.css          # Dark-mode theme
-├── tests/                 # Automated test suite (64 tests)
+├── tests/                 # Automated test suite (68 tests)
 ├── run_server.py          # Production server entrypoint
 ├── Dockerfile             # Production container definition
 ├── docker-compose.yml     # Docker Compose orchestration

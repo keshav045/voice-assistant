@@ -106,27 +106,17 @@
     <div id="sidebar-livekit-section" class="p-3 border-t border-surface-container bg-surface-container-lowest shrink-0">
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-primary text-[17px]">graphic_eq</span>
-          <span class="text-[11px] font-bold text-on-surface">Voice Engine</span>
+          <span class="material-symbols-outlined text-primary text-[17px]">podcasts</span>
+          <span class="text-[11px] font-bold text-on-surface">LiveKit WebRTC</span>
         </div>
-        <span id="livekit-status-pill" class="text-[9px] px-2 py-0.5 rounded-full font-semibold bg-surface-container text-on-surface-variant">Web Speech</span>
-      </div>
-
-      <!-- Engine Selector Tabs -->
-      <div class="grid grid-cols-2 gap-1 p-1 bg-surface-container-low rounded-lg mb-2 text-[11px] font-semibold">
-        <button id="engine-btn-webspeech" onclick="switchAudioEngine('webspeech')" class="py-1 rounded-md bg-white text-primary shadow-xs transition-all text-center">
-          Web Speech
-        </button>
-        <button id="engine-btn-livekit" onclick="switchAudioEngine('livekit')" class="py-1 rounded-md text-on-surface-variant hover:text-on-surface transition-all text-center">
-          LiveKit WebRTC
-        </button>
+        <span id="livekit-status-pill" class="text-[9px] px-2 py-0.5 rounded-full font-semibold bg-primary/10 text-primary border border-primary/20">Ready</span>
       </div>
 
       <!-- LiveKit WebRTC Connect / Disconnect Action Button -->
-      <div id="livekit-controls" class="hidden flex flex-col gap-1.5">
-        <button id="livekit-connect-btn" onclick="toggleLiveKitConnection()" class="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-all shadow-xs group">
-          <span class="material-symbols-outlined text-[16px]">podcasts</span>
-          <span id="livekit-connect-btn-label">Connect WebRTC Stream</span>
+      <div id="livekit-controls" class="flex flex-col gap-1.5">
+        <button id="livekit-connect-btn" onclick="toggleLiveKitConnection()" class="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-semibold transition-all shadow-sm group">
+          <span class="material-symbols-outlined text-[16px]">mic</span>
+          <span id="livekit-connect-btn-label">Connect LiveKit Voice</span>
         </button>
         <div id="livekit-latency-indicator" class="hidden flex items-center justify-between px-1 text-[10px] text-on-surface-variant">
           <span>Latency: <strong id="livekit-rtt" class="text-emerald-700 font-bold">&lt;150ms</strong></span>
@@ -290,12 +280,12 @@
         <div class="flex items-center gap-2 p-2 rounded-2xl bg-surface-container-lowest border border-surface-container shadow-sm focus-within:border-primary transition-all">
           
           <!-- Mic Button inside the search box -->
-          <button onclick="toggleMicrophone()" id="mic-btn" class="w-10 h-10 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface flex items-center justify-center transition-all shrink-0 border border-surface-container/60" title="Click to speak">
+          <button onclick="toggleMicrophone()" id="mic-btn" class="w-10 h-10 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface flex items-center justify-center transition-all shrink-0 border border-surface-container/60" title="Connect LiveKit Voice">
             <span class="material-symbols-outlined text-[20px] text-primary" id="mic-icon">mic</span>
           </button>
 
           <!-- Input Box -->
-          <input id="chat-input" class="flex-1 bg-transparent px-3 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none" placeholder="Ask anything or use mic..." type="text" onkeydown="handleChatInput(event)"/>
+          <input id="chat-input" class="flex-1 bg-transparent px-3 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none" placeholder="Ask anything or speak with LiveKit..." type="text" onkeydown="handleChatInput(event)"/>
           
           <!-- Send Button -->
           <button onclick="submitChatTurn()" class="w-10 h-10 rounded-xl bg-primary hover:bg-primary-container text-white flex items-center justify-center transition-all shadow-sm shrink-0" title="Send message">
@@ -304,7 +294,7 @@
         </div>
 
         <div class="flex items-center justify-between px-2 text-on-surface-variant text-[11px]">
-          <span class="text-on-surface-variant/70 text-[10px]">Press Enter to send or click the mic to speak</span>
+          <span class="text-on-surface-variant/70 text-[10px]">Press Enter to send or click the mic for LiveKit real-time voice</span>
           <span id="turn-latency-label" class="text-on-surface-variant/70 text-[10px]">Model: GPT-4o</span>
         </div>
       </div>

@@ -8,8 +8,6 @@
  */
 
 let audioOutputEnabled = true;
-let isListening = false;
-let recognition = null;
 let currentAuthTab = "login";
 let authToken = localStorage.getItem("nexus_auth_token") || "";
 let currentUser = null;
@@ -20,7 +18,7 @@ let isSpeaking = false;
 
 // --- Initialization ---
 document.addEventListener("DOMContentLoaded", () => {
-  initSpeechRecognition();
+  checkLiveKitStatus();
   checkAuthStatus();
   loadHistory();
   checkGmailStatus();
@@ -415,83 +413,43 @@ function escapeJs(str) {
   return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
 }
 
-// --- Speech Recognition ---
-function initSpeechRecognition() {
-  if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
-    const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechClass();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = "en-US";
-
-    recognition.onstart = () => {
-      isListening = true;
-      stopSpeaking();
-      updateMicUI(true);
-    };
-
-    recognition.onresult = (event) => {
-      const text = event.results[0][0].transcript;
-      const input = document.getElementById("chat-input");
-      if (input) input.value = text;
-      submitChatTurn(text);
-    };
-
-    recognition.onerror = (event) => {
-      console.warn("Speech recognition error:", event.error);
-      stopMicrophone();
-    };
-
-    recognition.onend = () => {
-      stopMicrophone();
-    };
-  } else {
-    console.info("Web Speech API not supported in this browser.");
-  }
-}
-
+// --- LiveKit WebRTC Voice Controls ---
 function toggleMicrophone() {
-  if (!recognition) {
-    alert("Speech recognition is not supported in this browser. Please use Chrome or Edge, or type your message.");
-    return;
-  }
-  if (isListening) {
-    recognition.stop();
-  } else {
-    try {
-      recognition.start();
-    } catch (e) {
-      console.warn("Could not start recognition:", e);
-    }
-  }
+  toggleLiveKitConnection();
 }
 
-function stopMicrophone() {
-  isListening = false;
-  updateMicUI(false);
-}
-
-function updateMicUI(listening) {
+function updateMicUI(state) {
+  // state: "idle" | "connecting" | "connected"
   const micBtn = document.getElementById("mic-btn");
   const micIcon = document.getElementById("mic-icon");
   const chatInput = document.getElementById("chat-input");
 
   if (!micBtn) return;
 
-  if (listening) {
-    micBtn.className = "w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center transition-all shadow-md animate-pulse shrink-0";
+  if (state === "connected") {
+    micBtn.className = "w-10 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center transition-all shadow-md animate-pulse shrink-0";
     if (micIcon) {
       micIcon.innerText = "mic";
       micIcon.className = "material-symbols-outlined text-[20px] text-white";
     }
-    if (chatInput) chatInput.placeholder = "Listening... Speak now";
+    micBtn.title = "Disconnect LiveKit Voice Stream";
+    if (chatInput) chatInput.placeholder = "LiveKit Voice active... Speak now";
+  } else if (state === "connecting") {
+    micBtn.className = "w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center transition-all shadow-md animate-spin shrink-0";
+    if (micIcon) {
+      micIcon.innerText = "sync";
+      micIcon.className = "material-symbols-outlined text-[20px] text-white";
+    }
+    micBtn.title = "Connecting LiveKit...";
+    if (chatInput) chatInput.placeholder = "Connecting LiveKit WebRTC...";
   } else {
     micBtn.className = "w-10 h-10 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface flex items-center justify-center transition-all shrink-0 border border-surface-container/60";
     if (micIcon) {
       micIcon.innerText = "mic";
       micIcon.className = "material-symbols-outlined text-[20px] text-primary";
     }
-    if (chatInput) chatInput.placeholder = "Ask anything or use mic...";
+    micBtn.title = "Connect LiveKit Voice Stream";
+    if (chatInput) chatInput.placeholder = "Ask anything or speak with LiveKit...";
   }
 }
 
@@ -593,11 +551,6 @@ function stopSpeaking() {
     } catch (e) {}
     currentAudio = null;
   }
-  if ("speechSynthesis" in window) {
-    try {
-      window.speechSynthesis.cancel();
-    } catch (e) {}
-  }
   setSpeakingState(false);
 }
 
@@ -606,7 +559,7 @@ async function playSpokenAudio(text) {
 
   stopSpeaking();
 
-  // 1. Try server TTS first
+  // Try server TTS (OpenAI TTS endpoint)
   try {
     const res = await fetch("/api/tts", {
       method: "POST",
@@ -644,35 +597,10 @@ async function playSpokenAudio(text) {
 
       setSpeakingState(true);
       await audio.play();
-      return;
     }
   } catch (e) {
-    console.warn("Server TTS playback issue, falling back to browser synthesis:", e);
-  }
-
-  // 2. Fallback to browser Web Speech Synthesis
-  if ("speechSynthesis" in window) {
-    try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.05;
-      utterance.pitch = 1.0;
-
-      utterance.onstart = () => {
-        setSpeakingState(true);
-      };
-      utterance.onend = () => {
-        setSpeakingState(false);
-      };
-      utterance.onerror = () => {
-        setSpeakingState(false);
-      };
-
-      setSpeakingState(true);
-      window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      setSpeakingState(false);
-    }
+    console.warn("TTS playback error:", e);
+    setSpeakingState(false);
   }
 }
 
@@ -877,37 +805,27 @@ window.addEventListener("message", (event) => {
 });
 
 // ============================================================================
-// LiveKit WebRTC Voice Engine Integration
+// LiveKit WebRTC Voice Engine (Dedicated Real-Time Audio)
 // ============================================================================
-let activeAudioEngine = "webspeech"; // "webspeech" | "livekit"
 let livekitRoom = null;
 let isLiveKitConnecting = false;
 
-function switchAudioEngine(engine) {
-  activeAudioEngine = engine;
-  const webSpeechBtn = document.getElementById("engine-btn-webspeech");
-  const livekitBtn = document.getElementById("engine-btn-livekit");
-  const controls = document.getElementById("livekit-controls");
-  const pill = document.getElementById("livekit-status-pill");
-
-  if (engine === "livekit") {
-    if (webSpeechBtn) webSpeechBtn.className = "py-1 rounded-md text-on-surface-variant hover:text-on-surface transition-all text-center";
-    if (livekitBtn) livekitBtn.className = "py-1 rounded-md bg-white text-primary shadow-xs transition-all text-center";
-    if (controls) controls.classList.remove("hidden");
+async function checkLiveKitStatus() {
+  try {
+    const res = await fetch("/api/livekit/status");
+    const data = await res.json();
+    const pill = document.getElementById("livekit-status-pill");
     if (pill) {
-      pill.innerText = livekitRoom ? "Connected" : "LiveKit Ready";
-      pill.className = livekitRoom
-        ? "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800"
-        : "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-primary/10 text-primary";
+      if (data.configured) {
+        pill.innerText = "LiveKit Ready";
+        pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200";
+      } else {
+        pill.innerText = "Setup Required";
+        pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-amber-50 text-amber-700 border border-amber-200";
+      }
     }
-  } else {
-    if (livekitBtn) livekitBtn.className = "py-1 rounded-md text-on-surface-variant hover:text-on-surface transition-all text-center";
-    if (webSpeechBtn) webSpeechBtn.className = "py-1 rounded-md bg-white text-primary shadow-xs transition-all text-center";
-    if (controls) controls.classList.add("hidden");
-    if (pill) {
-      pill.innerText = "Web Speech";
-      pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-surface-container text-on-surface-variant";
-    }
+  } catch (e) {
+    console.warn("Could not check LiveKit status:", e);
   }
 }
 
@@ -920,6 +838,7 @@ async function toggleLiveKitConnection() {
 }
 
 async function connectLiveKit() {
+  if (isLiveKitConnecting) return;
   if (typeof LivekitClient === "undefined") {
     alert("LiveKit client library is loading. Please check your internet connection and try again.");
     return;
@@ -932,10 +851,12 @@ async function connectLiveKit() {
 
   try {
     isLiveKitConnecting = true;
-    if (btnLabel) btnLabel.innerText = "Fetching Room Token...";
+    updateMicUI("connecting");
+    if (btn) btn.className = "w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold transition-all shadow-sm";
+    if (btnLabel) btnLabel.innerText = "Connecting WebRTC...";
     if (pill) {
       pill.innerText = "Connecting...";
-      pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-amber-100 text-amber-800";
+      pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-amber-100 text-amber-800 border border-amber-200";
     }
 
     // 1. Fetch room token from backend
@@ -949,8 +870,6 @@ async function connectLiveKit() {
       resetLiveKitUI();
       return;
     }
-
-    if (btnLabel) btnLabel.innerText = "Connecting WebRTC...";
 
     // 2. Initialize LiveKit Room
     livekitRoom = new LivekitClient.Room({
@@ -981,20 +900,21 @@ async function connectLiveKit() {
     await livekitRoom.connect(data.url, data.token);
     await livekitRoom.localParticipant.setMicrophoneEnabled(true);
 
-    // Update UI
+    // Update UI to Connected State
     if (btn) {
-      btn.className = "w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-all shadow-xs group";
+      btn.className = "w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-all shadow-sm";
     }
-    if (btnLabel) btnLabel.innerText = "Disconnect Stream";
+    if (btnLabel) btnLabel.innerText = "Disconnect LiveKit Voice";
     if (pill) {
       pill.innerText = "Connected";
-      pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800";
+      pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300";
     }
     if (latency) latency.classList.remove("hidden");
+    updateMicUI("connected");
 
     appendAssistantBubble(
-      "LiveKit WebRTC audio stream connected! Speak into your microphone for sub-second real-time voice response.",
-      [{ tool: "livekit_webrtc", result: { status: "connected" } }]
+      "LiveKit WebRTC audio stream connected! Speak into your microphone for real-time full-duplex voice response.",
+      [{ tool: "livekit_webrtc", result: { status: "connected", room: data.room } }]
     );
   } catch (err) {
     console.error("LiveKit connection error:", err);
@@ -1017,18 +937,20 @@ async function disconnectLiveKit() {
 
 function resetLiveKitUI() {
   livekitRoom = null;
+  isLiveKitConnecting = false;
   const btn = document.getElementById("livekit-connect-btn");
   const btnLabel = document.getElementById("livekit-connect-btn-label");
   const pill = document.getElementById("livekit-status-pill");
   const latency = document.getElementById("livekit-latency-indicator");
 
   if (btn) {
-    btn.className = "w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-all shadow-xs group";
+    btn.className = "w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-semibold transition-all shadow-sm group";
   }
-  if (btnLabel) btnLabel.innerText = "Connect WebRTC Stream";
+  if (btnLabel) btnLabel.innerText = "Connect LiveKit Voice";
   if (pill) {
-    pill.innerText = activeAudioEngine === "livekit" ? "LiveKit Ready" : "Web Speech";
-    pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-surface-container text-on-surface-variant";
+    pill.innerText = "LiveKit Ready";
+    pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-primary/10 text-primary border border-primary/20";
   }
   if (latency) latency.classList.add("hidden");
+  updateMicUI("idle");
 }
