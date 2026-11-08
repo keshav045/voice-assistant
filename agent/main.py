@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, HTTPException, Header
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, UploadFile, File, HTTPException, Header
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -422,14 +422,24 @@ def auth_logout(authorization: Optional[str] = Header(None)):
 
 
 # --- Google OAuth (Connect Gmail) Endpoints ---
+def _resolve_google_redirect_uri(request: Request) -> str:
+    """Resolve the OAuth redirect URI from environment or automatically from incoming request host."""
+    env_uri = os.environ.get("GOOGLE_REDIRECT_URI", "").strip()
+    if env_uri:
+        return env_uri
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or "localhost:8000"
+    proto = request.headers.get("x-forwarded-proto") or ("https" if "vercel" in host or not host.startswith("localhost") else "http")
+    return f"{proto}://{host}/api/auth/google/callback"
+
+
 @app.get("/api/auth/google/url")
-def get_google_auth_url(authorization: Optional[str] = Header(None)):
+def get_google_auth_url(request: Request, authorization: Optional[str] = Header(None)):
     """Generate official Google OAuth 2.0 authorization URL for connecting Gmail."""
     user = get_current_user_optional(authorization)
     user_id = user["id"] if user else "guest"
 
     client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
-    redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/auth/google/callback").strip()
+    redirect_uri = _resolve_google_redirect_uri(request)
 
     if not client_id:
         return {
@@ -455,11 +465,11 @@ def get_google_auth_url(authorization: Optional[str] = Header(None)):
         "state": state_b64,
     }
     auth_url = f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}"
-    return {"configured": True, "url": auth_url}
+    return {"configured": True, "url": auth_url, "redirect_uri": redirect_uri}
 
 
 @app.get("/api/auth/google/callback")
-def google_auth_callback(code: Optional[str] = None, state: Optional[str] = None, error: Optional[str] = None):
+def google_auth_callback(request: Request, code: Optional[str] = None, state: Optional[str] = None, error: Optional[str] = None):
     """Handle redirect from Google OAuth consent screen."""
     if error or not code:
         err_msg = error or "Authorization code not provided by Google."
@@ -467,7 +477,7 @@ def google_auth_callback(code: Optional[str] = None, state: Optional[str] = None
 
     client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
     client_secret = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
-    redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/auth/google/callback").strip()
+    redirect_uri = _resolve_google_redirect_uri(request)
 
     user_id = "guest"
     if state:
