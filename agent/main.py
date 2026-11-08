@@ -438,6 +438,12 @@ def get_google_auth_url(request: Request, authorization: Optional[str] = Header(
     user = get_current_user_optional(authorization)
     user_id = user["id"] if user else "guest"
 
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except Exception:
+        pass
+
     client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
     redirect_uri = _resolve_google_redirect_uri(request)
 
