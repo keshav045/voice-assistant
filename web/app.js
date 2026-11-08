@@ -945,9 +945,13 @@ async function connectLiveKit() {
     // Handle remote assistant audio tracks
     livekitRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
       if (track.kind === LivekitClient.Track.Kind.Audio) {
+        const existingAudio = document.getElementById(`audio-${participant.identity}`);
+        if (existingAudio) existingAudio.remove();
         const audioElement = track.attach();
         audioElement.id = `audio-${participant.identity}`;
+        audioElement.autoplay = true;
         document.body.appendChild(audioElement);
+        audioElement.play().catch(e => console.warn("LiveKit audio playback notice:", e));
       }
     });
 
@@ -971,7 +975,12 @@ async function connectLiveKit() {
 
     // 3. Connect to room & publish local microphone
     await livekitRoom.connect(data.url, data.token);
-    await livekitRoom.localParticipant.setMicrophoneEnabled(true);
+    try {
+      await livekitRoom.localParticipant.setMicrophoneEnabled(true);
+    } catch (micErr) {
+      console.warn("Microphone access error:", micErr);
+      alert("Microphone Access Required:\nPlease allow microphone access in your browser address bar to speak with LiveKit.");
+    }
 
     // Update UI to Connected State
     if (btn) {

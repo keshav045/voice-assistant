@@ -193,6 +193,11 @@ async def entrypoint(ctx: JobContext):
     logger.info(f"Connecting to LiveKit room: {ctx.room.name}")
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
+    # Wait for the browser user to connect into the room
+    logger.info("Waiting for user participant to connect...")
+    participant = await ctx.wait_for_participant()
+    logger.info(f"Participant connected: {participant.identity} ({participant.name or 'User'})")
+
     # Initialize Voice Pipeline Session
     session = AgentSession(
         vad=silero.VAD.load(),
@@ -208,13 +213,14 @@ async def entrypoint(ctx: JobContext):
         tools=LIVEKIT_TOOLS,
     )
 
-    # Start audio pipeline on room
-    session.start(agent, room=ctx.room)
+    # Start audio pipeline on room (must be awaited so listening loop starts!)
+    await session.start(agent, room=ctx.room)
+    logger.info("AgentSession started and listening for voice input")
 
     # Greet participant on join
     try:
         await session.say(
-            "Hello! I am Nexus AI. I'm connected via LiveKit WebRTC and ready to assist you.",
+            "Hello! I am Nexus AI. I'm connected via LiveKit WebRTC and listening. How can I help you?",
             allow_interruptions=True,
         )
     except Exception as e:
