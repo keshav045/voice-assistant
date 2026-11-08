@@ -484,6 +484,24 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
+// --- URL / Application Auto-Launcher ---
+function triggerOpenUrl(url) {
+  if (!url) return;
+  let opened = false;
+  try {
+    const w = window.open(url, "_blank");
+    if (w && !w.closed && typeof w.closed !== "undefined") {
+      opened = true;
+    }
+  } catch (e) {
+    opened = false;
+  }
+  // If the browser's popup blocker blocked the new tab, navigate directly so the app or website opens
+  if (!opened) {
+    window.location.href = url;
+  }
+}
+
 async function submitChatTurn(textOverride) {
   stopSpeaking();
   const inputEl = document.getElementById("chat-input");
@@ -493,6 +511,21 @@ async function submitChatTurn(textOverride) {
   if (inputEl) inputEl.value = "";
 
   appendUserBubble(userText);
+
+  // Synchronously capture window handle during the user's keystroke/click event
+  // This prevents Google Chrome and Microsoft Edge from blocking the tab as an unprompted popup
+  let pendingWindow = null;
+  const cleanLower = userText.toLowerCase().trim();
+  const isOpenIntent = /(?:^|\b)(?:open|launch|start|play|goto|visit)\b/i.test(cleanLower) ||
+                       /(?:youtube|whatsapp|linkedin|gmail|mail|spotify|github)/i.test(cleanLower);
+
+  if (isOpenIntent) {
+    try {
+      pendingWindow = window.open("about:blank", "_blank");
+    } catch (e) {
+      pendingWindow = null;
+    }
+  }
 
   const thinkingId = appendThinkingBubble();
 
@@ -509,6 +542,29 @@ async function submitChatTurn(textOverride) {
     const data = await resp.json();
     removeMessage(thinkingId);
 
+    // Check if tools yielded a URL to open
+    let targetUrlToOpen = null;
+    if (data.tool_calls_executed && data.tool_calls_executed.length > 0) {
+      for (const tc of data.tool_calls_executed) {
+        if ((tc.tool === "open_app" || tc.tool === "send_whatsapp_message") && tc.result && tc.result.url) {
+          targetUrlToOpen = tc.result.url;
+          break;
+        }
+      }
+    }
+
+    if (targetUrlToOpen) {
+      if (pendingWindow && !pendingWindow.closed) {
+        pendingWindow.location.href = targetUrlToOpen;
+        pendingWindow = null;
+      } else {
+        triggerOpenUrl(targetUrlToOpen);
+      }
+    } else if (pendingWindow && !pendingWindow.closed) {
+      pendingWindow.close();
+      pendingWindow = null;
+    }
+
     appendAssistantBubble(data.spoken_reply, data.tool_calls_executed);
 
     const latLabel = document.getElementById("turn-latency-label");
@@ -524,6 +580,10 @@ async function submitChatTurn(textOverride) {
     loadHistory();
 
   } catch (err) {
+    if (pendingWindow && !pendingWindow.closed) {
+      pendingWindow.close();
+      pendingWindow = null;
+    }
     console.error("Chat turn error:", err);
     removeMessage(thinkingId);
     appendAssistantBubble("I encountered an error processing your request. Please try again.");
@@ -669,7 +729,7 @@ function appendAssistantBubble(text, toolCalls) {
             <span class="material-symbols-outlined text-[14px]">open_in_new</span>
           </a>
         `;
-        try { window.open(tc.result.url, "_blank"); } catch (e) {}
+        triggerOpenUrl(tc.result.url);
       }
     }
   }
@@ -888,6 +948,19 @@ async function connectLiveKit() {
         const audioElement = track.attach();
         audioElement.id = `audio-${participant.identity}`;
         document.body.appendChild(audioElement);
+      }
+    });
+
+    // Listen for data packets from worker (e.g. auto-launch app or open URL)
+    livekitRoom.on(LivekitClient.RoomEvent.DataReceived, (payload, participant) => {
+      try {
+        const text = new TextDecoder().decode(payload);
+        const dataPacket = JSON.parse(text);
+        if (dataPacket.type === "OPEN_URL" && dataPacket.url) {
+          triggerOpenUrl(dataPacket.url);
+        }
+      } catch (e) {
+        console.warn("Could not process LiveKit data packet:", e);
       }
     });
 

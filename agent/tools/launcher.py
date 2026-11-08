@@ -163,10 +163,20 @@ def launch_in_browser(url: str, browser: Optional[str] = None) -> bool:
 
     # Default browser
     try:
-        webbrowser.open_new_tab(url)
-        return True
+        if webbrowser.open_new_tab(url):
+            return True
     except Exception:
-        return False
+        pass
+
+    # Windows native ShellExecute (reliable direct launch on Windows)
+    if sys.platform.startswith("win") and hasattr(os, "startfile"):
+        try:
+            os.startfile(url)
+            return True
+        except Exception:
+            pass
+
+    return False
 
 
 def is_windows_app_installed(cmd: str) -> bool:

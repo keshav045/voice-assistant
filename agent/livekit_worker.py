@@ -43,6 +43,27 @@ logger = logging.getLogger("nexus.livekit_worker")
 # Tool Definitions for LiveKit Agents
 # --------------------------------------------------------------------------- #
 
+_active_room: Optional[Any] = None
+
+
+def _broadcast_client_action(action_type: str, data: dict):
+    """Publish an automated action (e.g. open URL) to the web client via LiveKit data channel."""
+    global _active_room
+    if not _active_room or not getattr(_active_room, "local_participant", None):
+        return
+    import json
+    import asyncio
+    try:
+        payload = json.dumps({"type": action_type, **data}).encode("utf-8")
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            asyncio.create_task(_active_room.local_participant.publish_data(payload, reliable=True))
+        else:
+            loop.run_until_complete(_active_room.local_participant.publish_data(payload, reliable=True))
+    except Exception as e:
+        logger.debug(f"Could not publish data action to room: {e}")
+
+
 @llm.function_tool
 def web_search(query: str) -> str:
     """Search Google News and DuckDuckGo for live news, real-time facts, cricket scores, and current events.
@@ -110,6 +131,8 @@ def open_app(name: str, query: str = "") -> str:
     """
     try:
         res = launcher.open_app(name=name, query=query)
+        if res.get("url"):
+            _broadcast_client_action("OPEN_URL", {"url": res["url"], "target": res.get("target")})
         return res.get("spoken") or f"Opening {name}."
     except Exception as e:
         return f"Error opening application {name}: {e}"
@@ -125,6 +148,8 @@ def send_whatsapp_message(contact_name: str, message: str = "") -> str:
     """
     try:
         res = whatsapp.send_whatsapp_message(contact_name=contact_name, message=message)
+        if res.get("url"):
+            _broadcast_client_action("OPEN_URL", {"url": res["url"], "target": "WhatsApp"})
         return res.get("spoken") or f"Sent WhatsApp message to {contact_name}."
     except Exception as e:
         return f"Error sending WhatsApp message: {e}"
@@ -163,6 +188,8 @@ LIVEKIT_TOOLS = [
 
 async def entrypoint(ctx: JobContext):
     """LiveKit agent worker entrypoint for WebRTC audio rooms."""
+    global _active_room
+    _active_room = ctx.room
     logger.info(f"Connecting to LiveKit room: {ctx.room.name}")
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
