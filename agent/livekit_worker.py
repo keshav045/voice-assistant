@@ -46,26 +46,21 @@ logger = logging.getLogger("nexus.livekit_worker")
 _active_room: Optional[Any] = None
 
 
-def _broadcast_client_action(action_type: str, data: dict):
+async def _broadcast_client_action(action_type: str, data: dict):
     """Publish an automated action (e.g. open URL) to the web client via LiveKit data channel."""
     global _active_room
     if not _active_room or not getattr(_active_room, "local_participant", None):
         return
     import json
-    import asyncio
     try:
         payload = json.dumps({"type": action_type, **data}).encode("utf-8")
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            asyncio.create_task(_active_room.local_participant.publish_data(payload, reliable=True))
-        else:
-            loop.run_until_complete(_active_room.local_participant.publish_data(payload, reliable=True))
+        await _active_room.local_participant.publish_data(payload, reliable=True)
     except Exception as e:
         logger.debug(f"Could not publish data action to room: {e}")
 
 
 @llm.function_tool
-def web_search(query: str) -> str:
+async def web_search(query: str) -> str:
     """Search Google News and DuckDuckGo for live news, real-time facts, cricket scores, and current events.
 
     Args:
@@ -79,7 +74,7 @@ def web_search(query: str) -> str:
 
 
 @llm.function_tool
-def calculator(expression: str) -> str:
+async def calculator(expression: str) -> str:
     """Safely calculate mathematical equations, percentages, powers, or arithmetic expressions.
 
     Args:
@@ -93,7 +88,7 @@ def calculator(expression: str) -> str:
 
 
 @llm.function_tool
-def run_python_code(code: str) -> str:
+async def run_python_code(code: str) -> str:
     """Execute Python code in an isolated REPL to test algorithms, compute logic, or verify scripts.
 
     Args:
@@ -107,7 +102,7 @@ def run_python_code(code: str) -> str:
 
 
 @llm.function_tool
-def get_current_time(timezone: str = "Asia/Kolkata") -> str:
+async def get_current_time(timezone: str = "Asia/Kolkata") -> str:
     """Get the current time, date, day of week, and timezone.
 
     Args:
@@ -122,7 +117,7 @@ def get_current_time(timezone: str = "Asia/Kolkata") -> str:
 
 
 @llm.function_tool
-def open_app(name: str, query: str = "") -> str:
+async def open_app(name: str, query: str = "") -> str:
     """Open desktop applications (Calculator, Notepad, Explorer) or websites (YouTube, WhatsApp, LinkedIn, Spotify, GitHub, Gmail).
 
     Args:
@@ -132,14 +127,14 @@ def open_app(name: str, query: str = "") -> str:
     try:
         res = launcher.open_app(name=name, query=query)
         if res.get("url"):
-            _broadcast_client_action("OPEN_URL", {"url": res["url"], "target": res.get("target")})
+            await _broadcast_client_action("OPEN_URL", {"url": res["url"], "target": res.get("target")})
         return res.get("spoken") or f"Opening {name}."
     except Exception as e:
         return f"Error opening application {name}: {e}"
 
 
 @llm.function_tool
-def send_whatsapp_message(contact_name: str, message: str = "") -> str:
+async def send_whatsapp_message(contact_name: str, message: str = "") -> str:
     """Search for a contact in WhatsApp Web or Desktop, open their chat, and send a message.
 
     Args:
@@ -149,14 +144,14 @@ def send_whatsapp_message(contact_name: str, message: str = "") -> str:
     try:
         res = whatsapp.send_whatsapp_message(contact_name=contact_name, message=message)
         if res.get("url"):
-            _broadcast_client_action("OPEN_URL", {"url": res["url"], "target": "WhatsApp"})
+            await _broadcast_client_action("OPEN_URL", {"url": res["url"], "target": "WhatsApp"})
         return res.get("spoken") or f"Sent WhatsApp message to {contact_name}."
     except Exception as e:
         return f"Error sending WhatsApp message: {e}"
 
 
 @llm.function_tool
-def send_email(to: str, description: str, recipient_name: str = "") -> str:
+async def send_email(to: str, description: str, recipient_name: str = "") -> str:
     """Compose and send emails to a single recipient, multiple recipients, or bulk contacts from contacts.csv.
 
     Args:
@@ -198,13 +193,19 @@ async def entrypoint(ctx: JobContext):
     participant = await ctx.wait_for_participant()
     logger.info(f"Participant connected: {participant.identity} ({participant.name or 'User'})")
 
-    # Initialize Voice Pipeline Session
+    # Initialize Voice Pipeline Session with optimized VAD sensitivity
     session = AgentSession(
-        vad=silero.VAD.load(),
+        vad=silero.VAD.load(
+            activation_threshold=0.35,
+            min_speech_duration=0.05,
+            min_silence_duration=0.55,
+        ),
         stt=openai.STT(),
         llm=openai.LLM(model=os.environ.get("OPENAI_MODEL", "gpt-4o")),
         tts=openai.TTS(voice=os.environ.get("OPENAI_TTS_VOICE", "alloy")),
         allow_interruptions=True,
+        min_endpointing_delay=0.4,
+        max_endpointing_delay=3.0,
     )
 
     # Create Voice Agent with persona instructions and tools

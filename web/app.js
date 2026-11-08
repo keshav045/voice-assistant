@@ -976,7 +976,11 @@ async function connectLiveKit() {
     // 3. Connect to room & publish local microphone
     await livekitRoom.connect(data.url, data.token);
     try {
-      await livekitRoom.localParticipant.setMicrophoneEnabled(true);
+      await livekitRoom.localParticipant.setMicrophoneEnabled(true, {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      });
     } catch (micErr) {
       console.warn("Microphone access error:", micErr);
       alert("Microphone Access Required:\nPlease allow microphone access in your browser address bar to speak with LiveKit.");
