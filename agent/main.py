@@ -124,6 +124,30 @@ def _clean_spoken_text(text: str) -> str:
     return re.sub(r"\s+", " ", t).strip()
 
 
+def _extract_youtube_query(text: str) -> Optional[str]:
+    """Cleanly extract query for YouTube searches from voice requests."""
+    t = text.strip().rstrip(".")
+    # 1. 'search for X on youtube' or 'play X on youtube'
+    m = re.search(r'(?:search\s+(?:for\s+)?|play\s+|watch\s+)(.+?)(?:\s+(?:on|in)\s+youtube)', t, re.IGNORECASE)
+    if m and m.group(1).strip():
+        return m.group(1).strip()
+
+    # 2. 'search youtube for X'
+    m = re.search(r'search\s+youtube\s+(?:for\s+)?(.+)', t, re.IGNORECASE)
+    if m and m.group(1).strip():
+        return m.group(1).strip()
+
+    # 3. 'open youtube and search for/play X' or 'youtube search for X'
+    m = re.search(r'(?:open\s+)?youtube\s+(?:and\s+)?(?:search\s+(?:for\s+)?|play\s+|watch\s+|for\s+)?(.+)', t, re.IGNORECASE)
+    if m and m.group(1).strip() and m.group(1).strip().lower() != 'youtube':
+        q = m.group(1).strip()
+        q = re.sub(r'^(and\s+)?(search\s+for|search|play|watch|for)\s+', '', q, flags=re.IGNORECASE).strip()
+        if q and q.lower() != 'youtube':
+            return q
+
+    return None
+
+
 ACTIVE_TOOL_NAMES = {"web_search", "calculator", "run_python_code", "get_current_time", "open_app", "send_whatsapp_message", "send_email"}
 ACTIVE_TOOL_SCHEMAS = [s for s in TOOL_SCHEMAS if s.get("function", {}).get("name") in ACTIVE_TOOL_NAMES]
 
@@ -218,16 +242,9 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                 spoken = last_tool["spoken"]
         else:
             lower = clean_text.lower()
-            if any(k in lower for k in ["news", "cricket", "score", "vs", "match", "search", "who is", "what is"]):
-                res = TOOLS_REGISTRY["web_search"](query=clean_text)
-                executed_tools.append({"tool": "web_search", "args": {"query": clean_text}, "result": res})
-                spoken = res.get("spoken", "Found search information.")
-            elif any(k in lower for k in ["calculate", "math", "+", "-", "*", "/", "%", "sqrt", "**", "//"]):
-                expr = clean_text.replace("calculate", "").replace("what is", "").strip()
-                res = TOOLS_REGISTRY["calculator"](expression=expr or clean_text)
-                executed_tools.append({"tool": "calculator", "args": {"expression": expr}, "result": res})
-                spoken = res.get("spoken", "Calculated the expression.")
-            elif "whatsapp" in lower and any(w in lower for w in ["message", "text", "send", "chat", "to", "him", "her"]):
+
+            # 1. WhatsApp Messaging & Chat Automation
+            if "whatsapp" in lower and any(w in lower for w in ["message", "text", "send", "chat", "to", "him", "her"]):
                 contact = "Krish" if "krish" in lower else "Contact"
                 msg_body = None
                 match_name = re.search(r"(?:open|find|to|chat of)\s+([A-Za-z]+)(?:'s)?\s+chat", clean_text, re.IGNORECASE)
@@ -243,7 +260,9 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                 res = TOOLS_REGISTRY["send_whatsapp_message"](contact_name=contact, message=msg_body)
                 executed_tools.append({"tool": "send_whatsapp_message", "args": {"contact_name": contact, "message": msg_body}, "result": res})
                 spoken = res.get("spoken", f"Opened WhatsApp for {contact}.")
-            elif any(k in lower for k in ["open", "launch", "play on youtube"]) or any(k in lower for k in ["youtube", "whatsapp", "linkedin", "gmail", "mail", "spotify"]):
+
+            # 2. Desktop Applications & Web Launcher (YouTube, Spotify, LinkedIn, Calculator, Notepad, etc.)
+            elif any(k in lower for k in ["youtube", "spotify", "linkedin", "gmail", "github", "calculator", "notepad", "explorer"]) or any(lower.startswith(k) for k in ["open ", "launch ", "start ", "play on youtube"]) or "on youtube" in lower:
                 target = "google"
                 query_val = None
                 browser_pref = None
@@ -256,18 +275,37 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                     if site in lower:
                         target = site
                         break
-                if target == "youtube" and any(w in lower for w in ["play", "search", "watch"]):
-                    query_val = re.sub(r"^(open|play|search for|search|watch)\s+", "", clean_text, flags=re.IGNORECASE)
-                    query_val = re.sub(r"\s+on youtube$", "", query_val, flags=re.IGNORECASE).strip()
-                    if query_val.lower() == "youtube":
-                        query_val = None
+
+                if target == "youtube":
+                    query_val = _extract_youtube_query(clean_text)
+                elif target == "google" and any(w in lower for w in ["search", "find", "google"]):
+                    query_val = re.sub(r"^(open|search|google|find)\s+(google\s+)?(for\s+)?", "", clean_text, flags=re.IGNORECASE).strip()
+
                 res = TOOLS_REGISTRY["open_app"](name=target, query=query_val, browser=browser_pref)
                 executed_tools.append({"tool": "open_app", "args": {"name": target, "query": query_val, "browser": browser_pref}, "result": res})
                 spoken = res.get("spoken", f"Opening {target}.")
-            elif "time" in lower:
+
+            # 3. Mathematical Calculations
+            elif any(k in lower for k in ["calculate", "math", "+", "-", "*", "/", "%", "sqrt", "**", "//"]) and any(c.isdigit() for c in clean_text):
+                expr = clean_text.replace("calculate", "").replace("what is", "").strip()
+                res = TOOLS_REGISTRY["calculator"](expression=expr or clean_text)
+                executed_tools.append({"tool": "calculator", "args": {"expression": expr}, "result": res})
+                spoken = res.get("spoken", "Calculated the expression.")
+
+            # 4. Current Time & Date
+            elif ("time" in lower and any(w in lower for w in ["what", "tell", "current", "now", "is"])) or lower in ["time", "current time", "what time is it"]:
                 res = TOOLS_REGISTRY["get_current_time"]()
                 executed_tools.append({"tool": "get_current_time", "args": {}, "result": res})
                 spoken = res.get("spoken", "Checked the current time.")
+
+            # 5. General Web Search (News, Cricket scores, Weather, General facts)
+            elif any(k in lower for k in ["news", "cricket", "score", "vs", "match", "search", "who is", "what is", "tell me about"]):
+                search_q = clean_text
+                search_q = re.sub(r"^(search\s+(for\s+)?|who\s+is\s+|what\s+is\s+|tell\s+me\s+about\s+)", "", clean_text, flags=re.IGNORECASE).strip()
+                res = TOOLS_REGISTRY["web_search"](query=search_q or clean_text)
+                executed_tools.append({"tool": "web_search", "args": {"query": search_q or clean_text}, "result": res})
+                spoken = res.get("spoken", "Found search information.")
+
             else:
                 spoken = f"I am your personal voice assistant. You said: '{clean_text}'. How can I help you today?"
 

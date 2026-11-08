@@ -66,7 +66,7 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "open_app",
-            "description": "Open websites or applications on the laptop, such as YouTube, WhatsApp, Gmail/Mail, LinkedIn, GitHub, Google, Spotify, Calculator, Notepad, etc. Can also search for videos on YouTube or topics on LinkedIn.",
+            "description": "Open websites or applications on the laptop, such as YouTube, WhatsApp, Gmail/Mail, LinkedIn, GitHub, Google, Spotify, Calculator, Notepad, etc. Can also search for videos on YouTube or topics on LinkedIn (e.g. 'open youtube and search for crazy xyz new video'). Use this whenever the user asks to open an app or search/play on YouTube, NOT web_search.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -76,7 +76,7 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
                     },
                     "query": {
                         "type": "string",
-                        "description": "Optional search query, video title, or topic to search for on the platform (e.g. 'python tutorial', 'lofi music').",
+                        "description": "Optional search query, video title, or topic to search for on the platform (e.g. 'crazy xyz new video', 'lofi music').",
                     },
                     "url": {
                         "type": "string",
@@ -96,7 +96,7 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "web_search",
-            "description": "Search the web for real-time information, latest news headlines, live cricket scores, sports match scorecards, current events, and up-to-date facts.",
+            "description": "Search the web for real-time information, latest news headlines, live cricket scores, sports match scorecards, current events, and up-to-date facts. Do NOT call this when the user asks to open or search inside YouTube, WhatsApp, or specific applications (use open_app instead).",
             "parameters": {
                 "type": "object",
                 "properties": {
