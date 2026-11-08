@@ -484,22 +484,65 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-// --- URL / Application Auto-Launcher ---
-function triggerOpenUrl(url) {
+// --- URL / Application Auto-Launcher (Always Opens in New Tab) ---
+function triggerOpenUrl(url, targetName) {
   if (!url) return;
+  const label = targetName || "Application";
   let opened = false;
+
+  // 1. Attempt to open in a new tab via window.open
   try {
-    const w = window.open(url, "_blank");
+    const w = window.open(url, "_blank", "noopener,noreferrer");
     if (w && !w.closed && typeof w.closed !== "undefined") {
       opened = true;
     }
   } catch (e) {
     opened = false;
   }
-  // If the browser's popup blocker blocked the new tab, navigate directly so the app or website opens
+
+  // 2. If direct window.open was not confirmed, attempt programmatic anchor click
   if (!opened) {
-    window.location.href = url;
+    try {
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      opened = true;
+    } catch (e) {
+      opened = false;
+    }
   }
+
+  // 3. Show non-intrusive floating toast so user can click to open in new tab if browser blocked popups
+  showOpenTabToast(url, label);
+}
+
+function showOpenTabToast(url, label) {
+  const existing = document.getElementById("open-tab-toast");
+  if (existing) existing.remove();
+
+  const toast = document.createElement("div");
+  toast.id = "open-tab-toast";
+  toast.className = "fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl bg-surface-container-highest text-on-surface border border-primary/40 shadow-2xl animate-bounce";
+  toast.innerHTML = `
+    <span class="material-symbols-outlined text-primary text-[22px]">open_in_new</span>
+    <div class="flex flex-col min-w-0 pr-1">
+      <span class="text-xs font-bold text-on-surface">Opening ${escapeHtml(label)}</span>
+      <span class="text-[10px] text-on-surface-variant">Opening in a new tab</span>
+    </div>
+    <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-white text-xs font-semibold shadow-xs shrink-0">
+      <span>Open</span>
+      <span class="material-symbols-outlined text-[13px]">north_east</span>
+    </a>
+    <button onclick="this.parentElement.remove()" class="text-on-surface-variant hover:text-on-surface text-sm ml-1 p-1">✕</button>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    if (toast.parentElement) toast.remove();
+  }, 9000);
 }
 
 async function submitChatTurn(textOverride) {
@@ -544,10 +587,12 @@ async function submitChatTurn(textOverride) {
 
     // Check if tools yielded a URL to open
     let targetUrlToOpen = null;
+    let targetNameToOpen = "App";
     if (data.tool_calls_executed && data.tool_calls_executed.length > 0) {
       for (const tc of data.tool_calls_executed) {
         if ((tc.tool === "open_app" || tc.tool === "send_whatsapp_message") && tc.result && tc.result.url) {
           targetUrlToOpen = tc.result.url;
+          targetNameToOpen = tc.result.target || (tc.tool === "open_app" ? "Application" : "WhatsApp");
           break;
         }
       }
@@ -558,7 +603,7 @@ async function submitChatTurn(textOverride) {
         pendingWindow.location.href = targetUrlToOpen;
         pendingWindow = null;
       } else {
-        triggerOpenUrl(targetUrlToOpen);
+        triggerOpenUrl(targetUrlToOpen, targetNameToOpen);
       }
     } else if (pendingWindow && !pendingWindow.closed) {
       pendingWindow.close();
@@ -729,7 +774,7 @@ function appendAssistantBubble(text, toolCalls) {
             <span class="material-symbols-outlined text-[14px]">open_in_new</span>
           </a>
         `;
-        triggerOpenUrl(tc.result.url);
+        triggerOpenUrl(tc.result.url, tc.result.target || "App");
       }
     }
   }
@@ -961,7 +1006,7 @@ async function connectLiveKit() {
         const text = new TextDecoder().decode(payload);
         const dataPacket = JSON.parse(text);
         if (dataPacket.type === "OPEN_URL" && dataPacket.url) {
-          triggerOpenUrl(dataPacket.url);
+          triggerOpenUrl(dataPacket.url, dataPacket.target || "App");
         }
       } catch (e) {
         console.warn("Could not process LiveKit data packet:", e);
