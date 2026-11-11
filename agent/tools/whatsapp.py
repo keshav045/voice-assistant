@@ -29,6 +29,12 @@ def _automate_whatsapp_search_and_send(contact_name: str, message: Optional[str]
     if not AUTOMATION_AVAILABLE:
         return
 
+    # Safely disable fail-safe for background worker to avoid corner cursor aborts
+    try:
+        pyautogui.FAILSAFE = False
+    except Exception:
+        pass
+
     # Wait for browser to open WhatsApp Web and render chat list
     time.sleep(3.5)
 
@@ -134,6 +140,7 @@ def send_whatsapp_message(
         return {
             "success": True,
             "contact": clean_name,
+            "url": whatsapp_url,
             "message": clean_msg,
             "action": "search_and_send",
             "spoken": spoken_text,

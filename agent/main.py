@@ -702,6 +702,7 @@ def clear_chat_history(
 
 
 @app.delete("/api/history/{target_id}")
+@app.delete("/api/sessions/{target_id}")
 def delete_history_item(target_id: str, authorization: Optional[str] = Header(None)):
     """Delete a single turn or an entire chat session."""
     user = get_current_user_optional(authorization)
