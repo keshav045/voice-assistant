@@ -92,11 +92,14 @@ def calculator(expression: str) -> Dict[str, Any]:
     """
     raw = expression.strip()
 
-    # Normalize "X% of Y" -> "X/100 * Y"
+    # Normalize inline or full "X% of Y" -> "((X/100) * Y)"
     import re
-    pct_match = re.match(r"^(\d+(?:\.\d+)?)\s*%\s*of\s*(.+)$", raw, re.IGNORECASE)
-    if pct_match:
-        raw = f"({pct_match.group(1)}/100) * ({pct_match.group(2)})"
+    raw = re.sub(
+        r"(\d+(?:\.\d+)?)\s*%\s*of\s*(\(?\d+(?:\.\d+)?\)?)",
+        r"((\1/100) * \2)",
+        raw,
+        flags=re.IGNORECASE,
+    )
 
     try:
         tree = ast.parse(raw, mode="eval")

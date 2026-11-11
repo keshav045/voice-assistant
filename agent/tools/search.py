@@ -5,17 +5,19 @@ import html
 import re
 import urllib.parse
 import urllib.request
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from zoneinfo import ZoneInfo
 
 
-def get_current_time(timezone_str: str = "Asia/Kolkata") -> Dict[str, Any]:
+def get_current_time(timezone_str: str = "Asia/Kolkata", timezone: Optional[str] = None) -> Dict[str, Any]:
     """Get the current date and time in the user's timezone.
     
-    Default timezone is Asia/Kolkata.
+    Default timezone is Asia/Kolkata. Accepts either timezone_str or timezone.
     """
+    resolved_tz = timezone or timezone_str or "Asia/Kolkata"
     try:
-        tz = ZoneInfo(timezone_str)
+        tz = ZoneInfo(resolved_tz)
+        timezone_str = resolved_tz
     except Exception:
         tz = datetime.timezone.utc
         timezone_str = "UTC"
