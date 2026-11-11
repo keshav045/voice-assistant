@@ -1007,6 +1007,9 @@ async function connectLiveKit() {
         const dataPacket = JSON.parse(text);
         if (dataPacket.type === "OPEN_URL" && dataPacket.url) {
           triggerOpenUrl(dataPacket.url, dataPacket.target || "App");
+        } else if (dataPacket.type === "EMAIL_SENT") {
+          const fromDesc = dataPacket.sender ? ` from ${dataPacket.sender}` : "";
+          showOpenTabToast(`✓ Email sent to ${dataPacket.to}${fromDesc}: "${dataPacket.subject}"`, "https://mail.google.com");
         }
       } catch (e) {
         console.warn("Could not process LiveKit data packet:", e);

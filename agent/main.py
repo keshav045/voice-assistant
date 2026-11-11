@@ -614,8 +614,19 @@ def livekit_token(
     user_id = user["id"] if user else None
     user_name = user["username"] if user else (name or "User")
 
-    room_name = room or (f"nexus-room-{user_id}" if user_id else "nexus-room")
-    participant_id = identity or (f"user-{user_id}" if user_id else f"guest-{uuid.uuid4().hex[:6]}")
+    from db.models import db_get_user_oauth
+    oauth_record = db_get_user_oauth(user_id=str(user_id) if user_id else None)
+    connected_email = oauth_record.get("email") if oauth_record else ""
+    bound_user_id = str(user_id) if user_id else (oauth_record.get("user_id") if oauth_record else "guest")
+
+    room_name = room or (f"nexus-room-{bound_user_id}" if bound_user_id != "guest" else "nexus-room")
+    participant_id = identity or (f"user-{bound_user_id}" if bound_user_id != "guest" else f"guest-{uuid.uuid4().hex[:6]}")
+
+    metadata_dict = {
+        "user_id": bound_user_id,
+        "email": connected_email or (user.get("email", "") if user else ""),
+        "name": user_name,
+    }
 
     try:
         from livekit import api
@@ -623,6 +634,7 @@ def livekit_token(
             api.AccessToken(key, secret)
             .with_identity(participant_id)
             .with_name(user_name)
+            .with_metadata(json.dumps(metadata_dict))
             .with_grants(api.VideoGrants(room_join=True, room=room_name))
             .to_jwt()
         )

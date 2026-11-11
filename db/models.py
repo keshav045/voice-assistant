@@ -529,26 +529,98 @@ def db_save_user_oauth(
     return {"id": oauth_id, "user_id": user_id, "provider": provider, "email": email}
 
 
-def db_get_user_oauth(user_id: str, provider: str = "google") -> Optional[Dict[str, Any]]:
-    """Retrieve stored OAuth credentials for a user."""
+def db_get_user_oauth(user_id: Optional[str] = None, provider: str = "google") -> Optional[Dict[str, Any]]:
+    """Retrieve stored OAuth credentials for a user.
+    
+    Resolution order:
+    1. Exact user_id match
+    2. Stripped prefix (e.g. 'user-1' -> '1')
+    3. User email match
+    4. Fallback to 'guest' user_id
+    5. Fallback to latest connected account for this provider
+    """
     with get_db_connection() as conn:
+        # 1. Exact user_id match
+        if user_id:
+            uid_str = str(user_id).strip()
+            cur = conn.execute(
+                "SELECT * FROM user_oauth_tokens WHERE user_id = ? AND provider = ? ORDER BY updated_at DESC LIMIT 1",
+                (uid_str, provider),
+            )
+            row = cur.fetchone()
+            if row:
+                return dict(row)
+
+            # 2. Stripped prefix (e.g. 'user-1' -> '1', 'guest-abc' -> 'guest')
+            if uid_str.startswith("user-"):
+                clean_uid = uid_str.replace("user-", "", 1)
+                cur = conn.execute(
+                    "SELECT * FROM user_oauth_tokens WHERE user_id = ? AND provider = ? ORDER BY updated_at DESC LIMIT 1",
+                    (clean_uid, provider),
+                )
+                row = cur.fetchone()
+                if row:
+                    return dict(row)
+
+            # 3. User email match
+            if "@" in uid_str:
+                cur = conn.execute(
+                    "SELECT * FROM user_oauth_tokens WHERE email = ? AND provider = ? ORDER BY updated_at DESC LIMIT 1",
+                    (uid_str, provider),
+                )
+                row = cur.fetchone()
+                if row:
+                    return dict(row)
+
+            # 4. Fallback to 'guest' if user_id was non-guest
+            if uid_str != "guest":
+                cur = conn.execute(
+                    "SELECT * FROM user_oauth_tokens WHERE user_id = 'guest' AND provider = ? ORDER BY updated_at DESC LIMIT 1",
+                    (provider,),
+                )
+                row = cur.fetchone()
+                if row:
+                    return dict(row)
+
+        # 5. Fallback to the latest connected OAuth token in the database
         cur = conn.execute(
-            "SELECT * FROM user_oauth_tokens WHERE user_id = ? AND provider = ?",
-            (user_id, provider),
+            "SELECT * FROM user_oauth_tokens WHERE provider = ? ORDER BY updated_at DESC LIMIT 1",
+            (provider,),
         )
         row = cur.fetchone()
         return dict(row) if row else None
 
 
-def db_delete_user_oauth(user_id: str, provider: str = "google") -> bool:
+def db_delete_user_oauth(user_id: Optional[str] = None, provider: str = "google") -> bool:
     """Disconnect / delete OAuth credentials for a user."""
     with get_db_connection() as conn:
-        cur = conn.execute(
-            "DELETE FROM user_oauth_tokens WHERE user_id = ? AND provider = ?",
-            (user_id, provider),
-        )
+        deleted = False
+        if user_id:
+            uid_str = str(user_id).strip()
+            cur = conn.execute(
+                "DELETE FROM user_oauth_tokens WHERE user_id = ? AND provider = ?",
+                (uid_str, provider),
+            )
+            if cur.rowcount > 0:
+                deleted = True
+            if uid_str.startswith("user-"):
+                cur = conn.execute(
+                    "DELETE FROM user_oauth_tokens WHERE user_id = ? AND provider = ?",
+                    (uid_str.replace("user-", "", 1), provider),
+                )
+                if cur.rowcount > 0:
+                    deleted = True
+
+        # If not deleted by specific user_id, clear provider tokens
+        if not deleted:
+            cur = conn.execute(
+                "DELETE FROM user_oauth_tokens WHERE provider = ?",
+                (provider,),
+            )
+            deleted = cur.rowcount > 0
+
         conn.commit()
-        return cur.rowcount > 0
+        return deleted
 
 
 # Auto-initialize database on import

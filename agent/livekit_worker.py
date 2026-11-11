@@ -44,6 +44,7 @@ logger = logging.getLogger("nexus.livekit_worker")
 # --------------------------------------------------------------------------- #
 
 _active_room: Optional[Any] = None
+_active_user_id: str = "guest"
 
 
 async def _broadcast_client_action(action_type: str, data: dict):
@@ -159,8 +160,21 @@ async def send_email(to: str, description: str, recipient_name: str = "") -> str
         description: Brief description of the email content to be professionally composed.
         recipient_name: Optional recipient name for greeting.
     """
+    global _active_user_id
     try:
-        res = email.send_email(to=to, description=description, recipient_name=recipient_name)
+        res = email.send_email(
+            to=to,
+            description=description,
+            recipient_name=recipient_name,
+            user_id=_active_user_id,
+        )
+        if res.get("success"):
+            await _broadcast_client_action("EMAIL_SENT", {
+                "to": to,
+                "subject": res.get("subject", ""),
+                "sender": res.get("from", ""),
+                "provider": res.get("provider", "email"),
+            })
         return res.get("spoken") or f"Email sent to {to}."
     except Exception as e:
         return f"Error delivering email: {e}"
@@ -183,7 +197,7 @@ LIVEKIT_TOOLS = [
 
 async def entrypoint(ctx: JobContext):
     """LiveKit agent worker entrypoint for WebRTC audio rooms."""
-    global _active_room
+    global _active_room, _active_user_id
     _active_room = ctx.room
     logger.info(f"Connecting to LiveKit room: {ctx.room.name}")
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
@@ -192,6 +206,24 @@ async def entrypoint(ctx: JobContext):
     logger.info("Waiting for user participant to connect...")
     participant = await ctx.wait_for_participant()
     logger.info(f"Participant connected: {participant.identity} ({participant.name or 'User'})")
+
+    # Resolve bound user_id for OAuth credentials and tools
+    user_id = "guest"
+    if participant.metadata:
+        try:
+            meta = json.loads(participant.metadata)
+            if meta.get("user_id"):
+                user_id = str(meta["user_id"])
+        except Exception:
+            pass
+    if user_id == "guest" and participant.identity:
+        if participant.identity.startswith("user-"):
+            user_id = participant.identity.replace("user-", "", 1)
+        elif not participant.identity.startswith("guest-"):
+            user_id = participant.identity
+
+    _active_user_id = user_id
+    logger.info(f"LiveKit session bound to user_id: {_active_user_id}")
 
     # Initialize Voice Pipeline Session with optimized VAD sensitivity
     session = AgentSession(

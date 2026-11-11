@@ -197,6 +197,40 @@ class TestSendEmailOffline:
         assert "could not find csv" in result["spoken"].lower()
 
     # ------------------------------------------------------------------ #
+    # Google OAuth Priority vs SMTP Fallback
+    # ------------------------------------------------------------------ #
+
+    def test_google_oauth_prioritized_over_env_smtp(self):
+        """When Google OAuth is linked, send_email must use connected Google email, NOT .env SENDER_EMAIL."""
+        from agent.tools import email as email_mod
+        fake_compose = {"subject": "Meeting", "body": "Hello"}
+        with patch.object(email_mod, "_compose_email", return_value=fake_compose), \
+             patch.object(email_mod, "_get_fresh_google_access_token", return_value=("fake_tok", "personal@gmail.com")), \
+             patch.object(email_mod, "_send_gmail_api", return_value={"success": True, "to": "friend@ex.com", "subject": "Meeting", "from": "personal@gmail.com", "provider": "google_gmail_api"}) as mock_gmail, \
+             patch.object(email_mod, "_send_smtp") as mock_smtp:
+
+            res = email_mod.send_email(to="friend@ex.com", description="talk about meeting", user_id="1")
+            assert res["success"] is True
+            mock_gmail.assert_called_once()
+            mock_smtp.assert_not_called()
+            assert "personal@gmail.com" in res["spoken"]
+
+    def test_livekit_guest_fallback_finds_connected_oauth(self):
+        """When LiveKit calls send_email without user_id, it should find connected Google OAuth."""
+        from agent.tools import email as email_mod
+        fake_compose = {"subject": "Update", "body": "Here is the update"}
+        with patch.object(email_mod, "_compose_email", return_value=fake_compose), \
+             patch.object(email_mod, "_get_fresh_google_access_token", return_value=("fake_tok_2", "user_google@gmail.com")), \
+             patch.object(email_mod, "_send_gmail_api", return_value={"success": True, "to": "team@ex.com", "subject": "Update", "from": "user_google@gmail.com", "provider": "google_gmail_api"}) as mock_gmail, \
+             patch.object(email_mod, "_send_smtp") as mock_smtp:
+
+            res = email_mod.send_email(to="team@ex.com", description="send project update")
+            assert res["success"] is True
+            mock_gmail.assert_called_once()
+            mock_smtp.assert_not_called()
+            assert "user_google@gmail.com" in res["spoken"]
+
+    # ------------------------------------------------------------------ #
     # Legacy stubs still work
     # ------------------------------------------------------------------ #
 

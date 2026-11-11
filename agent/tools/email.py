@@ -243,7 +243,8 @@ def _send_gmail_api(to_email: str, subject: str, body: str, access_token: str, s
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
-    msg["From"] = sender_email
+    if sender_email:
+        msg["From"] = sender_email
     msg["To"] = to_email
 
     # Plain-text and HTML versions
@@ -263,8 +264,14 @@ def _send_gmail_api(to_email: str, subject: str, body: str, access_token: str, s
     try:
         response = httpx.post(url, headers=headers, json=payload, timeout=20.0)
         if response.status_code == 200:
-            logger.info(f"Gmail REST API: Email sent to {to_email} | subject: {subject}")
-            return {"success": True, "to": to_email, "subject": subject}
+            logger.info(f"Gmail REST API: Email sent to {to_email} from {sender_email} | subject: {subject}")
+            return {
+                "success": True,
+                "to": to_email,
+                "subject": subject,
+                "from": sender_email,
+                "provider": "google_gmail_api",
+            }
         else:
             err_msg = response.text
             try:
@@ -279,7 +286,7 @@ def _send_gmail_api(to_email: str, subject: str, body: str, access_token: str, s
         return {"success": False, "error": str(e), "spoken": f"Gmail delivery failed: {e}"}
 
 
-def _get_fresh_google_access_token(user_id: str) -> Optional[Tuple[str, str]]:
+def _get_fresh_google_access_token(user_id: Optional[str] = None) -> Optional[Tuple[str, str]]:
     """Retrieve fresh Google access token using stored refresh token.
     Returns (access_token, user_email) or None.
     """
@@ -288,6 +295,7 @@ def _get_fresh_google_access_token(user_id: str) -> Optional[Tuple[str, str]]:
 
     record = db_get_user_oauth(user_id=user_id, provider="google")
     if not record:
+        logger.info(f"No Google OAuth record found in database for user_id={user_id}.")
         return None
 
     client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
@@ -295,6 +303,19 @@ def _get_fresh_google_access_token(user_id: str) -> Optional[Tuple[str, str]]:
     refresh_token = record.get("refresh_token")
     user_email = record.get("email") or ""
     current_token = record.get("access_token")
+
+    # If user_email is not cached in DB record, fetch from Google profile
+    if not user_email and current_token:
+        try:
+            prof = httpx.get(
+                "https://gmail.googleapis.com/gmail/v1/users/me/profile",
+                headers={"Authorization": f"Bearer {current_token}"},
+                timeout=5.0,
+            )
+            if prof.status_code == 200:
+                user_email = prof.json().get("emailAddress", "")
+        except Exception:
+            pass
 
     # If we have refresh credentials, refresh access token
     if client_id and client_secret and refresh_token:
@@ -315,12 +336,15 @@ def _get_fresh_google_access_token(user_id: str) -> Optional[Tuple[str, str]]:
                 fresh_access_token = data.get("access_token")
                 if fresh_access_token:
                     db_save_user_oauth(
-                        user_id=user_id,
+                        user_id=record.get("user_id", user_id or "guest"),
                         email=user_email,
                         access_token=fresh_access_token,
                         refresh_token=refresh_token,
                     )
+                    logger.info(f"Refreshed Google OAuth token for {user_email}")
                     return fresh_access_token, user_email
+            else:
+                logger.warning(f"Google token refresh failed with code {resp.status_code}: {resp.text}")
         except Exception as e:
             logger.warning(f"Could not refresh Google token: {e}")
 
@@ -387,8 +411,14 @@ def _send_smtp(to_email: str, subject: str, body: str) -> Dict[str, Any]:
     for attempt in (_try_465, _try_587):
         try:
             attempt()
-            logger.info(f"Email sent to {to_email} | subject: {subject}")
-            return {"success": True, "to": to_email, "subject": subject}
+            logger.info(f"Email sent to {to_email} via SMTP | subject: {subject}")
+            return {
+                "success": True,
+                "to": to_email,
+                "subject": subject,
+                "from": sender_email,
+                "provider": "smtp",
+            }
         except smtplib.SMTPAuthenticationError:
             return {
                 "success": False,
@@ -460,10 +490,33 @@ def send_email(
 
     # Internal dispatcher: checks Google OAuth first, then SMTP
     def _deliver(to_em: str, subj: str, bdy: str) -> Dict[str, Any]:
-        token_info = _get_fresh_google_access_token(user_id=effective_user_id) if effective_user_id else None
+        token_info = _get_fresh_google_access_token(user_id=effective_user_id)
         if token_info:
             access_tok, sender_em = token_info
-            return _send_gmail_api(to_email=to_em, subject=subj, body=bdy, access_token=access_tok, sender_email=sender_em)
+            res = _send_gmail_api(to_email=to_em, subject=subj, body=bdy, access_token=access_tok, sender_email=sender_em)
+            if res.get("success"):
+                return res
+
+            # Attempt one token refresh on 401 Unauthorized / Token expired
+            err_str = str(res.get("error", "")).lower()
+            if "401" in err_str or "invalid credentials" in err_str or "unauthorized" in err_str:
+                logger.info("Attempting re-refresh for 401 error from Gmail API...")
+                refreshed = _get_fresh_google_access_token(user_id=effective_user_id)
+                if refreshed:
+                    new_tok, new_sender = refreshed
+                    retry_res = _send_gmail_api(to_email=to_em, subject=subj, body=bdy, access_token=new_tok, sender_email=new_sender)
+                    if retry_res.get("success"):
+                        return retry_res
+
+            # When Google OAuth is linked, DO NOT silently send from a random .env email!
+            logger.error(f"Google OAuth delivery failed: {res.get('error')}")
+            return {
+                "success": False,
+                "error": res.get("error"),
+                "spoken": f"I tried to send the email from your connected Google account ({sender_em}), but Google reported an error: {res.get('error')}. Please reconnect your Gmail in the dashboard.",
+            }
+
+        # Fallback to SMTP only if Google OAuth is not linked
         return _send_smtp(to_email=to_em, subject=subj, body=bdy)
 
     # ----------------------------------------------------------------------- #
@@ -476,8 +529,9 @@ def send_email(
         result = _deliver(to_em=target_email, subj=final_subject, bdy=base_body)
         if result["success"]:
             name_part = f" to {target_name}" if target_name else f" to {target_email}"
+            from_part = f" from your connected Gmail ({result['from']})" if result.get("provider") == "google_gmail_api" else (f" from {result['from']}" if result.get("from") else "")
             result["spoken"] = (
-                f"Done! I've sent the email{name_part} with the subject \"{final_subject}\"."
+                f"Done! I've sent the email{name_part}{from_part} with the subject \"{final_subject}\"."
             )
             result["subject"] = final_subject
             result["body"] = base_body
