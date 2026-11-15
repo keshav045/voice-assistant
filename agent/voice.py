@@ -9,9 +9,20 @@ import threading
 import time
 from typing import Optional, Tuple
 
-import numpy as np
-import scipy.io.wavfile as wavfile
-import sounddevice as sd
+try:
+    import numpy as np
+except ImportError:
+    np = None
+
+try:
+    import scipy.io.wavfile as wavfile
+except ImportError:
+    wavfile = None
+
+try:
+    import sounddevice as sd
+except (ImportError, OSError):
+    sd = None
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -42,8 +53,12 @@ def clean_spoken_text(text: str) -> str:
     return clean
 
 
-def record_audio_push_to_talk(stop_event: threading.Event, samplerate: int = DEFAULT_SAMPLERATE) -> np.ndarray:
+def record_audio_push_to_talk(stop_event: threading.Event, samplerate: int = DEFAULT_SAMPLERATE):
     """Record audio from the default microphone until stop_event is set."""
+    if sd is None or np is None:
+        logger.warning("sounddevice or numpy not available in this environment.")
+        return np.zeros((0, 1), dtype=np.int16) if np is not None else None
+
     audio_frames = []
 
     def callback(indata, frames, time_info, status):
@@ -63,6 +78,9 @@ def record_audio_push_to_talk(stop_event: threading.Event, samplerate: int = DEF
 
 def calibrate_ambient_noise(duration: float = 0.5, samplerate: int = DEFAULT_SAMPLERATE) -> float:
     """Measure the background ambient noise level in RMS amplitude."""
+    if sd is None or np is None:
+        return 300.0
+
     samples = int(duration * samplerate)
     rec = sd.rec(samples, samplerate=samplerate, channels=1, dtype="int16")
     sd.wait()
@@ -75,11 +93,13 @@ def record_audio_vad(
     samplerate: int = DEFAULT_SAMPLERATE,
     max_duration: float = 20.0,
     stop_event: Optional[threading.Event] = None
-) -> np.ndarray:
+):
     """Record audio automatically using Voice Activity Detection (silence detection).
     
     Begins recording when speech is detected and stops after silence_timeout seconds of silence.
     """
+    if sd is None or np is None:
+        return np.zeros((0, 1), dtype=np.int16) if np is not None else None
     chunk_duration = 0.1  # 100ms chunks
     chunk_samples = int(chunk_duration * samplerate)
     
@@ -122,9 +142,12 @@ def record_audio_vad(
     return np.concatenate(audio_frames, axis=0)
 
 
-def transcribe_audio(audio_data: np.ndarray, samplerate: int = DEFAULT_SAMPLERATE) -> str:
+def transcribe_audio(audio_data, samplerate: int = DEFAULT_SAMPLERATE) -> str:
     """Transcribe audio numpy array into text using OpenAI Whisper."""
-    if audio_data.size == 0:
+    if audio_data is None or wavfile is None:
+        return ""
+
+    if hasattr(audio_data, "size") and audio_data.size == 0:
         return ""
 
     # Check for empty audio / silence
@@ -164,6 +187,10 @@ def speak_text(text: str, voice: str = "alloy", use_openai: bool = True) -> None
     """
     clean = clean_spoken_text(text)
     if not clean:
+        return
+
+    if sd is None or np is None:
+        logger.info(f"[Spoken]: {clean}")
         return
 
     api_key = os.environ.get("OPENAI_API_KEY", "")

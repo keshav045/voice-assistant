@@ -28,7 +28,23 @@ except Exception:
 
 from openai import OpenAI
 from agent.main import process_user_turn, OPENAI_MODEL
-from agent.voice import clean_spoken_text
+try:
+    from agent.voice import clean_spoken_text
+except Exception:
+    import re
+    def clean_spoken_text(text: str) -> str:
+        if not text:
+            return ""
+        clean = re.sub(r"#+\s*", "", text)
+        clean = re.sub(r"\*\*([^*]+)\*\*", r"\1", clean)
+        clean = re.sub(r"\*([^*]+)\*", r"\1", clean)
+        clean = re.sub(r"`([^`]+)`", r"\1", clean)
+        clean = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", clean)
+        clean = re.sub(r"https?://\S+", "", clean)
+        clean = re.sub(r"[-*]\s+", "", clean)
+        clean = re.sub(r"[^\w\s.,!?'\":-]", "", clean)
+        clean = re.sub(r"\s+", " ", clean).strip()
+        return clean
 from db.models import (
     get_db_connection,
     db_list_chat_sessions,
