@@ -158,7 +158,7 @@ if "session_id" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state.messages = []
     # Load past turns for current session if exists in database
-    existing_turns = db_get_session_turns(st.session_state.session_id)
+    existing_turns = db_get_session_turns(user_id="guest", session_id=st.session_state.session_id)
     for t in existing_turns:
         st.session_state.messages.append({"role": "user", "content": t["user_message"]})
         st.session_state.messages.append({
@@ -376,7 +376,7 @@ with st.sidebar:
     if selected_sess != st.session_state.session_id:
         st.session_state.session_id = selected_sess
         st.session_state.messages = []
-        existing = db_get_session_turns(selected_sess)
+        existing = db_get_session_turns(user_id="guest", session_id=selected_sess)
         for t in existing:
             st.session_state.messages.append({"role": "user", "content": t["user_message"]})
             st.session_state.messages.append({

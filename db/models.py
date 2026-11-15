@@ -457,15 +457,42 @@ def db_list_chat_sessions(user_id: str, limit: int = 50) -> List[Dict[str, Any]]
         return sessions
 
 
-def db_get_session_turns(user_id: str, session_id: str) -> List[Dict[str, Any]]:
-    """Retrieve all turns for a specific chat session ordered chronologically."""
+def db_get_session_turns(user_id: Optional[str] = None, session_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Retrieve all turns for a specific chat session ordered chronologically.
+    
+    Supports:
+      - db_get_session_turns(user_id, session_id)
+      - db_get_session_turns(session_id)
+      - db_get_session_turns(session_id=..., user_id=...)
+    """
+    if session_id is None and user_id is not None:
+        session_id = user_id
+        user_id = None
+
     with get_db_connection() as conn:
-        cur = conn.execute(
-            """SELECT * FROM chat_history 
-               WHERE user_id = ? AND session_id = ? 
-               ORDER BY created_at ASC""",
-            (user_id, session_id),
-        )
+        if user_id and session_id:
+            cur = conn.execute(
+                """SELECT * FROM chat_history 
+                   WHERE user_id = ? AND session_id = ? 
+                   ORDER BY created_at ASC""",
+                (user_id, session_id),
+            )
+        elif session_id:
+            cur = conn.execute(
+                """SELECT * FROM chat_history 
+                   WHERE session_id = ? 
+                   ORDER BY created_at ASC""",
+                (session_id,),
+            )
+        elif user_id:
+            cur = conn.execute(
+                """SELECT * FROM chat_history 
+                   WHERE user_id = ? 
+                   ORDER BY created_at ASC""",
+                (user_id,),
+            )
+        else:
+            return []
         rows = [dict(r) for r in cur.fetchall()]
         for r in rows:
             if r.get("tool_calls"):
@@ -478,13 +505,24 @@ def db_get_session_turns(user_id: str, session_id: str) -> List[Dict[str, Any]]:
         return rows
 
 
-def db_delete_chat_session(user_id: str, session_id: str) -> bool:
+def db_delete_chat_session(user_id: Optional[str] = None, session_id: Optional[str] = None) -> bool:
     """Delete an entire chat session and all its turns from history."""
+    if session_id is None and user_id is not None:
+        session_id = user_id
+        user_id = None
+
     with get_db_connection() as conn:
-        cur = conn.execute(
-            "DELETE FROM chat_history WHERE user_id = ? AND session_id = ?",
-            (user_id, session_id),
-        )
+        if user_id and session_id:
+            cur = conn.execute(
+                "DELETE FROM chat_history WHERE user_id = ? AND session_id = ?",
+                (user_id, session_id),
+            )
+        elif session_id:
+            cur = conn.execute("DELETE FROM chat_history WHERE session_id = ?", (session_id,))
+        elif user_id:
+            cur = conn.execute("DELETE FROM chat_history WHERE user_id = ?", (user_id,))
+        else:
+            return False
         conn.commit()
         return cur.rowcount > 0
 
