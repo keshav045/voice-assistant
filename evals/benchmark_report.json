@@ -1,0 +1,135 @@
+{
+  "timestamp": "2026-11-16T11:07:24.922934+00:00",
+  "total_benchmark_time_ms": 8480.88,
+  "overall_score": 100.0,
+  "latencies": {
+    "calculator": {
+      "avg_ms": 0.12,
+      "min_ms": 0.03,
+      "max_ms": 0.28
+    },
+    "clock_timezone": {
+      "avg_ms": 3.85,
+      "min_ms": 0.01,
+      "max_ms": 11.53
+    },
+    "app_launcher": {
+      "avg_ms": 68.96,
+      "min_ms": 24.5,
+      "max_ms": 154.84
+    },
+    "whatsapp_url": {
+      "avg_ms": 29.22,
+      "min_ms": 24.67,
+      "max_ms": 31.65
+    },
+    "python_sandbox": {
+      "avg_ms": 0.17,
+      "min_ms": 0.09,
+      "max_ms": 0.3
+    },
+    "web_search": {
+      "avg_ms": 1303.82,
+      "min_ms": 1303.82,
+      "max_ms": 1303.82
+    },
+    "rag_vector_search": {
+      "avg_ms": 564.79,
+      "min_ms": 293.46,
+      "max_ms": 888.59
+    },
+    "email_composer": {
+      "avg_ms": 1328.79,
+      "min_ms": 1118.14,
+      "max_ms": 1726.16
+    }
+  },
+  "accuracy": {
+    "tests": [
+      {
+        "name": "Math Percentage Calculation",
+        "passed": true,
+        "details": "Result: 1150.0 (Expected: 1150.0)"
+      },
+      {
+        "name": "Timezone Precision (UTC)",
+        "passed": true,
+        "details": "Spoken: The current time is Monday, November 16, 2026 at 11:07 AM (UTC)."
+      },
+      {
+        "name": "App Launcher Query Resolution",
+        "passed": true,
+        "details": "URL: https://www.youtube.com/results?search_query=jazz+music"
+      },
+      {
+        "name": "WhatsApp Click-to-Chat Link Generation",
+        "passed": true,
+        "details": "Target: Alice"
+      },
+      {
+        "name": "Python Code Execution Sandbox",
+        "passed": true,
+        "details": "Output: [0, 1, 2, 3]"
+      },
+      {
+        "name": "AI Email Generation Quality",
+        "passed": true,
+        "details": "Subject: 'Rescheduling Project Status Meeting'"
+      }
+    ],
+    "total": 6,
+    "passed": 6,
+    "accuracy_pct": 100.0
+  },
+  "error_resilience": {
+    "cases": [
+      {
+        "test": "Division by Zero in Math",
+        "handled_gracefully": true,
+        "details": "Caught error: 'Division by zero'"
+      },
+      {
+        "test": "Syntax Error in Math Expression",
+        "handled_gracefully": true,
+        "details": "Caught error: ''(' was never closed (<unknown>, line 1)'"
+      },
+      {
+        "test": "Malicious Code Injection Blocking (os.system)",
+        "handled_gracefully": true,
+        "details": "Blocked with: 'Security restriction: 'os.system' is blocked.'"
+      },
+      {
+        "test": "Unknown App Launcher Graceful Fallback",
+        "handled_gracefully": true,
+        "details": "Fallback search URL: 'https://www.google.com/search?q=quantum_hyper_nonexistent_tool_123'"
+      },
+      {
+        "test": "Invalid Timezone Fallback Handling",
+        "handled_gracefully": true,
+        "details": "Resolved timezone: 'UTC'"
+      },
+      {
+        "test": "Zero Markdown Leakage in Spoken Voice Stream",
+        "handled_gracefully": true,
+        "details": "Cleaned speech: 'Spoken Update Task 1: Finished with status 200! Check Docs.'"
+      }
+    ],
+    "total": 6,
+    "handled": 6,
+    "resilience_pct": 100.0
+  },
+  "safety": {
+    "critical_actions_protected": true,
+    "safe_actions_unblocked": true,
+    "safety_gating_precision_pct": 100.0,
+    "nl_parser_passed": true
+  },
+  "system_readiness": {
+    "sqlite_wal_mode": true,
+    "database_tables_intact": true,
+    "openai_llm_ready": true,
+    "google_oauth_ready": true,
+    "livekit_cloud_ready": true,
+    "all_ready": true
+  }
+}

@@ -206,10 +206,11 @@ def is_windows_app_installed(cmd: str) -> bool:
 
 
 def open_app(
-    name: str,
+    name: str = "",
     query: Optional[str] = None,
     url: Optional[str] = None,
     browser: Optional[str] = None,
+    target: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Launch a website or application on the laptop.
 
@@ -221,11 +222,12 @@ def open_app(
         query: Optional search topic or query (e.g. 'lofi beats' on YouTube).
         url: Direct custom URL to open if specified.
         browser: Optional preferred browser e.g. 'chrome', 'edge', or 'default'.
+        target: Optional alias for name.
 
     Returns:
         dict with execution status, target, URL or method, and spoken text.
     """
-    clean_name = (name or "").strip().lower()
+    clean_name = (name or target or "").strip().lower()
     clean_query = (query or "").strip()
     browser_pref = (browser or "").strip().lower()
 
@@ -244,10 +246,17 @@ def open_app(
 
     # Match predefined app or website
     matched_key = None
-    for k in APP_SITES:
-        if k == clean_name or k in clean_name or clean_name in k:
-            matched_key = k
-            break
+    if clean_name in APP_SITES:
+        matched_key = clean_name
+    else:
+        words = clean_name.split()
+        for k in APP_SITES:
+            if k in words:
+                matched_key = k
+                break
+            elif len(k) > 2 and (k in clean_name or clean_name in k):
+                matched_key = k
+                break
 
     if not matched_key:
         # Fallback to web search
