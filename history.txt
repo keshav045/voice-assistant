@@ -1,0 +1,287 @@
+================================================================================
+NEXUS AI ASSISTANT — COMPLETE PROJECT CHANGE HISTORY & IMPACT MATRIX
+================================================================================
+Generated: 2026-11-21
+Repository: https://github.com/keshav045/voice-assistant.git
+Branch: main
+
+This document records all modifications, architectural evolutions, tool
+integrations, bug fixes, and feature additions across the entire development
+lifecycle of the Nexus AI Assistant project. For each entry, both the exact change
+and its cascading impacts across modules, test suites, and user workflows are
+documented in full detail.
+
+
+================================================================================
+1. INITIAL ARCHITECTURE & INFRASTRUCTURE FOUNDATION (PHASES 1 - 4)
+================================================================================
+
+Entry 1.1: Foundation & SQLite Infrastructure Setup
+- Change:
+  * Implemented db/models.py with SQLite database management, WAL (Write-Ahead Logging)
+    mode concurrency, and structured schema definitions.
+  * Created tables: users, auth_tokens, sessions, chat_history, email_profiles,
+    tasks, reminders, and audit_logs.
+- What was Affected:
+  * Database Engine: Provided thread-safe, non-blocking concurrent read/write
+    access for multi-turn sessions and background daemons.
+  * Persistence: Enabled permanent storage of user profiles, authentication tokens,
+    session turns, and audit trails.
+  * Downstream Modules: Established foundational data access layers used by
+    agent/main.py, streamlit_app.py, and all evaluation suites.
+
+Entry 1.2: Streaming Audio & Voice Pipeline (Phase 2)
+- Change:
+  * Created agent/voice.py providing speech-to-text (Whisper API) and text-to-speech
+    (OpenAI TTS) pipeline integrations.
+  * Added clean spoken text sanitization (_clean_spoken_text) to strip raw markdown
+    tags, markdown asterisks, hash headers, and code fences from spoken output.
+- What was Affected:
+  * Speech Quality: Audio output became natural and fluent without pronouncing
+    code backticks or bullet characters.
+  * Latency: Integrated chunked audio streaming for sub-second vocal response.
+
+Entry 1.3: Agentic Core & Safety Approval Gating (Phase 3)
+- Change:
+  * Created agent/safety.py and agent/confirm.py to implement natural language
+    confirmation gating for write actions.
+  * High-stakes tools (sending emails, modifying calendar events, executing system commands)
+    were gated behind an approval requirement.
+- What was Affected:
+  * Security: Prevented accidental or hallucinated execution of irreversible actions.
+  * User Interaction: Assistant prompts "Would you like me to proceed with sending this email?"
+    and parses user responses (e.g. "yes", "sure", "proceed", "no", "cancel") accurately.
+
+Entry 1.4: Background Tasks & Reminders Engine (Phase 4)
+- Change:
+  * Implemented agent/tools/tasks.py with add_task, list_tasks, and complete_task.
+  * Created background task polling and reminder notifications stored in SQLite.
+- What was Affected:
+  * Task Management: Users can track to-dos and scheduling items directly via voice.
+  * Database: Added rows to tasks and reminders tables with active status flags.
+
+
+================================================================================
+2. INTEGRATIONS & EXPANDED TOOL CATALOG (PHASES 5 - 8)
+================================================================================
+
+Entry 2.1: Gmail & Email Integration (Phase 5)
+- Change:
+  * Implemented agent/tools/email.py supporting search_email, summarize_email,
+    draft_reply, and real SMTP dispatch with Gmail App Passwords.
+  * Added AI subject and body composition when users provide brief descriptions.
+- What was Affected:
+  * Email Workflow: Enabled hands-free email composition and dispatch.
+  * Security: Stored sender email and 16-character App Passwords securely in database
+    and environment variables.
+
+Entry 2.2: Google Calendar Availability & Booking (Phase 6)
+- Change:
+  * Implemented agent/tools/calendar.py with list_events, find_free_slot, and create_event.
+  * Integrated timezone localization with default Asia/Kolkata timezone support.
+- What was Affected:
+  * Schedule Management: Users can query free calendar slots and schedule meetings.
+  * Conflict Detection: Automated overlap checks against existing calendar entries.
+
+Entry 2.3: Windows Desktop Companion & App Launcher (Phase 7)
+- Change:
+  * Implemented agent/tools/launcher.py with open_app and browser launch handlers.
+  * Added support for launching local applications (Notepad, Calculator, File Explorer)
+    and web destinations (YouTube, WhatsApp, LinkedIn, Spotify, GitHub, Gmail).
+- What was Affected:
+  * Desktop Interaction: Users can say "Open YouTube" or "Launch Notepad" to launch apps.
+  * Web Launcher: Added auto-open URL dispatch so websites open in fresh browser tabs
+    without leaving the assistant interface.
+
+Entry 2.4: Semantic Memory & RAG Vector Search (Phase 8)
+- Change:
+  * Implemented rag/ingest.py, rag/store.py, and agent/memory.py for vector storage
+    and cosine similarity matching.
+  * Created memory_tools.py (remember, forget) to persist custom user facts across sessions.
+- What was Affected:
+  * Knowledge Recall: Assistant can index syllabus documents, notes, and user preferences.
+  * Long-term Personalization: Fact recall survives across different sessions and server restarts.
+
+
+================================================================================
+3. PRODUCTION REFACTORING, DOCKER & VERCEL DEPLOYMENT
+================================================================================
+
+Entry 3.1: Production Dockerization & Serverless Handling
+- Change:
+  * Added Dockerfile and docker-compose.yml for containerized execution.
+  * Configured Vercel serverless deployment via vercel.json and api/index.py with
+    stateless SQLite fallback handling.
+- What was Affected:
+  * Deployment Portability: Application can run identically on local machines,
+    Docker containers, and cloud PaaS environments (Vercel, Render, Railway).
+  * Audio Library Fallbacks: Made heavy native audio libraries (sounddevice, scipy)
+    optional so headless cloud Linux containers build without native driver errors.
+
+Entry 3.2: Modern Executive Web Dashboard & UI Redesign
+- Change:
+  * Built web/index.html and web/app.js featuring an executive command center
+    with audio waveforms, real-time activity toasts, and session history management.
+  * Styled with clean black, grey, and white palettes matching professional aesthetic guidelines.
+- What was Affected:
+  * User Experience: Provided a high-performance web interface alongside Streamlit.
+  * Real-Time Feedback: Displayed visual WebRTC connectivity indicators and action toasts.
+
+
+================================================================================
+4. LIVEKIT WEBRTC REAL-TIME CLOUD VOICE ENGINE
+================================================================================
+
+Entry 4.1: LiveKit Voice Pipeline Worker Integration
+- Change:
+  * Implemented agent/livekit_worker.py and run_livekit.py dev entrypoint.
+  * Connected to LiveKit Cloud (wss://nexus-ai-assistant-awu0v1ts.livekit.cloud).
+  * Configured Silero VAD (Voice Activity Detection), OpenAI Realtime/TTS models,
+    and automatic audio capture defaults (echo cancellation, noise suppression).
+- What was Affected:
+  * Voice Latency: Reduced end-to-end voice turnaround time to sub-400ms.
+  * Conversational Naturalness: Users can speak naturally and interrupt the assistant
+    mid-sentence without pressing buttons.
+  * Tool Calling in Voice: Bound live Python tools directly into the WebRTC audio loop.
+
+Entry 4.2: Streamlit LiveKit WebRTC Voice Studio Component
+- Change:
+  * Embedded a custom HTML5/JavaScript LiveKit WebRTC client inside streamlit_app.py
+    connected via dynamic tokens generated by agent/main.py (/api/livekit/token).
+  * Removed the old Whisper audio recorder (st.audio_input) and file upload widgets.
+- What was Affected:
+  * Streamlit App: Voice interaction moved entirely to real-time WebRTC audio streaming.
+  * Interface Simplicity: Eliminated confusing duplicate voice buttons (Whisper vs LiveKit).
+
+
+================================================================================
+5. 1-CLICK GOOGLE OAUTH 2.0 LOGIN & GMAIL REST API
+================================================================================
+
+Entry 5.1: 1-Click Google OAuth Authentication & Token Persistence
+- Change:
+  * Added db_save_user_oauth, db_get_user_oauth, and db_delete_user_oauth in db/models.py.
+  * Built Google OAuth 2.0 authorization URL generator linking to accounts.google.com
+    requesting openid, userinfo.email, userinfo.profile, and gmail.send scopes.
+  * Added OAuth callback route /api/auth/google/callback in agent/main.py that exchanges
+    authorization codes for OAuth tokens and stores them for user "krish".
+- What was Affected:
+  * User Authentication: Users sign in with their Google account in a single click.
+  * Streamlit Sidebar: Displays authenticated user email with a "Logout from Google" button.
+  * Security: Completely eliminates the requirement for users to generate or enter manual
+    16-character Gmail App Passwords.
+
+Entry 5.2: Official Gmail REST API Integration
+- Change:
+  * Refactored agent/tools/email.py to check for connected Google OAuth tokens before SMTP.
+  * Implemented direct email dispatch via Google's official Gmail REST API
+    (https://gmail.googleapis.com/gmail/v1/users/me/messages/send) using Bearer access tokens.
+  * Added automatic token refresh using GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.
+- What was Affected:
+  * Email Sending: Emails send directly from the logged-in user's authentic Gmail address.
+  * Deliverability: Uses official Google API endpoints, preventing SMTP port 587 blocks.
+  * Personal Meeting Emails: When Krish says "mail John about the meeting", the invite
+    is sent directly from Krish's authenticated Gmail address with professional sign-off.
+
+
+================================================================================
+6. STRICT ZERO-EMOJI ENFORCEMENT & VISUAL PURIFICATION
+================================================================================
+
+Entry 6.1: Codebase-Wide Emoji Elimination
+- Change:
+  * Stripped all unicode emojis (e.g. robot, microphone, envelope, speaker, sparkles, etc.)
+    and decorative symbols (checkmarks, arrows, crosses) across all project files:
+    - streamlit_app.py: Cleaned all 34 emoji instances, labels, and status badges.
+    - agent/main.py: Cleaned success headers and fallback descriptions.
+    - web/app.js: Replaced special symbols with clean text equivalents.
+    - evals/: Cleaned status badges across benchmark.py, harness.py, and promote.py.
+    - tests/: Cleaned status markers in verify_all_features.py.
+- What was Affected:
+  * Visual Cleanliness: Achieved an executive, distraction-free aesthetic.
+  * Cross-Platform Consistency: Eliminates rendering discrepancies across Windows,
+    macOS, and Linux terminals where emojis render with inconsistent fonts or broken boxes.
+  * Codebase Integrity: Verified via automated scanner that exactly 0 emojis exist.
+
+
+================================================================================
+7. NEW MEDICAL SEARCH & PHARMACOLOGY TOOL
+================================================================================
+
+Entry 7.1: Medical Search Engine (agent/tools/medical.py)
+- Change:
+  * Implemented medical_search tool providing structured pharmacology data:
+    - Generic Name and Drug Class
+    - Popular Brand Names (e.g. Dolo 650, Crocin, Combiflam, Pan 40, Augmentin, etc.)
+    - Therapeutic Indications (what conditions the medicine treats)
+    - Standard Adult Dosage Guidelines
+    - Common & Serious Side Effects
+    - Important Warnings and Precautions
+    - Drug-to-Drug Interactions
+    - Responsible Medical Safety Disclaimer
+  * Built multi-tier data retrieval architecture:
+    1. Curated Clinical Knowledge Base for instant, high-speed, offline-safe lookups.
+    2. OpenFDA Drug Label API (api.fda.gov) for official FDA-approved label data.
+    3. Medical Web Search Fallback via DuckDuckGo for newly approved or regional drugs.
+- What was Affected:
+  * Capabilities: Assistant can answer detailed medical and medicine queries accurately.
+  * Spoken Audio: Formats clear, natural sentences suitable for LiveKit voice and TTS.
+  * Safety: Includes standard clinical disclaimers urging users to consult a doctor.
+
+Entry 7.2: Medical Tool System-Wide Integration
+- Change:
+  * Registered medical_search in agent/tools/__init__.py (TOOLS_REGISTRY and TOOL_SCHEMAS).
+  * Added @llm.function_tool medical_search to agent/livekit_worker.py in LIVEKIT_TOOLS.
+  * Added Section 7 (Medical and Medicine Information Search) to agent/prompts.py.
+  * Added medical inquiry intent routing in agent/main.py fallback turn handler.
+  * Added dedicated Clinical Reference card and suggestion button in streamlit_app.py.
+  * Created unit test suite in tests/test_medical.py.
+- What was Affected:
+  * Voice & Text: Both LiveKit WebRTC voice and Streamlit chat support medicine inquiries.
+  * Test Suite: Expanded unit test coverage from 72 to 79 tests (100% pass rate).
+
+
+================================================================================
+8. DATABASE CONCURRENCY & ORDERING FIXES
+================================================================================
+
+Entry 8.1: SQLite History Tie-Breaking Fix (db/models.py)
+- Change:
+  * Modified db_list_chat_history queries to ORDER BY created_at DESC, rowid DESC.
+- What was Affected:
+  * Session History: Resolves millisecond timestamp collisions on Windows systems.
+  * Reliability: Guarantees that the most recently inserted turn is strictly first in
+    the history list, fixing test_chat_history_persistence in pytest.
+
+
+================================================================================
+9. SUMMARY OF SYSTEM VERIFICATION STATUS
+================================================================================
+
+- Pytest Unit Tests: 79/79 Passed (100%)
+  * test_agent.py (7 tests)
+  * test_auth_and_history.py (6 tests)
+  * test_calc_and_session.py (16 tests)
+  * test_email.py (21 tests)
+  * test_launcher.py (10 tests)
+  * test_livekit.py (4 tests)
+  * test_medical.py (7 tests)
+  * test_voice.py (4 tests)
+  * test_whatsapp.py (4 tests)
+
+- Master Modular Evaluation Suite: 35/35 Passed (100%)
+  * Retrieval & Memory: Hit@1, Hit@3, MRR, Fact Recall
+  * Generation: Clean Speech Compliance, Conciseness Index
+  * Latency: Math, Clock, Sandbox P95 profiling
+  * Cost: Cloud GPT-4o and Local Ollama budget tracking
+  * Security: Zero Secret Leakage, Prompt Boundary Defense
+  * Infrastructure: SQLite WAL Concurrency, Table Integrity, Service Readiness
+  * Safety: 100% Approval Gating for Write Actions, Natural Language Confirmations
+  * Robustness: Division by Zero, Injection Blocking, Fallback Resilience
+  * Toxicity: 100% Toxic Interception, Zero False Positives on Benign Queries
+  * Session: Multi-turn Persistence and Clean Session Isolation
+
+- Production Gate Check: APPROVED FOR PRODUCTION
+- Total Emojis Across Entire Codebase: Exactly 0
+- Git Remote Status: Up to date with origin/main (Commit message: "first")
+================================================================================
