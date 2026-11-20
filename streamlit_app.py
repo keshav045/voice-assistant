@@ -283,7 +283,8 @@ def transcribe_uploaded_audio(audio_data: bytes) -> str:
     if not openai_key or openai_key.startswith("your-"):
         return ""
     try:
-        client = OpenAI(api_key=openai_key)
+        # Explicitly use official OpenAI API endpoint for Whisper
+        client = OpenAI(api_key=openai_key, base_url="https://api.openai.com/v1")
         audio_file = io.BytesIO(audio_data)
         audio_file.name = "recording.wav"
         transcription = client.audio.transcriptions.create(
@@ -305,7 +306,8 @@ def synthesize_speech(text: str, voice: str = "alloy") -> bytes:
     if not openai_key or openai_key.startswith("your-"):
         return b""
     try:
-        client = OpenAI(api_key=openai_key)
+        # Explicitly use official OpenAI API endpoint for TTS
+        client = OpenAI(api_key=openai_key, base_url="https://api.openai.com/v1")
         response = client.audio.speech.create(
             model="tts-1",
             voice=voice,
@@ -456,7 +458,7 @@ with st.sidebar:
     if "Local Model" in model_mode:
         local_model = st.selectbox(
             "Select Local Ollama Model:",
-            options=["rtu-senior:latest", "qwen2.5:1.5b", "llama3.2", "mistral"],
+            options=["rtu-senior:latest", "qwen2.5:1.5b"],
             index=0,
         )
         local_url = st.text_input("Ollama Endpoint:", value="http://localhost:11434/v1")
@@ -475,36 +477,48 @@ with st.sidebar:
     if st.session_state.session_id not in session_options:
         session_options.insert(0, st.session_state.session_id)
 
-    selected_sess = st.selectbox(
+    def _switch_study_session():
+        chosen_sess = st.session_state.get("study_session_selector")
+        if chosen_sess and chosen_sess != st.session_state.session_id:
+            st.session_state.session_id = chosen_sess
+            st.session_state.messages = []
+            existing = db_get_session_turns(user_id="guest", session_id=chosen_sess)
+            for t in existing:
+                st.session_state.messages.append({
+                    "role": "user",
+                    "content": t["user_message"],
+                    "timestamp": t.get("created_at", "Past"),
+                    "input_mode": "voice",
+                })
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": t["spoken_reply"],
+                    "tool_calls": t.get("tool_calls", []),
+                    "latency_ms": t.get("latency_ms", 0.0),
+                    "timestamp": t.get("created_at", "Past"),
+                })
+
+    curr_idx = session_options.index(st.session_state.session_id) if st.session_state.session_id in session_options else 0
+    st.selectbox(
         "Study Session:",
         options=session_options,
-        index=session_options.index(st.session_state.session_id),
+        index=curr_idx,
+        key="study_session_selector",
+        on_change=_switch_study_session,
     )
-    if selected_sess != st.session_state.session_id:
-        st.session_state.session_id = selected_sess
-        st.session_state.messages = []
-        existing = db_get_session_turns(user_id="guest", session_id=selected_sess)
-        for t in existing:
-            st.session_state.messages.append({
-                "role": "user",
-                "content": t["user_message"],
-                "timestamp": t.get("created_at", "Past"),
-                "input_mode": "voice",
-            })
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": t["spoken_reply"],
-                "tool_calls": json.loads(t["tool_calls"]) if isinstance(t.get("tool_calls"), str) else (t.get("tool_calls") or []),
-                "latency_ms": t.get("latency_ms", 0.0),
-                "timestamp": t.get("created_at", "Past"),
-            })
-        st.rerun()
 
-    if st.button("🗑️ Clear Session Notes", use_container_width=True):
-        db_clear_chat_history(user_id="guest", session_id=st.session_state.session_id)
-        st.session_state.messages = []
-        st.success("Session cleared.")
-        st.rerun()
+    col_new, col_del = st.columns(2)
+    with col_new:
+        if st.button("➕ New Chat", use_container_width=True):
+            st.session_state.session_id = f"sess-{uuid.uuid4().hex[:8]}"
+            st.session_state.messages = []
+            st.rerun()
+    with col_del:
+        if st.button("🗑️ Clear", use_container_width=True):
+            db_clear_chat_history(user_id="guest", session_id=st.session_state.session_id)
+            st.session_state.messages = []
+            st.success("Cleared.")
+            st.rerun()
 
 
 # --------------------------------------------------------------------------- #

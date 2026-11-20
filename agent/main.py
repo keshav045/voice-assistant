@@ -747,7 +747,7 @@ async def stt_endpoint(file: UploadFile = File(...)):
     if OPENAI_API_KEY and not OPENAI_API_KEY.startswith("your-"):
         try:
             import io
-            client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+            client = AsyncOpenAI(api_key=OPENAI_API_KEY, base_url="https://api.openai.com/v1")
             audio_io = io.BytesIO(content)
             audio_io.name = file.filename or "speech.webm"
             tr = await client.audio.transcriptions.create(model="whisper-1", file=audio_io)
@@ -763,7 +763,7 @@ async def tts_endpoint(req: TTSRequest):
     """Synthesize text to speech MP3 audio."""
     if OPENAI_API_KEY and not OPENAI_API_KEY.startswith("your-"):
         try:
-            client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+            client = AsyncOpenAI(api_key=OPENAI_API_KEY, base_url="https://api.openai.com/v1")
             res = await client.audio.speech.create(
                 model="tts-1",
                 voice=req.voice or "alloy",
