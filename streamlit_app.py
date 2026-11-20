@@ -565,42 +565,6 @@ with st.sidebar:
         st.caption("Using Cloud OpenAI GPT-4o API")
 
     st.markdown("---")
-    st.markdown("#### 📚 Revision Sessions")
-    sessions = db_list_chat_sessions(user_id="guest", limit=15)
-    session_options = [s["session_id"] for s in sessions]
-    if st.session_state.session_id not in session_options:
-        session_options.insert(0, st.session_state.session_id)
-
-    def _switch_study_session():
-        chosen_sess = st.session_state.get("study_session_selector")
-        if chosen_sess and chosen_sess != st.session_state.session_id:
-            st.session_state.session_id = chosen_sess
-            st.session_state.messages = []
-            existing = db_get_session_turns(user_id="guest", session_id=chosen_sess)
-            for t in existing:
-                st.session_state.messages.append({
-                    "role": "user",
-                    "content": t["user_message"],
-                    "timestamp": t.get("created_at", "Past"),
-                    "input_mode": "voice",
-                })
-                st.session_state.messages.append({
-                    "role": "assistant",
-                    "content": t["spoken_reply"],
-                    "tool_calls": t.get("tool_calls", []),
-                    "latency_ms": t.get("latency_ms", 0.0),
-                    "timestamp": t.get("created_at", "Past"),
-                })
-
-    curr_idx = session_options.index(st.session_state.session_id) if st.session_state.session_id in session_options else 0
-    st.selectbox(
-        "Study Session:",
-        options=session_options,
-        index=curr_idx,
-        key="study_session_selector",
-        on_change=_switch_study_session,
-    )
-
     col_new, col_del = st.columns(2)
     with col_new:
         if st.button("➕ New Chat", use_container_width=True):
@@ -608,10 +572,9 @@ with st.sidebar:
             st.session_state.messages = []
             st.rerun()
     with col_del:
-        if st.button("🗑️ Clear", use_container_width=True):
+        if st.button("🗑️ Clear Chat", use_container_width=True):
             db_clear_chat_history(user_id="guest", session_id=st.session_state.session_id)
             st.session_state.messages = []
-            st.success("Cleared.")
             st.rerun()
 
 
