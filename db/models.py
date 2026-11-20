@@ -664,3 +664,81 @@ def db_delete_user_oauth(user_id: Optional[str] = None, provider: str = "google"
 # Auto-initialize database on import
 init_db()
 
+
+# --- User Email Profile (Custom Sender Credentials, e.g. Krish) ---
+def db_save_user_email_profile(
+    user_id: str = "krish",
+    sender_name: str = "Krish",
+    sender_email: str = "",
+    sender_password: Optional[str] = None,
+    smtp_host: str = "smtp.gmail.com",
+    smtp_port: int = 587,
+) -> Dict[str, Any]:
+    """Store or update personal sender email profile credentials for a user (e.g. Krish)."""
+    now = datetime.now(timezone.utc).isoformat()
+    with get_db_connection() as conn:
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS user_email_profiles (
+                user_id TEXT PRIMARY KEY,
+                sender_name TEXT NOT NULL,
+                sender_email TEXT NOT NULL,
+                sender_password TEXT,
+                smtp_host TEXT DEFAULT 'smtp.gmail.com',
+                smtp_port INTEGER DEFAULT 587,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )"""
+        )
+        cur = conn.execute("SELECT user_id, sender_password FROM user_email_profiles WHERE user_id = ?", (user_id,))
+        row = cur.fetchone()
+        final_password = sender_password if sender_password is not None else (row["sender_password"] if row else None)
+        if row:
+            conn.execute(
+                """UPDATE user_email_profiles 
+                   SET sender_name = ?, sender_email = ?, sender_password = ?, smtp_host = ?, smtp_port = ?, updated_at = ?
+                   WHERE user_id = ?""",
+                (sender_name, sender_email, final_password, smtp_host, smtp_port, now, user_id),
+            )
+        else:
+            conn.execute(
+                """INSERT INTO user_email_profiles 
+                   (user_id, sender_name, sender_email, sender_password, smtp_host, smtp_port, created_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (user_id, sender_name, sender_email, final_password, smtp_host, smtp_port, now, now),
+            )
+        conn.commit()
+    return {
+        "user_id": user_id,
+        "sender_name": sender_name,
+        "sender_email": sender_email,
+        "has_password": bool(final_password),
+    }
+
+
+def db_get_user_email_profile(user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """Retrieve stored personal email sender profile for Krish or specified user."""
+    uid = user_id or "krish"
+    with get_db_connection() as conn:
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS user_email_profiles (
+                user_id TEXT PRIMARY KEY,
+                sender_name TEXT NOT NULL,
+                sender_email TEXT NOT NULL,
+                sender_password TEXT,
+                smtp_host TEXT DEFAULT 'smtp.gmail.com',
+                smtp_port INTEGER DEFAULT 587,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )"""
+        )
+        cur = conn.execute("SELECT * FROM user_email_profiles WHERE user_id = ? LIMIT 1", (uid,))
+        row = cur.fetchone()
+        if not row and uid != "krish":
+            cur = conn.execute("SELECT * FROM user_email_profiles WHERE user_id = 'krish' LIMIT 1")
+            row = cur.fetchone()
+        if not row:
+            cur = conn.execute("SELECT * FROM user_email_profiles ORDER BY updated_at DESC LIMIT 1")
+            row = cur.fetchone()
+        return dict(row) if row else None
+
+

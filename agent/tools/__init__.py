@@ -312,6 +312,14 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
                         "type": "string",
                         "description": "Optional name of the recipient used to personalise the greeting, e.g. 'Priya'.",
                     },
+                    "sender_name": {
+                        "type": "string",
+                        "description": "Optional sender display name, e.g. 'Krish' (defaults to 'Krish').",
+                    },
+                    "sender_email": {
+                        "type": "string",
+                        "description": "Optional personal sender email address (e.g. 'krish@gmail.com') to send from Krish's own email account.",
+                    },
                     "subject": {
                         "type": "string",
                         "description": "Optional explicit subject line (overrides AI generation).",

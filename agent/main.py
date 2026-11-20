@@ -229,8 +229,11 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                     except Exception:
                         t_args = {}
 
-                    if t_name == "send_email" and "user_id" not in t_args:
-                        t_args["user_id"] = effective_user_id
+                    if t_name == "send_email":
+                        if "user_id" not in t_args:
+                            t_args["user_id"] = effective_user_id
+                        if "sender_name" not in t_args:
+                            t_args["sender_name"] = "Krish"
 
                     handler = TOOLS_REGISTRY.get(t_name)
                     if handler:
@@ -380,7 +383,32 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                 executed_tools.append({"tool": "get_current_time", "args": {}, "result": res})
                 spoken = res.get("spoken", "Checked the current time.")
 
-            # 5. Universal Web Search Fallback (Cricket scores, news, multilingual facts, queries)
+            # 5. Email & Meeting Inquiries / Personal Mail ID Fallback
+            elif any(w in lower for w in ["mail", "email", "gmail", "send email", "send a mail"]):
+                if "how" in lower and any(w in lower for w in ["mail from", "send from", "my mail", "my email", "own email", "krish"]):
+                    spoken = (
+                        "To send emails from your own mail ID as Krish: "
+                        "First, enter your name and email in the sidebar Sender Profile. "
+                        "Second, enter your 16-character Google App Password generated from your Google Account Security settings. "
+                        "Once saved, whenever you ask me to mail someone about a meeting, "
+                        "I will send the email directly from your email address with your signature."
+                    )
+                else:
+                    to_cand = "recipient@example.com"
+                    match_em = re.search(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', clean_text)
+                    if match_em:
+                        to_cand = match_em.group(0)
+                    desc = clean_text
+                    res = TOOLS_REGISTRY["send_email"](
+                        to=to_cand,
+                        description=desc,
+                        user_id=effective_user_id,
+                        sender_name="Krish",
+                    )
+                    executed_tools.append({"tool": "send_email", "args": {"to": to_cand, "description": desc, "sender_name": "Krish"}, "result": res})
+                    spoken = res.get("spoken") or "Processed your email request."
+
+            # 6. Universal Web Search Fallback (Cricket scores, news, multilingual facts, queries)
             else:
                 search_q = clean_text
                 search_q = re.sub(r"^(search\s+(for\s+)?|who\s+is\s+|what\s+is\s+|tell\s+me\s+about\s+)", "", clean_text, flags=re.IGNORECASE).strip()

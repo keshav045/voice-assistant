@@ -245,6 +245,42 @@ class TestSendEmailOffline:
             assert res["success"] is True
             assert "keshav045@gmail.com" in res["spoken"]
 
+    def test_krish_sender_profile_and_meeting_email(self):
+        """When Krish sends an email about a meeting, sender_name='Krish' and custom sender_email are respected."""
+        from agent.tools import email as email_mod
+        from db.models import db_save_user_email_profile, db_get_user_email_profile
+
+        # Save Krish's personal profile
+        db_save_user_email_profile(
+            user_id="krish",
+            sender_name="Krish",
+            sender_email="krish.developer@gmail.com",
+            sender_password="b" * 16,
+        )
+        saved = db_get_user_email_profile("krish")
+        assert saved["sender_name"] == "Krish"
+        assert saved["sender_email"] == "krish.developer@gmail.com"
+
+        sent_kwargs = {}
+        def mock_send_smtp(**kwargs):
+            sent_kwargs.update(kwargs)
+            return {"success": True, "to": kwargs["to_email"], "subject": kwargs["subject"], "from": kwargs.get("sender_email", "")}
+
+        with patch.object(email_mod, "_send_smtp", side_effect=mock_send_smtp):
+            res = email_mod.send_email(
+                to="alex@example.com",
+                description="Our project review meeting is tomorrow at 3 PM",
+                sender_name="Krish",
+                sender_email="krish.developer@gmail.com",
+                sender_password="b" * 16,
+            )
+            assert res["success"] is True
+            assert res["sender_name"] == "Krish"
+            assert "alex@example.com" in res["spoken"]
+            assert "Krish" in res["spoken"]
+            assert sent_kwargs["sender_name"] == "Krish"
+            assert sent_kwargs["sender_email"] == "krish.developer@gmail.com"
+
     # ------------------------------------------------------------------ #
     # Legacy stubs still work
     # ------------------------------------------------------------------ #

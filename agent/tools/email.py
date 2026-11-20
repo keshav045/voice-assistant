@@ -40,21 +40,37 @@ SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
 
 
-def _get_smtp_creds() -> tuple[str, str]:
-    """Return (sender_email, app_password) from environment, dynamically checking .env."""
+def _get_smtp_creds(
+    user_id: Optional[str] = None,
+    sender_email: Optional[str] = None,
+    sender_password: Optional[str] = None,
+) -> tuple[str, str]:
+    """Return (sender_email, app_password) checking explicit args, user profile (e.g. Krish), and .env."""
+    if sender_email and sender_password:
+        return sender_email.strip(), sender_password.strip()
+
+    # Check database profile for user (e.g. Krish)
+    try:
+        from db.models import db_get_user_email_profile
+        prof = db_get_user_email_profile(user_id or "krish")
+        if prof and prof.get("sender_email") and prof.get("sender_password"):
+            return prof["sender_email"].strip(), prof["sender_password"].strip()
+    except Exception:
+        pass
+
     if "PYTEST_CURRENT_TEST" not in os.environ:
         try:
             from dotenv import load_dotenv
             load_dotenv(override=True)
         except Exception:
             pass
-    sender = os.environ.get("SENDER_EMAIL", "").strip()
-    password = os.environ.get("SENDER_APP_PASSWORD", "").strip()
+    sender = (sender_email or os.environ.get("SENDER_EMAIL", "")).strip()
+    password = (sender_password or os.environ.get("SENDER_APP_PASSWORD", "")).strip()
     return sender, password
 
 
-def _smtp_configured() -> bool:
-    sender, password = _get_smtp_creds()
+def _smtp_configured(user_id: Optional[str] = None) -> bool:
+    sender, password = _get_smtp_creds(user_id=user_id)
     return bool(sender and password)
 
 
@@ -229,14 +245,17 @@ def _parse_recipients(
 # AI subject + body composer (uses OpenAI synchronously — light call)
 # --------------------------------------------------------------------------- #
 
-def _compose_email(description: str, recipient_name: str = "") -> Dict[str, str]:
+def _compose_email(description: str, recipient_name: str = "", sender_name: str = "Krish") -> Dict[str, str]:
     """Use OpenAI to generate a professional subject and body from a brief description.
     Falls back to a simple template if the API key is missing.
     """
+    effective_sender = sender_name or "Krish"
     api_key = os.environ.get("OPENAI_API_KEY", "")
     if not api_key or api_key.startswith("your-"):
-        subject = f"Message{' for ' + recipient_name if recipient_name else ''}"
-        body = description
+        is_meeting = any(w in description.lower() for w in ["meet", "sync", "call", "schedule", "catch up"])
+        subject = f"Meeting Invitation: Discussion" if is_meeting else f"Message{' for ' + recipient_name if recipient_name else ''}"
+        greeting = f"Hi {recipient_name}," if recipient_name else "Hello,"
+        body = f"{greeting}\n\n{description}\n\nBest regards,\n{effective_sender}"
         return {"subject": subject, "body": body}
 
     try:
@@ -244,16 +263,20 @@ def _compose_email(description: str, recipient_name: str = "") -> Dict[str, str]
         client = OpenAI(api_key=api_key)
 
         prompt = f"""You are a professional email assistant.
-A user wants to send an email. Their description is:
+The sender is: {effective_sender}.
+The recipient is: {recipient_name if recipient_name else "the designated recipient"}.
+The user's description or intent is:
 "{description}"
 
-{"Recipient name: " + recipient_name if recipient_name else ""}
+Instructions:
+- If this relates to a meeting, sync, or discussion, generate a clear, professional meeting invitation email with an informative subject line (e.g. "Meeting Invitation: Project Discussion", "Upcoming Meeting Sync").
+- Write a polite, crisp, and structured email body with greeting, meeting context/agenda, proposed schedule, and sign off with:
+"Best regards,\n{effective_sender}"
 
-Generate a concise, professional email.
 Respond ONLY with valid JSON in this exact format (no markdown, no extra text):
 {{
   "subject": "<email subject line>",
-  "body": "<full email body with greeting and sign-off>"
+  "body": "<full email body with greeting, agenda, and sign-off from {effective_sender}>"
 }}"""
 
         response = client.chat.completions.create(
@@ -268,14 +291,17 @@ Respond ONLY with valid JSON in this exact format (no markdown, no extra text):
         raw = raw.strip("```json").strip("```").strip()
         result = json.loads(raw)
         return {
-            "subject": result.get("subject", "No Subject"),
+            "subject": result.get("subject", "Meeting Invitation"),
             "body": result.get("body", description),
         }
     except Exception as e:
         logger.warning(f"AI compose failed, using fallback: {e}")
+        is_meeting = any(w in description.lower() for w in ["meet", "sync", "call", "schedule", "catch up"])
+        subject = f"Meeting Invitation" if is_meeting else f"Message{' for ' + recipient_name if recipient_name else ''}"
+        greeting = f"Hi {recipient_name}," if recipient_name else "Hello,"
         return {
-            "subject": f"Message{' for ' + recipient_name if recipient_name else ''}",
-            "body": description,
+            "subject": subject,
+            "body": f"{greeting}\n\n{description}\n\nBest regards,\n{effective_sender}",
         }
 
 
@@ -404,18 +430,30 @@ def _get_fresh_google_access_token(user_id: Optional[str] = None) -> Optional[Tu
     return None
 
 
-def _send_smtp(to_email: str, subject: str, body: str) -> Dict[str, Any]:
+def _send_smtp(
+    to_email: str,
+    subject: str,
+    body: str,
+    sender_email: Optional[str] = None,
+    sender_password: Optional[str] = None,
+    sender_name: Optional[str] = "Krish",
+    user_id: Optional[str] = None,
+) -> Dict[str, Any]:
     """Send email via Gmail SMTP. Tries port 587 (STARTTLS) then 465 (SSL)."""
-    sender_email, app_password = _get_smtp_creds()
+    effective_sender_email, app_password = _get_smtp_creds(
+        user_id=user_id,
+        sender_email=sender_email,
+        sender_password=sender_password,
+    )
 
-    if not sender_email or not app_password:
+    if not effective_sender_email or not app_password:
         return {
             "success": False,
             "error": "SMTP not configured",
             "spoken": (
-                "Email is not configured yet. Please open the dot-env file, "
-                "set SENDER_EMAIL to your Gmail address, and set SENDER_APP_PASSWORD "
-                "to a 16-character Gmail App Password."
+                "Email is not configured yet. Please configure your email and 16-character "
+                "Gmail App Password in the sidebar Sender Profile (or set SENDER_EMAIL and "
+                "SENDER_APP_PASSWORD in your dot-env file)."
             ),
         }
 
@@ -425,14 +463,17 @@ def _send_smtp(to_email: str, subject: str, body: str) -> Dict[str, Any]:
             "success": False,
             "error": f"App password has {len(clean_password)} chars, expected 16.",
             "spoken": (
-                f"The Gmail App Password in your dot-env file looks incorrect — "
+                f"The Gmail App Password looks incorrect — "
                 f"it has {len(clean_password)} characters but should be exactly 16."
             ),
         }
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
-    msg["From"] = sender_email
+    if sender_name:
+        msg["From"] = f"{sender_name} <{effective_sender_email}>"
+    else:
+        msg["From"] = effective_sender_email
     msg["To"] = to_email
 
     # Plain-text part
@@ -449,25 +490,26 @@ def _send_smtp(to_email: str, subject: str, body: str) -> Dict[str, Any]:
             server.ehlo()
             server.starttls(context=context)
             server.ehlo()
-            server.login(sender_email, clean_password)
-            server.sendmail(sender_email, to_email, msg.as_string())
+            server.login(effective_sender_email, clean_password)
+            server.sendmail(effective_sender_email, to_email, msg.as_string())
 
     def _try_465() -> None:
         with smtplib.SMTP_SSL(SMTP_HOST, 465, context=context, timeout=15) as server:
             server.ehlo()
-            server.login(sender_email, clean_password)
-            server.sendmail(sender_email, to_email, msg.as_string())
+            server.login(effective_sender_email, clean_password)
+            server.sendmail(effective_sender_email, to_email, msg.as_string())
 
     last_err: Exception | None = None
     for attempt in (_try_465, _try_587):
         try:
             attempt()
-            logger.info(f"Email sent to {to_email} via SMTP | subject: {subject}")
+            logger.info(f"Email sent to {to_email} via SMTP | subject: {subject} | from: {effective_sender_email}")
             return {
                 "success": True,
                 "to": to_email,
                 "subject": subject,
-                "from": sender_email,
+                "from": effective_sender_email,
+                "sender_name": sender_name or "Krish",
                 "provider": "smtp",
             }
         except smtplib.SMTPAuthenticationError:
@@ -500,13 +542,17 @@ def send_email(
     recipient_name: Optional[str] = None,
     csv_path: Optional[str] = None,
     user_id: Optional[str] = None,
+    sender_email: Optional[str] = None,
+    sender_name: Optional[str] = "Krish",
+    sender_password: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Compose and send emails to a single recipient, multiple recipients, or bulk contacts via CSV.
 
-    Uses the user's connected Google Account (via Gmail REST API) if linked,
-    or falls back to Gmail SMTP credentials from .env.
+    Supports custom sender identity (e.g. Krish sending from his own email ID),
+    Google OAuth 2.0 Gmail REST API, and Gmail SMTP with App Passwords.
     """
-    effective_user_id = user_id or "guest"
+    effective_user_id = user_id or "krish"
+    effective_sender_name = sender_name or "Krish"
 
     # 1. Parse Recipients (single, multi, or CSV)
     recipients, parse_err = _parse_recipients(to=to, csv_path=csv_path)
@@ -530,7 +576,10 @@ def send_email(
         final_subject = subject
         base_body = body
     elif description:
-        composed = _compose_email(description, recipient_name or "")
+        if sender_name and sender_name != "Krish":
+            composed = _compose_email(description, recipient_name or "", sender_name=effective_sender_name)
+        else:
+            composed = _compose_email(description, recipient_name or "")
         final_subject = subject or composed["subject"]
         base_body = body or composed["body"]
     else:
@@ -539,13 +588,26 @@ def send_email(
             "spoken": "Please describe what you want to say in the email.",
         }
 
-    # Internal dispatcher: checks Google OAuth first, then SMTP
+    # Internal dispatcher: checks direct sender credentials, Google OAuth, then SMTP
     def _deliver(to_em: str, subj: str, bdy: str) -> Dict[str, Any]:
+        # If user explicitly provided sender credentials, or has an email profile, use SMTP
+        if sender_email and sender_password:
+            return _send_smtp(
+                to_email=to_em,
+                subject=subj,
+                body=bdy,
+                sender_email=sender_email,
+                sender_password=sender_password,
+                sender_name=effective_sender_name,
+                user_id=effective_user_id,
+            )
+
         token_info = _get_fresh_google_access_token(user_id=effective_user_id)
         if token_info:
             access_tok, sender_em = token_info
             res = _send_gmail_api(to_email=to_em, subject=subj, body=bdy, access_token=access_tok, sender_email=sender_em)
             if res.get("success"):
+                res["sender_name"] = effective_sender_name
                 return res
 
             # Attempt one token refresh on 401 Unauthorized / Token expired
@@ -557,9 +619,9 @@ def send_email(
                     new_tok, new_sender = refreshed
                     retry_res = _send_gmail_api(to_email=to_em, subject=subj, body=bdy, access_token=new_tok, sender_email=new_sender)
                     if retry_res.get("success"):
+                        retry_res["sender_name"] = effective_sender_name
                         return retry_res
 
-            # When Google OAuth is linked, DO NOT silently send from a random .env email!
             logger.error(f"Google OAuth delivery failed: {res.get('error')}")
             return {
                 "success": False,
@@ -567,8 +629,18 @@ def send_email(
                 "spoken": f"I tried to send the email from your connected Google account ({sender_em}), but Google reported an error: {res.get('error')}. Please reconnect your Gmail in the dashboard.",
             }
 
-        # Fallback to SMTP only if Google OAuth is not linked
-        return _send_smtp(to_email=to_em, subject=subj, body=bdy)
+        # Fallback to SMTP using profile or environment credentials
+        if sender_email or sender_password:
+            return _send_smtp(
+                to_email=to_em,
+                subject=subj,
+                body=bdy,
+                sender_email=sender_email,
+                sender_password=sender_password,
+                sender_name=effective_sender_name,
+                user_id=effective_user_id,
+            )
+        return _send_smtp(to_em, subj, bdy)
 
     # ----------------------------------------------------------------------- #
     # Case A: Single Recipient
@@ -580,13 +652,14 @@ def send_email(
         result = _deliver(to_em=target_email, subj=final_subject, bdy=base_body)
         if result["success"]:
             name_part = f" to {target_name}" if target_name else f" to {target_email}"
-            from_part = f" from your connected Gmail ({result['from']})" if result.get("provider") == "google_gmail_api" else (f" from {result['from']}" if result.get("from") else "")
+            from_part = f" from {effective_sender_name} ({result['from']})" if result.get("from") else f" from {effective_sender_name}"
             result["spoken"] = (
                 f"Done! I've sent the email{name_part}{from_part} with the subject \"{final_subject}\"."
             )
             result["subject"] = final_subject
             result["body"] = base_body
             result["to"] = target_email
+            result["sender_name"] = effective_sender_name
         return result
 
     # ----------------------------------------------------------------------- #

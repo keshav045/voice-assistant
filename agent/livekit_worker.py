@@ -152,27 +152,33 @@ async def send_whatsapp_message(contact_name: str, message: str = "") -> str:
 
 
 @llm.function_tool
-async def send_email(to: str, description: str, recipient_name: str = "") -> str:
+async def send_email(to: str, description: str, recipient_name: str = "", sender_email: str = "", sender_name: str = "Krish") -> str:
     """Compose and send emails to a single recipient, multiple recipients, or bulk contacts from contacts.csv.
 
     Args:
         to: Recipient email address, comma-separated list, or 'contacts.csv'.
         description: Brief description of the email content to be professionally composed.
         recipient_name: Optional recipient name for greeting.
+        sender_email: Optional personal sender email address (e.g. Krish's mail ID).
+        sender_name: Optional sender display name (defaults to 'Krish').
     """
     global _active_user_id
     try:
+        eff_sender = sender_name or "Krish"
         res = email.send_email(
             to=to,
             description=description,
             recipient_name=recipient_name,
             user_id=_active_user_id,
+            sender_email=sender_email or None,
+            sender_name=eff_sender,
         )
         if res.get("success"):
             await _broadcast_client_action("EMAIL_SENT", {
                 "to": to,
                 "subject": res.get("subject", ""),
                 "sender": res.get("from", ""),
+                "sender_name": eff_sender,
                 "provider": res.get("provider", "email"),
             })
         return res.get("spoken") or f"Email sent to {to}."

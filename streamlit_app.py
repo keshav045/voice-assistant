@@ -393,7 +393,7 @@ def execute_turn(user_prompt: str, input_mode: str = "voice"):
             result = asyncio.run(process_user_turn(
                 user_text=clean_prompt,
                 session_id=st.session_state.session_id,
-                user_id="guest",
+                user_id="krish",
             ))
         except Exception as err:
             result = {
@@ -431,7 +431,7 @@ def execute_turn(user_prompt: str, input_mode: str = "voice"):
 
     try:
         db_save_chat_turn(
-            user_id="guest",
+            user_id="krish",
             session_id=st.session_state.session_id,
             user_message=clean_prompt,
             spoken_reply=spoken_reply,
@@ -495,6 +495,61 @@ with st.sidebar:
         os.environ.pop("OPENAI_BASE_URL", None)
         os.environ["OPENAI_MODEL"] = "gpt-4o"
         st.caption("Using Cloud OpenAI GPT-4o with Web Search & Multilingual Support")
+
+    st.markdown("---")
+    st.markdown("#### 📧 Sender Profile (Krish)")
+
+    from db.models import db_get_user_email_profile, db_save_user_email_profile
+
+    existing_profile = db_get_user_email_profile("krish") or {}
+    default_name = existing_profile.get("sender_name") or "Krish"
+    default_email = existing_profile.get("sender_email") or os.environ.get("SENDER_EMAIL", "")
+    default_has_pw = bool(existing_profile.get("sender_password") or os.environ.get("SENDER_APP_PASSWORD"))
+
+    prof_name = st.text_input("Name:", value=default_name, key="profile_name_input")
+    prof_email = st.text_input("Sender Email ID:", value=default_email, key="profile_email_input", placeholder="krish@gmail.com")
+
+    prof_password = st.text_input(
+        "Gmail App Password (16-char):",
+        type="password",
+        placeholder="•••• •••• •••• ••••" if default_has_pw else "Enter 16-character password",
+        help="Generate at myaccount.google.com/apppasswords under 2-Step Verification",
+        key="profile_pw_input",
+    )
+
+    if st.button("💾 Save Sender Profile", use_container_width=True):
+        pw_to_save = prof_password.strip() if prof_password.strip() else (existing_profile.get("sender_password") or os.environ.get("SENDER_APP_PASSWORD"))
+        db_save_user_email_profile(
+            user_id="krish",
+            sender_name=prof_name.strip() or "Krish",
+            sender_email=prof_email.strip(),
+            sender_password=pw_to_save,
+        )
+        if prof_email.strip():
+            os.environ["SENDER_EMAIL"] = prof_email.strip()
+        if pw_to_save:
+            os.environ["SENDER_APP_PASSWORD"] = pw_to_save
+        st.success(f"✓ Saved sender profile: {prof_name} <{prof_email}>")
+        st.rerun()
+
+    if prof_email:
+        st.caption(f"Active Sender: **{prof_name}** (`{prof_email}`)")
+    else:
+        st.caption("Active Sender: Default System")
+
+    with st.expander("ℹ️ How Krish sends emails from his mail ID"):
+        st.markdown(
+            """
+            1. **Set Email & Name**: Enter your name (`Krish`) and email ID above.
+            2. **Gmail App Password**:
+               - Open [Google Security Settings](https://myaccount.google.com/apppasswords).
+               - Under 2-Step Verification, generate an **App Password** for 'Mail'.
+               - Paste the 16-character code above and click **Save Sender Profile**.
+            3. **Ask the Assistant**:
+               - Speak or type: *"Mail John (john@example.com) that our meeting is tomorrow at 3 PM"*.
+               - The AI automatically delivers the meeting invitation from **Krish's mail ID** (`From: Krish <krish@...>` with signature `Best regards, Krish`).
+            """
+        )
 
     st.markdown("---")
     col_new, col_del = st.columns(2)
@@ -633,38 +688,292 @@ for idx, msg in enumerate(st.session_state.messages):
                     )
 
 # --------------------------------------------------------------------------- #
-# Unified Voice Mode Capsule (Single Sleek ChatGPT Input)
+# LiveKit WebRTC Real-Time Voice Studio (Exclusive Voice Mode)
 # --------------------------------------------------------------------------- #
-st.markdown(
-    """
-    <div style="max-width: 768px; margin: 20px auto 8px auto; display: flex; align-items: center; justify-content: space-between; padding: 0 6px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; background: #ef4444; border-radius: 50%; font-size: 12px; color: white;">🎙️</span>
-            <span style="font-size: 13px; font-weight: 600; color: #ececec;">Voice Mode (Click red mic to speak):</span>
-        </div>
-        <span style="font-size: 11px; color: #9ca3af; background: rgba(255,255,255,0.06); padding: 3px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">Whisper AI Active</span>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+def get_livekit_connection():
+    url = os.environ.get("LIVEKIT_URL", "").strip()
+    key = os.environ.get("LIVEKIT_API_KEY", "").strip()
+    secret = os.environ.get("LIVEKIT_API_SECRET", "").strip()
+    if not (url and key and secret):
+        return None
+    try:
+        from livekit import api
+        user_name = "Krish"
+        user_id = "krish"
+        participant_id = f"user-krish-{uuid.uuid4().hex[:6]}"
+        room_name = "nexus-room"
+        meta = json.dumps({"user_id": user_id, "name": user_name})
+        token = (
+            api.AccessToken(key, secret)
+            .with_identity(participant_id)
+            .with_name(user_name)
+            .with_metadata(meta)
+            .with_grants(api.VideoGrants(room_join=True, room=room_name))
+            .to_jwt()
+        )
+        return {
+            "url": url,
+            "token": token,
+            "room": room_name,
+            "identity": participant_id,
+            "name": user_name,
+        }
+    except Exception as e:
+        logger.error(f"LiveKit token minting error: {e}")
+        return None
 
-voice_audio = st.audio_input(
-    "Voice Search",
-    label_visibility="collapsed",
-    key="chatgpt_voice_recorder",
-)
-if voice_audio is not None:
-    audio_bytes = voice_audio.read()
-    audio_hash = hash(audio_bytes)
-    if st.session_state.last_processed_audio != audio_hash:
-        st.session_state.last_processed_audio = audio_hash
-        with st.spinner("Transcribing speech with Whisper AI..."):
-            transcribed_text = transcribe_uploaded_audio(audio_bytes)
-            if transcribed_text:
-                execute_turn(transcribed_text, input_mode="voice")
-                st.rerun()
-            else:
-                st.warning("Could not detect clear speech. Please speak again.")
+livekit_data = get_livekit_connection()
+if livekit_data:
+    lk_url = livekit_data["url"]
+    lk_token = livekit_data["token"]
+    import streamlit.components.v1 as components
+    components.html(
+        f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.6.0/dist/livekit-client.umd.min.js"></script>
+          <style>
+            * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }}
+            body {{ background: transparent; color: #ececec; padding: 2px; }}
+            .lk-box {{
+              max-width: 768px;
+              margin: 0 auto;
+              background: #262626;
+              border: 1px solid rgba(255, 255, 255, 0.15);
+              border-radius: 24px;
+              padding: 10px 18px;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+              gap: 12px;
+            }}
+            .lk-left {{
+              display: flex;
+              align-items: center;
+              gap: 12px;
+            }}
+            .lk-status-indicator {{
+              width: 14px;
+              height: 14px;
+              border-radius: 50%;
+              background: #10b981;
+              box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+              transition: all 0.3s ease;
+            }}
+            .lk-status-indicator.connected {{
+              background: #ef4444;
+              box-shadow: 0 0 14px rgba(239, 68, 68, 0.8);
+              animation: lk-pulse 1.4s infinite;
+            }}
+            @keyframes lk-pulse {{
+              0% {{ transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }}
+              70% {{ transform: scale(1.15); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }}
+              100% {{ transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }}
+            }}
+            .lk-title {{
+              font-size: 13px;
+              font-weight: 700;
+              color: #f3f4f6;
+            }}
+            .lk-sub {{
+              font-size: 11px;
+              color: #9ca3af;
+            }}
+            .lk-right {{
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            }}
+            .lk-btn {{
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+              background: #10b981;
+              color: #ffffff;
+              border: none;
+              border-radius: 20px;
+              padding: 8px 18px;
+              font-size: 13px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.2s ease;
+            }}
+            .lk-btn:hover {{
+              background: #059669;
+            }}
+            .lk-btn.connected {{
+              background: #ef4444;
+            }}
+            .lk-btn.connected:hover {{
+              background: #dc2626;
+            }}
+            .lk-hub-btn {{
+              display: inline-flex;
+              align-items: center;
+              background: rgba(255, 255, 255, 0.08);
+              color: #9ca3af;
+              border: 1px solid rgba(255, 255, 255, 0.12);
+              border-radius: 20px;
+              padding: 7px 14px;
+              font-size: 12px;
+              font-weight: 600;
+              text-decoration: none;
+              transition: all 0.2s ease;
+            }}
+            .lk-hub-btn:hover {{
+              background: rgba(255, 255, 255, 0.15);
+              color: #ffffff;
+            }}
+          </style>
+        </head>
+        <body>
+          <div class="lk-box">
+            <div class="lk-left">
+              <div id="lk-dot" class="lk-status-indicator"></div>
+              <div>
+                <div id="lk-title" class="lk-title">⚡ LiveKit Voice Agent (Sub-400ms)</div>
+                <div id="lk-sub" class="lk-sub">Auto-VAD • Cloud WebRTC • Hands-Free (Speak naturally)</div>
+              </div>
+            </div>
+            <div class="lk-right">
+              <button id="lk-btn" class="lk-btn" onclick="toggleVoice()">
+                <span id="lk-icon">🎙️</span>
+                <span id="lk-btn-text">Start LiveKit Voice</span>
+              </button>
+              <a href="http://localhost:8000/" target="_blank" class="lk-hub-btn" title="Open Full Standalone Voice Hub">
+                Full Web Hub ↗
+              </a>
+            </div>
+          </div>
+
+          <script>
+            let currentRoom = null;
+            let isConnecting = false;
+
+            async function toggleVoice() {{
+              if (currentRoom) {{
+                await disconnectVoice();
+              }} else {{
+                await connectVoice();
+              }}
+            }}
+
+            async function connectVoice() {{
+              if (isConnecting) return;
+              if (typeof LivekitClient === "undefined") {{
+                alert("Loading LiveKit WebRTC client library... Please check your internet connection.");
+                return;
+              }}
+              const btn = document.getElementById("lk-btn");
+              const btnText = document.getElementById("lk-btn-text");
+              const icon = document.getElementById("lk-icon");
+              const dot = document.getElementById("lk-dot");
+              const title = document.getElementById("lk-title");
+              const sub = document.getElementById("lk-sub");
+
+              try {{
+                isConnecting = true;
+                btnText.innerText = "Connecting...";
+                title.innerText = "Connecting WebRTC to LiveKit Cloud...";
+                
+                currentRoom = new LivekitClient.Room({{
+                  adaptiveStream: true,
+                  dynacast: true,
+                  audioCaptureDefaults: {{
+                    autoGainControl: true,
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                  }},
+                }});
+
+                currentRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {{
+                  if (track.kind === LivekitClient.Track.Kind.Audio) {{
+                    const existingAudio = document.getElementById(`audio-${{participant.identity}}`);
+                    if (existingAudio) existingAudio.remove();
+                    const audioEl = track.attach();
+                    audioEl.id = `audio-${{participant.identity}}`;
+                    audioEl.autoplay = true;
+                    document.body.appendChild(audioEl);
+                    audioEl.play().catch(e => console.warn(e));
+                  }}
+                }});
+
+                currentRoom.on(LivekitClient.RoomEvent.ActiveSpeakersChanged, (speakers) => {{
+                  if (speakers.length > 0) {{
+                    const isAssistant = speakers.some(s => !s.isLocal);
+                    if (isAssistant) {{
+                      title.innerText = "🗣️ AI Assistant is speaking...";
+                      sub.innerText = "You can speak to interrupt anytime";
+                    }} else {{
+                      title.innerText = "🎙️ Listening to Krish...";
+                      sub.innerText = "Silero VAD active (auto-stops when you pause)";
+                    }}
+                  }} else {{
+                    title.innerText = "🟢 Connected to LiveKit (Listening...)";
+                    sub.innerText = "Speak into microphone — auto-processes on silence";
+                  }}
+                }});
+
+                currentRoom.on(LivekitClient.RoomEvent.Disconnected, () => {{
+                  resetVoiceUI();
+                }});
+
+                await currentRoom.connect("{lk_url}", "{lk_token}");
+                await currentRoom.localParticipant.setMicrophoneEnabled(true, {{
+                  echoCancellation: true,
+                  noiseSuppression: true,
+                  autoGainControl: true,
+                }});
+
+                btn.className = "lk-btn connected";
+                icon.innerText = "⏹️";
+                btnText.innerText = "Disconnect Voice";
+                dot.className = "lk-status-indicator connected";
+                title.innerText = "🟢 Connected to LiveKit (Listening...)";
+                sub.innerText = "Speak into microphone — auto-processes on silence";
+              }} catch (err) {{
+                console.error("LiveKit connection error:", err);
+                alert("Could not connect to LiveKit voice stream: " + err.message);
+                resetVoiceUI();
+              }} finally {{
+                isConnecting = false;
+              }}
+            }}
+
+            async function disconnectVoice() {{
+              if (currentRoom) {{
+                try {{ await currentRoom.disconnect(); }} catch (e) {{}}
+                currentRoom = null;
+              }}
+              resetVoiceUI();
+            }}
+
+            function resetVoiceUI() {{
+              currentRoom = null;
+              isConnecting = false;
+              const btn = document.getElementById("lk-btn");
+              const btnText = document.getElementById("lk-btn-text");
+              const icon = document.getElementById("lk-icon");
+              const dot = document.getElementById("lk-dot");
+              const title = document.getElementById("lk-title");
+              const sub = document.getElementById("lk-sub");
+
+              if (btn) btn.className = "lk-btn";
+              if (icon) icon.innerText = "🎙️";
+              if (btnText) btnText.innerText = "Start LiveKit Voice";
+              if (dot) dot.className = "lk-status-indicator";
+              if (title) title.innerText = "⚡ LiveKit Voice Agent (Sub-400ms)";
+              if (sub) sub.innerText = "Auto-VAD • Cloud WebRTC • Hands-Free (Speak naturally)";
+            }}
+          </script>
+        </body>
+        </html>
+        """,
+        height=72,
+    )
 
 # ChatGPT Capsule Text Input Bar
 user_chat = st.chat_input("Ask anything or search the web...")
