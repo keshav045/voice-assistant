@@ -974,7 +974,10 @@ if livekit_data:
                     audioEl.id = `audio-${{participant.identity}}`;
                     audioEl.autoplay = true;
                     document.body.appendChild(audioEl);
-                    audioEl.play().catch(e => console.warn(e));
+                    audioEl.play().catch(e => {{
+                      console.warn("Autoplay unlock:", e);
+                      if (currentRoom.startAudio) currentRoom.startAudio();
+                    }});
                   }}
                 }});
 
@@ -994,11 +997,41 @@ if livekit_data:
                   }}
                 }});
 
+                currentRoom.on(LivekitClient.RoomEvent.DataReceived, (payload, participant) => {{
+                  try {{
+                    const text = new TextDecoder().decode(payload);
+                    const data = JSON.parse(text);
+                    if (data.type === "OPEN_URL" && data.url) {{
+                      window.open(data.url, "_blank");
+                    }}
+                  }} catch (e) {{
+                    console.warn("LiveKit data packet parse error:", e);
+                  }}
+                }});
+
+                currentRoom.on(LivekitClient.RoomEvent.TranscriptionReceived, (transcriptions, participant) => {{
+                  if (transcriptions && transcriptions.length > 0) {{
+                    const text = transcriptions.map(t => t.text).join(" ").trim();
+                    if (!text) return;
+                    const isAssistant = participant && !participant.isLocal;
+                    if (isAssistant) {{
+                      title.innerText = "AI: " + (text.length > 36 ? text.slice(0, 36) + "..." : text);
+                      sub.innerText = text;
+                    }} else {{
+                      title.innerText = "You: " + (text.length > 36 ? text.slice(0, 36) + "..." : text);
+                      sub.innerText = "Processing your voice command...";
+                    }}
+                  }}
+                }});
+
                 currentRoom.on(LivekitClient.RoomEvent.Disconnected, () => {{
                   resetVoiceUI();
                 }});
 
                 await currentRoom.connect("{lk_url}", "{lk_token}");
+                if (currentRoom.canPlayAudio && !currentRoom.canPlayAudio()) {{
+                  await currentRoom.startAudio();
+                }}
                 await currentRoom.localParticipant.setMicrophoneEnabled(true, {{
                   echoCancellation: true,
                   noiseSuppression: true,

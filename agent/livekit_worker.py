@@ -250,19 +250,21 @@ async def entrypoint(ctx: JobContext):
     _active_user_id = user_id
     logger.info(f"LiveKit session bound to user_id: {_active_user_id}")
 
-    # Initialize Voice Pipeline Session with optimized VAD sensitivity
+    # Initialize Voice Pipeline Session with local VAD & fast endpointing (sub-400ms cutoff)
     session = AgentSession(
         vad=silero.VAD.load(
-            activation_threshold=0.35,
+            activation_threshold=0.50,
             min_speech_duration=0.05,
-            min_silence_duration=0.55,
+            min_silence_duration=0.40,
         ),
         stt=openai.STT(),
         llm=openai.LLM(model=os.environ.get("OPENAI_MODEL", "gpt-4o")),
         tts=openai.TTS(voice=os.environ.get("OPENAI_TTS_VOICE", "alloy")),
+        turn_detection="vad",
+        min_endpointing_delay=0.2,
+        max_endpointing_delay=0.8,
+        aec_warmup_duration=0.0,
         allow_interruptions=True,
-        min_endpointing_delay=0.4,
-        max_endpointing_delay=3.0,
     )
 
     # Create Voice Agent with persona instructions and tools

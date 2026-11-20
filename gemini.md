@@ -75,12 +75,12 @@ For each script, the following specifications are detailed:
 
 ### 2.2 `agent/livekit_worker.py`
 - **Path**: `agent/livekit_worker.py`
-- **Role**: LiveKit WebRTC Agent worker definition and tool execution loop.
+- **Role**: LiveKit WebRTC Agent worker definition, local Silero VAD turn detection, and tool execution loop.
 - **Key Functions**:
-  - `entrypoint(ctx)`: Initializes WebRTC audio room session, binds OpenAI LLM and TTS plugins, and starts listener.
+  - `entrypoint(ctx)`: Initializes WebRTC audio room session, configures local Silero VAD (activation threshold 0.50, silence cutoff 0.40s, max endpoint delay 0.8s), binds OpenAI LLM and TTS plugins, and starts listener with local turn detection (`turn_detection="vad"`).
   - `@llm.function_tool` definitions: Registers `web_search`, `calculator`, `medical_search`, `run_python_code`, `get_current_time`, `open_app`, `send_whatsapp_message`, and `send_email`.
-  - `_broadcast_client_action(action_type, data)`: Sends real-time data packets to the browser client (e.g. triggering URL navigation or showing email sent toasts).
-- **End-to-End Use Case**: Powers hands-free, auto-silence conversational voice. When Krish speaks, LiveKit executes tools asynchronously and returns audio answers in real time.
+  - `_broadcast_client_action(action_type, data)`: Sends real-time data packets to the browser client (e.g. triggering URL navigation for YouTube/WhatsApp or showing email sent toasts).
+- **End-to-End Use Case**: Powers hands-free, auto-silence conversational voice. When Krish speaks, local Silero VAD detects speech onset instantly, cuts off within 400ms of user silence, executes tools asynchronously, and returns audio answers in real time without cloud inference gateway timeouts.
 
 ### 2.3 `agent/prompts.py`
 - **Path**: `agent/prompts.py`

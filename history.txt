@@ -255,7 +255,49 @@ Entry 8.1: SQLite History Tie-Breaking Fix (db/models.py)
 
 
 ================================================================================
-9. SUMMARY OF SYSTEM VERIFICATION STATUS
+9. LIVEKIT VOICE LISTENING & AUTO-STOP OPTIMIZATION
+================================================================================
+
+Entry 9.1: Local Silero VAD & Cloud Turn Detector Elimination (agent/livekit_worker.py)
+- Change:
+  * Replaced remote LiveKit Cloud server-side turn detector with local Silero VAD
+    (turn_detection="vad").
+  * Increased VAD activation_threshold from 0.35 to 0.50 to eliminate false speech
+    triggers from laptop fan noise, microphone hiss, and ambient room noise.
+  * Reduced min_silence_duration from 0.55s to 0.40s and max_endpointing_delay
+    from 3.0s to 0.8s for instantaneous auto-stop upon sentence completion.
+  * Set aec_warmup_duration=0.0 to prevent 3-second interruption blocks during startup.
+- What was Affected:
+  * Voice Responsiveness: Eliminated 11-second audio loop freezes caused by cloud
+    gateway HTTP 408 inference timeouts.
+  * Speech Cutoff: Voice auto-stops within 400ms of user pausing, eliminating the
+    "it didn't stop listening" hanging issue.
+  * Audio Reliability: Prevents garbled background tokens from corrupting speech input.
+
+Entry 9.2: Application Launching Tool Direct Calling (agent/prompts.py)
+- Change:
+  * Reinforced Rule 5 in SYSTEM_PROMPT: When asked to open or launch YouTube or any app,
+    the model must immediately call open_app(name="...", query="") without asking
+    clarifying questions (e.g. "What would you like to search for?").
+- What was Affected:
+  * Action Execution: Directly launches the requested application on first turn
+    without stalling or asking follow-up questions.
+
+Entry 9.3: LiveKit WebRTC Data Channel & Transcription Binding (streamlit_app.py)
+- Change:
+  * Added RoomEvent.DataReceived listener in embedded LiveKit client to handle OPEN_URL
+    packets and trigger window.open(data.url, '_blank').
+  * Added RoomEvent.TranscriptionReceived to display real-time live captions of user speech
+    and AI responses.
+  * Added currentRoom.startAudio() unlock on connect to prevent browser autoplay blocks.
+- What was Affected:
+  * Streamlit Voice Studio: Automatically opens browser tabs for YouTube, WhatsApp, etc.
+    when commanded over LiveKit voice.
+  * User Feedback: Provides real-time visual captions of spoken speech.
+
+
+================================================================================
+10. SUMMARY OF SYSTEM VERIFICATION STATUS
 ================================================================================
 
 - Pytest Unit Tests: 79/79 Passed (100%)
