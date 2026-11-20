@@ -64,53 +64,87 @@ st.set_page_config(
 st.markdown(
     """
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
     /* Global Base */
     .stApp {
-        background-color: #080d1a;
+        background-color: #070b14;
         color: #f1f5f9;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    
-    /* Header Banner */
+
+    /* Top Horizontal Navigation Tab Bar */
+    .top-nav-container {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+        padding-bottom: 12px;
+        margin-bottom: 24px;
+        overflow-x: auto;
+    }
+    .top-nav-item {
+        font-size: 15px;
+        font-weight: 600;
+        color: #94a3b8;
+        text-decoration: none;
+        padding-bottom: 8px;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    .top-nav-item:hover {
+        color: #e2e8f0;
+    }
+    .top-nav-active {
+        color: #38bdf8 !important;
+        font-weight: 700;
+        border-bottom: 3px solid #38bdf8;
+    }
+
+    /* Header Hero Banner */
     .nexus-hero {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 16px 24px;
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9));
-        border: 1px solid rgba(99, 102, 241, 0.25);
-        border-radius: 16px;
-        margin-bottom: 20px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+        padding: 20px 28px;
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.95));
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 18px;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(14px);
     }
     .nexus-title-wrap {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 18px;
     }
     .nexus-orb-glow {
-        width: 48px;
-        height: 48px;
-        border-radius: 14px;
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
         background: linear-gradient(135deg, #6366f1, #a855f7);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 24px;
-        box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+        font-size: 26px;
+        box-shadow: 0 0 24px rgba(99, 102, 241, 0.55);
     }
     .nexus-h1 {
-        font-size: 22px;
-        font-weight: 700;
+        font-size: 24px;
+        font-weight: 800;
         margin: 0;
-        background: linear-gradient(90deg, #f8fafc, #c7d2fe);
+        background: linear-gradient(90deg, #ffffff, #c7d2fe);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        letter-spacing: -0.5px;
     }
     .nexus-sub {
         font-size: 13px;
         color: #94a3b8;
-        margin: 0;
+        margin: 4px 0 0 0;
     }
 
     /* Waveform visualizer */
@@ -118,9 +152,9 @@ st.markdown(
         display: flex;
         align-items: center;
         gap: 6px;
-        padding: 8px 16px;
-        background: rgba(15, 23, 42, 0.8);
-        border: 1px solid rgba(99, 102, 241, 0.3);
+        padding: 8px 18px;
+        background: rgba(15, 23, 42, 0.9);
+        border: 1px solid rgba(99, 102, 241, 0.35);
         border-radius: 30px;
     }
     .wave-line {
@@ -130,9 +164,9 @@ st.markdown(
         border-radius: 4px;
         animation: waveAnim 1.2s infinite ease-in-out;
     }
-    .wave-line:nth-child(2) { animation-delay: 0.2s; height: 20px; background: #a855f7; }
-    .wave-line:nth-child(3) { animation-delay: 0.4s; height: 26px; background: #ec4899; }
-    .wave-line:nth-child(4) { animation-delay: 0.6s; height: 16px; background: #6366f1; }
+    .wave-line:nth-child(2) { animation-delay: 0.2s; height: 22px; background: #a855f7; }
+    .wave-line:nth-child(3) { animation-delay: 0.4s; height: 28px; background: #ec4899; }
+    .wave-line:nth-child(4) { animation-delay: 0.6s; height: 18px; background: #6366f1; }
     .wave-line:nth-child(5) { animation-delay: 0.8s; height: 12px; background: #38bdf8; }
     @keyframes waveAnim {
         0%, 100% { transform: scaleY(0.4); }
@@ -140,34 +174,36 @@ st.markdown(
     }
     .status-text {
         font-size: 11px;
-        font-weight: 700;
+        font-weight: 800;
         color: #38bdf8;
         margin-left: 8px;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.8px;
     }
 
     /* Line-by-Line Conversation Styling */
     .chat-line-user {
-        background: rgba(30, 41, 59, 0.5);
-        border: 1px solid rgba(99, 102, 241, 0.2);
+        background: rgba(30, 41, 59, 0.55);
+        border: 1px solid rgba(99, 102, 241, 0.25);
         border-left: 4px solid #6366f1;
-        border-radius: 12px;
-        padding: 14px 18px;
-        margin-bottom: 12px;
+        border-radius: 14px;
+        padding: 16px 20px;
+        margin-bottom: 14px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
     }
     .chat-line-assistant {
-        background: rgba(15, 23, 42, 0.7);
-        border: 1px solid rgba(16, 185, 129, 0.2);
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(16, 185, 129, 0.25);
         border-left: 4px solid #10b981;
-        border-radius: 12px;
-        padding: 16px 20px;
-        margin-bottom: 16px;
+        border-radius: 14px;
+        padding: 18px 22px;
+        margin-bottom: 18px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
     }
     .speaker-meta {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
         font-size: 12px;
         color: #94a3b8;
     }
@@ -183,51 +219,88 @@ st.markdown(
     .badge-pill {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 5px;
         font-size: 11px;
-        padding: 2px 8px;
-        border-radius: 12px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 14px;
         background: rgba(255, 255, 255, 0.08);
         color: #cbd5e1;
     }
     .chat-text {
         font-size: 15px;
-        line-height: 1.6;
-        color: #f1f5f9;
+        line-height: 1.65;
+        color: #f8fafc;
         margin: 0;
     }
 
-    /* Study Cards */
+    /* Cards & Blocks */
     .study-card {
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid rgba(99, 102, 241, 0.2);
-        border-radius: 14px;
-        padding: 18px 22px;
-        margin-bottom: 16px;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin-bottom: 18px;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
     }
     .tool-action-card {
-        margin-top: 10px;
-        padding: 10px 14px;
-        background: rgba(2, 6, 23, 0.6);
-        border: 1px solid rgba(99, 102, 241, 0.3);
-        border-radius: 10px;
+        margin-top: 12px;
+        padding: 12px 16px;
+        background: rgba(2, 6, 23, 0.7);
+        border: 1px solid rgba(99, 102, 241, 0.35);
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 10px;
     }
     .tool-link-btn {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 6px 14px;
+        padding: 8px 16px;
         background: linear-gradient(135deg, #4f46e5, #7c3aed);
         color: #ffffff !important;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 12px;
         border-radius: 8px;
         text-decoration: none !important;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        transition: all 0.2s ease;
+    }
+    .tool-link-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(79, 70, 229, 0.6);
+    }
+
+    /* Priority Badges */
+    .badge-p0 {
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        padding: 3px 8px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+    .badge-p1 {
+        background: rgba(245, 158, 11, 0.15);
+        color: #fcd34d;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        padding: 3px 8px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+    .badge-p2 {
+        background: rgba(16, 185, 129, 0.15);
+        color: #6ee7b7;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        padding: 3px 8px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
     }
     </style>
     """,
@@ -239,6 +312,9 @@ st.markdown(
 # --------------------------------------------------------------------------- #
 if "session_id" not in st.session_state:
     st.session_state.session_id = f"sess-{uuid.uuid4().hex[:8]}"
+
+if "active_tab" not in st.session_state:
+    st.session_state.active_tab = "Senior Tutor Chat"
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -253,13 +329,16 @@ if "messages" not in st.session_state:
         st.session_state.messages.append({
             "role": "assistant",
             "content": t["spoken_reply"],
-            "tool_calls": json.loads(t["tool_calls"]) if isinstance(t.get("tool_calls"), str) else (t.get("tool_calls") or []),
+            "tool_calls": t.get("tool_calls", []),
             "latency_ms": t.get("latency_ms", 0.0),
             "timestamp": t.get("created_at", "Past"),
         })
 
 if "auto_speech" not in st.session_state:
     st.session_state.auto_speech = True
+
+if "speech_speed" not in st.session_state:
+    st.session_state.speech_speed = 1.0
 
 if "voice_name" not in st.session_state:
     st.session_state.voice_name = "alloy"
@@ -297,7 +376,7 @@ def transcribe_uploaded_audio(audio_data: bytes) -> str:
         return ""
 
 
-def synthesize_speech(text: str, voice: str = "alloy") -> bytes:
+def synthesize_speech(text: str, voice: str = "alloy", speed: float = 1.0) -> bytes:
     """Convert spoken text to MP3 audio via OpenAI TTS."""
     clean_text = clean_spoken_text(text)
     if not clean_text:
@@ -312,7 +391,7 @@ def synthesize_speech(text: str, voice: str = "alloy") -> bytes:
             model="tts-1",
             voice=voice,
             input=clean_text[:4096],
-            speed=1.0,
+            speed=speed,
             response_format="mp3",
         )
         return response.content
@@ -358,7 +437,11 @@ def execute_turn(user_prompt: str, input_mode: str = "voice"):
 
     audio_bytes = None
     if st.session_state.auto_speech and spoken_reply:
-        audio_bytes = synthesize_speech(spoken_reply, voice=st.session_state.voice_name)
+        audio_bytes = synthesize_speech(
+            spoken_reply,
+            voice=st.session_state.voice_name,
+            speed=st.session_state.speech_speed,
+        )
 
     msg_entry = {
         "role": "assistant",
@@ -410,7 +493,7 @@ def generate_tutor_response(prompt: str, system_role: str) -> str:
 
 
 # --------------------------------------------------------------------------- #
-# STUDENT SIDEBAR: Clean, Focused Navigation Menu
+# STUDENT SIDEBAR: Clean, Focused Navigation Menu & Revision Sessions
 # --------------------------------------------------------------------------- #
 with st.sidebar:
     st.markdown(
@@ -426,18 +509,23 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-    # 5 Student Navigation Modules
-    nav_selection = st.radio(
+    MODULE_NAMES = [
+        "Senior Tutor Chat",
+        "Crash Course Planner",
+        "High-Yield Important Topics",
+        "Practice Quiz & Evaluation",
+        "Past Papers Archive",
+    ]
+
+    selected_sidebar_tab = st.radio(
         "STUDY MODULES",
-        options=[
-            "Senior Tutor Chat",
-            "Crash Course Planner",
-            "High-Yield Important Topics",
-            "Practice Quiz & Evaluation",
-            "Past Papers Archive",
-        ],
-        index=0,
+        options=MODULE_NAMES,
+        index=MODULE_NAMES.index(st.session_state.active_tab),
+        key="sidebar_module_radio",
     )
+    if selected_sidebar_tab != st.session_state.active_tab:
+        st.session_state.active_tab = selected_sidebar_tab
+        st.rerun()
 
     st.markdown("---")
     st.markdown("#### 🔊 Tutor Voice Controls")
@@ -446,6 +534,12 @@ with st.sidebar:
         "Tutor Voice Persona",
         options=["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
         index=["alloy", "echo", "fable", "onyx", "nova", "shimmer"].index(st.session_state.voice_name),
+    )
+    st.session_state.speech_speed = st.select_slider(
+        "Voice Speed:",
+        options=[0.85, 1.0, 1.15, 1.25, 1.5],
+        value=st.session_state.speech_speed,
+        format_func=lambda s: f"{s}x {'(Fast)' if s > 1.0 else '(Normal)' if s == 1.0 else '(Slow)'}",
     )
 
     st.markdown("---")
@@ -522,15 +616,25 @@ with st.sidebar:
 
 
 # --------------------------------------------------------------------------- #
-# Top Header Banner
+# Top Navigation Bar & Hero Banner (Matches Screenshot 1)
 # --------------------------------------------------------------------------- #
+# Render the 5 horizontal navigation tabs exactly matching the student portal design
+top_nav_cols = st.columns(5)
+for i, m_name in enumerate(MODULE_NAMES):
+    with top_nav_cols[i]:
+        is_active = (m_name == st.session_state.active_tab)
+        btn_type = "primary" if is_active else "secondary"
+        if st.button(m_name, key=f"nav_top_{i}", type=btn_type, use_container_width=True):
+            st.session_state.active_tab = m_name
+            st.rerun()
+
 st.markdown(
     f"""
     <div class="nexus-hero">
         <div class="nexus-title-wrap">
             <div class="nexus-orb-glow">🎓</div>
             <div>
-                <h1 class="nexus-h1">{nav_selection}</h1>
+                <h1 class="nexus-h1">{st.session_state.active_tab}</h1>
                 <p class="nexus-sub">Nexus AI Senior Academic Tutor • Real-Time Voice • Exam Strategy & Evaluation</p>
             </div>
         </div>
@@ -551,12 +655,12 @@ st.markdown(
 # =========================================================================== #
 # MODULE 1: Senior Tutor Chat (Line-by-Line Voice Conversation)
 # =========================================================================== #
-if nav_selection == "Senior Tutor Chat":
+if st.session_state.active_tab == "Senior Tutor Chat":
     st.markdown("#### 🎤 Voice Recording Station")
     col_mic, col_tips = st.columns([2, 1])
 
     with col_mic:
-        audio_input_data = st.audio_input("Ask Senior Tutor via Voice (click mic, speak your question, then click stop):")
+        audio_input_data = st.audio_input("Ask Senior Tutor via Voice (click mic, speak question, click stop):")
         if audio_input_data is not None:
             audio_bytes = audio_input_data.read()
             audio_hash = hash(audio_bytes)
@@ -571,7 +675,7 @@ if nav_selection == "Senior Tutor Chat":
                         st.warning("Could not detect clear speech. Please speak again.")
 
     with col_tips:
-        st.markdown("**Quick Academic Prompts:**")
+        st.markdown("**⚡ Quick Academic Prompts:**")
         student_prompts = [
             "Explain QuickSort vs MergeSort step by step",
             "Solve: integral of x * e^(2x) dx",
@@ -579,7 +683,7 @@ if nav_selection == "Senior Tutor Chat":
             "What is 25 * 40 + 15% of 1000?",
         ]
         for p in student_prompts:
-            if st.button(f"🗣️ {p}", key=f"chip_{p[:15]}", use_container_width=True):
+            if st.button(f"🗣️ {p}", key=f"chip_{p[:18]}", use_container_width=True):
                 execute_turn(p, input_mode="text")
                 st.rerun()
 
@@ -589,10 +693,12 @@ if nav_selection == "Senior Tutor Chat":
     if not st.session_state.messages:
         st.markdown(
             """
-            <div style="text-align: center; padding: 40px 20px; color: #64748b; background: rgba(15, 23, 42, 0.4); border-radius: 16px; border: 1px dashed rgba(99, 102, 241, 0.3);">
-                <div style="font-size: 42px; margin-bottom: 12px;">👋 🎓</div>
-                <h3 style="color: #cbd5e1; font-weight: 600;">How can Senior Tutor help your studies today?</h3>
-                <p style="font-size: 14px;">Speak using the microphone above, click a quick prompt, or type your question below!</p>
+            <div style="text-align: center; padding: 48px 24px; color: #64748b; background: rgba(15, 23, 42, 0.45); border-radius: 18px; border: 1px dashed rgba(99, 102, 241, 0.35);">
+                <div style="font-size: 46px; margin-bottom: 14px;">👋 🎓</div>
+                <h3 style="color: #cbd5e1; font-weight: 700;">How can Senior Tutor help your exam prep today?</h3>
+                <p style="font-size: 14px; max-width: 500px; margin: 0 auto; line-height: 1.6;">
+                    Speak using the microphone above, click a quick academic prompt, or type any formula, derivation, or concept below!
+                </p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -609,7 +715,7 @@ if nav_selection == "Senior Tutor Chat":
                 f"""
                 <div class="chat-line-user">
                     <div class="speaker-meta">
-                        <span class="speaker-tag speaker-tag-user">🗣️ STUDENT</span>
+                        <span class="speaker-tag speaker-tag-user">👨‍🎓 STUDENT</span>
                         <div style="display: flex; gap: 8px;">
                             <span class="badge-pill">{mode_badge}</span>
                             <span class="badge-pill">⏱️ {ts}</span>
@@ -694,17 +800,23 @@ if nav_selection == "Senior Tutor Chat":
 # =========================================================================== #
 # MODULE 2: Crash Course Planner
 # =========================================================================== #
-elif nav_selection == "Crash Course Planner":
+elif st.session_state.active_tab == "Crash Course Planner":
     st.markdown("### 📅 Fast-Track Crash Course & Exam Revision Planner")
     st.caption("Generate an optimized day-by-day study roadmap tailored to your remaining preparation time.")
 
     col1, col2 = st.columns(2)
     with col1:
         subject = st.text_input("Subject / Course Name:", value="Data Structures & Algorithms")
-        days_left = st.selectbox("Time Remaining Until Exam:", options=["3 Days (Emergency Sprint)", "7 Days (1 Week Fast-Track)", "14 Days (Balanced Revision)", "30 Days (Full Mastery)"])
+        days_left = st.selectbox(
+            "Time Remaining Until Exam:",
+            options=["3 Days (Emergency Sprint)", "7 Days (1 Week Fast-Track)", "14 Days (Balanced Revision)", "30 Days (Full Mastery)"]
+        )
     with col2:
         hours_per_day = st.slider("Daily Study Hours Available:", min_value=1, max_value=12, value=4)
-        target_score = st.selectbox("Target Goal:", options=["Score 90%+ (Top Grade)", "Pass Comfortably (75%+)", "High-Yield Topics Only"])
+        target_score = st.selectbox(
+            "Target Goal:",
+            options=["Score 90%+ (Top Grade)", "Pass Comfortably (75%+)", "High-Yield Topics Only"]
+        )
 
     if st.button("🚀 Generate Crash Course Study Plan", type="primary", use_container_width=True):
         sys_role = "You are an elite Senior Academic Tutor and Exam Strategist. Create concise, actionable, high-yield study timetables that maximize score retention."
@@ -728,30 +840,57 @@ Structure the plan with:
         st.markdown("---")
         st.markdown(st.session_state["latest_study_plan"])
 
-        if st.button("📋 Save Milestones as Study Tasks in My Database"):
-            db_add_task(title=f"Review High-Yield topics for {subject}")
-            db_add_task(title=f"Practice 10 mock questions for {subject}")
-            st.success("Study tasks successfully saved to your revision task list!")
+        col_save, col_down = st.columns(2)
+        with col_save:
+            if st.button("📋 Save Milestones as Study Tasks in SQLite", use_container_width=True):
+                db_add_task(title=f"Review High-Yield topics for {subject}")
+                db_add_task(title=f"Practice 10 mock questions for {subject}")
+                st.success("Study tasks successfully saved to your revision task list!")
+        with col_down:
+            st.download_button(
+                label="📥 Download Study Plan (.md)",
+                data=st.session_state["latest_study_plan"],
+                file_name=f"{subject.replace(' ', '_').lower()}_study_plan.md",
+                mime="text/markdown",
+                use_container_width=True,
+            )
 
 
 # =========================================================================== #
 # MODULE 3: High-Yield Important Topics
 # =========================================================================== #
-elif nav_selection == "High-Yield Important Topics":
+elif st.session_state.active_tab == "High-Yield Important Topics":
     st.markdown("### 🎯 High-Yield Exam Topics & Formula Cheat Sheet")
     st.caption("Identify 80/20 topics that carry the highest marks in examinations, along with essential formulas and common exam traps.")
 
+    st.markdown("**⚡ Quick Subject Presets:**")
+    preset_cols = st.columns(5)
+    presets = [
+        "Data Structures & Algorithms",
+        "Database Management (DBMS)",
+        "Operating Systems",
+        "Engineering Mathematics",
+        "Engineering Physics",
+    ]
+    for i, pre in enumerate(presets):
+        with preset_cols[i]:
+            if st.button(pre, key=f"pre_{i}", use_container_width=True):
+                st.session_state["hy_sub_val"] = pre
+                st.rerun()
+
+    default_sub = st.session_state.get("hy_sub_val", "Data Structures & Algorithms")
+
     col_sub, col_unit = st.columns(2)
     with col_sub:
-        hy_subject = st.text_input("Subject:", value="Engineering Physics & Electromagnetism")
+        hy_subject = st.text_input("Subject:", value=default_sub)
     with col_unit:
-        hy_unit = st.text_input("Specific Topic or Entire Syllabus:", value="Electromagnetic Waves & Optics")
+        hy_unit = st.text_input("Specific Topic or Entire Syllabus:", value="Trees, Graphs, and Dynamic Programming")
 
     if st.button("⚡ Extract High-Yield Topics & Cheat Sheet", type="primary", use_container_width=True):
         sys_role = "You are a master academic professor. Extract the highest probability exam questions, essential formulas, and key pitfalls."
         p = f"""Analyze the subject '{hy_subject}' and topic '{hy_unit}'. Provide:
 1. Top 5 High-Yield Topics (ranked by mark weightage in typical semester/board exams)
-2. Essential Formulas & Theorems (with clear notation and memory mnemonics)
+2. Essential Formulas & Theorems (with clear KaTeX notation)
 3. Common Exam Traps & Pitfalls (where students lose marks and how to avoid them)
 4. 3 Most Frequently Repeated Exam Questions with quick answering tips."""
 
@@ -763,27 +902,27 @@ elif nav_selection == "High-Yield Important Topics":
         st.markdown("---")
         st.markdown(st.session_state["latest_hy"])
 
-        if st.button("💾 Save to Revision Notes Archive"):
+        if st.button("💾 Save to Revision Notes Archive", use_container_width=True):
             db_add_note(text=st.session_state["latest_hy"][:500], tags=hy_subject)
-            st.success("Saved to your Notes Archive!")
+            st.success("Saved to your Notes Archive in SQLite!")
 
 
 # =========================================================================== #
 # MODULE 4: Practice Quiz & Evaluation
 # =========================================================================== #
-elif nav_selection == "Practice Quiz & Evaluation":
+elif st.session_state.active_tab == "Practice Quiz & Evaluation":
     st.markdown("### 📝 Interactive Practice Quiz & Self-Evaluation")
     st.caption("Test your exam readiness with dynamic questions, instant feedback, and benchmark diagnostics.")
 
     col_q1, col_q2, col_q3 = st.columns(3)
     with col_q1:
-        quiz_subject = st.text_input("Quiz Topic / Subject:", value="Python & Algorithm Complexity")
+        quiz_subject = st.text_input("Quiz Topic / Subject:", value="Data Structures & Algorithms")
     with col_q2:
         num_q = st.selectbox("Number of Questions:", options=[3, 5])
     with col_q3:
         difficulty = st.selectbox("Difficulty Level:", options=["Standard Exam", "Challenging (Distinction)", "Concept Mastery"])
 
-    if st.button("🚀 Generate Practice Quiz", type="primary"):
+    if st.button("🚀 Generate Practice Quiz", type="primary", use_container_width=True):
         sys_role = "You are an exam examiner. Return ONLY a valid JSON array of multiple choice questions."
         p = f"""Generate a {num_q}-question multiple choice quiz on '{quiz_subject}' at difficulty '{difficulty}'.
 Return ONLY valid JSON matching this schema:
@@ -805,28 +944,28 @@ Return ONLY valid JSON matching this schema:
                 st.session_state.active_quiz = quiz_data
                 st.session_state.quiz_submitted = False
             except Exception as e:
-                # Fallback simple quiz
+                # Fallback high quality quiz
                 st.session_state.active_quiz = [
                     {
                         "id": 1,
-                        "question": "What is the time complexity of searching in a balanced Binary Search Tree (AVL/Red-Black)?",
-                        "options": ["A) O(1)", "B) O(log n)", "C) O(n)", "D) O(n^2)"],
+                        "question": "What is the time complexity of searching in a balanced Binary Search Tree (AVL / Red-Black Tree)?",
+                        "options": ["A) O(1)", "B) O(log n)", "C) O(n)", "D) O(n log n)"],
                         "correct_index": 1,
-                        "explanation": "A balanced BST guarantees height O(log n), so search is O(log n).",
+                        "explanation": "A balanced BST guarantees tree height of O(log n), making search, insertion, and deletion strictly O(log n).",
                     },
                     {
                         "id": 2,
-                        "question": "Which Python data structure provides O(1) average time complexity for lookups?",
+                        "question": "Which Python data structure provides O(1) average time complexity for key lookups?",
                         "options": ["A) List", "B) Tuple", "C) Dictionary / Set", "D) Linked List"],
                         "correct_index": 2,
-                        "explanation": "Dictionaries and sets use hash tables for O(1) average lookup.",
+                        "explanation": "Dictionaries and sets in Python are implemented using hash tables with O(1) average lookup time.",
                     },
                     {
                         "id": 3,
-                        "question": "Which sorting algorithm is guaranteed to be stable and runs in O(n log n) worst-case?",
+                        "question": "Which sorting algorithm is guaranteed to be stable and runs in O(n log n) worst-case time?",
                         "options": ["A) QuickSort", "B) MergeSort", "C) HeapSort", "D) SelectionSort"],
                         "correct_index": 1,
-                        "explanation": "MergeSort is both stable and has O(n log n) worst-case time complexity.",
+                        "explanation": "MergeSort is both stable (preserves relative order of duplicate keys) and has O(n log n) worst-case time complexity.",
                     },
                 ]
                 st.session_state.quiz_submitted = False
@@ -894,7 +1033,7 @@ Return ONLY valid JSON matching this schema:
 # =========================================================================== #
 # MODULE 5: Past Papers Archive
 # =========================================================================== #
-elif nav_selection == "Past Papers Archive":
+elif st.session_state.active_tab == "Past Papers Archive":
     st.markdown("### 📚 Past Exam Papers & Revision Notes Archive")
     st.caption("Search past exam papers, review step-by-step solved questions, and access your saved study notes.")
 
