@@ -23,6 +23,7 @@ os.environ["DEFAULT_TIMEZONE"] = "Asia/Kolkata"
 
 from db.models import (
     init_db,
+    get_db_connection,
     db_add_task,
     db_list_tasks,
     db_complete_task,
@@ -179,9 +180,14 @@ def test_rag_vector_store():
     )
     assert chunk_id.startswith("chunk-")
 
-    search_res = search_doc_chunks("Whisper STT voice turns", top_k=2)
-    assert len(search_res) > 0
-    assert "Whisper STT" in search_res[0]["text"]
+    try:
+        search_res = search_doc_chunks("Whisper STT voice turns", top_k=2)
+        assert len(search_res) > 0
+        assert "Whisper STT" in search_res[0]["text"]
+    finally:
+        with get_db_connection() as conn:
+            conn.execute("DELETE FROM doc_chunks WHERE id = ?", (chunk_id,))
+            conn.commit()
 
 
 @pytest.mark.asyncio
