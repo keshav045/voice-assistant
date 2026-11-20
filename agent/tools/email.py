@@ -122,6 +122,56 @@ def _load_contacts_from_csv(csv_path: Optional[str] = None) -> Tuple[List[Dict[s
         return [], f"Failed to read contacts CSV: {e}"
 
 
+# --------------------------------------------------------------------------- #
+# Recipient parsing & Spoken Phonetic Email Normalization
+# --------------------------------------------------------------------------- #
+
+def normalize_spoken_email(text: str) -> str:
+    """Normalize spoken phonetic email representations into valid standard email addresses.
+    Handles spoken variants from speech-to-text:
+      - 'keshav zero four five at the rate gmail dot com' -> 'keshav045@gmail.com'
+      - 'keshav045 at the rate of gmail.com' -> 'keshav045@gmail.com'
+      - 'john dot smith at yahoo dot co dot in' -> 'john.smith@yahoo.co.in'
+      - 'priya 1 2 3 at gmail.com' -> 'priya123@gmail.com'
+      - 'alex underscore dev at outlook dot com' -> 'alex_dev@outlook.com'
+      - 'rahul at gmail.com and priya at yahoo.com' -> 'rahul@gmail.com, priya@yahoo.com'
+    """
+    if not text or not isinstance(text, str):
+        return ""
+    s = text.strip()
+
+    # 1. Split conjunctions for multi-recipients: ' and ', ' & ' -> ', '
+    s = re.sub(r'\s+(?:and|&)\s+', ', ', s, flags=re.IGNORECASE)
+
+    # 2. Convert spoken digits: 'zero' -> '0', 'one' -> '1', etc.
+    num_map = {
+        'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4',
+        'five': '5', 'six': '6', 'seven': '7', 'eight': '8', 'nine': '9'
+    }
+    for w, d in num_map.items():
+        s = re.sub(r'\b' + w + r'\b', d, s, flags=re.IGNORECASE)
+
+    # 3. Convert spoken symbols
+    s = re.sub(r'\s+(underscore|_)\s+', '_', s, flags=re.IGNORECASE)
+    s = re.sub(r'\s+(hyphen|dash|-)\s+', '-', s, flags=re.IGNORECASE)
+    s = re.sub(r'\s+(dot|\[dot\])\s+', '.', s, flags=re.IGNORECASE)
+
+    # 4. Convert spoken 'at' variations
+    s = re.sub(r'\s+(at\s+the\s+rate(\s+of)?|at\s+sign|\[at\])\s+', '@', s, flags=re.IGNORECASE)
+    s = re.sub(r'\s+at\s+([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', r'@\1', s, flags=re.IGNORECASE)
+    s = re.sub(r'\s+at\s+(?=[a-zA-Z0-9-]+\.(com|in|org|net|edu|co|io|ai|me))', '@', s, flags=re.IGNORECASE)
+
+    # 5. Spoken domain extensions if still spaced
+    s = re.sub(r'\.co\s*\.\s*in\b', '.co.in', s, flags=re.IGNORECASE)
+    s = re.sub(r'\.com\b', '.com', s, flags=re.IGNORECASE)
+
+    # 6. Clean whitespace inside email tokens (e.g. 'keshav 045 @ gmail.com' -> 'keshav045@gmail.com')
+    def fix_email_spaces(m):
+        return re.sub(r'\s+', '', m.group(0))
+    s = re.sub(r'[a-zA-Z0-9_.-]+(?:\s+[a-zA-Z0-9_.-]+)*\s*@\s*[a-zA-Z0-9.-]+(?:\s+[a-zA-Z0-9.-]+)*', fix_email_spaces, s)
+    return s
+
+
 def _parse_recipients(
     to: Optional[Union[str, List[str]]] = None,
     csv_path: Optional[str] = None,
@@ -149,9 +199,10 @@ def _parse_recipients(
         results: List[Dict[str, str]] = []
         for item in to:
             if isinstance(item, dict) and "email" in item:
-                results.append({"email": str(item["email"]).strip(), "name": str(item.get("name", "")).strip()})
+                norm_item = normalize_spoken_email(str(item["email"]))
+                results.append({"email": norm_item or str(item["email"]).strip(), "name": str(item.get("name", "")).strip()})
             else:
-                s = str(item).strip()
+                s = normalize_spoken_email(str(item))
                 matches = re.findall(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', s)
                 for em in matches:
                     results.append({"email": em, "name": ""})
@@ -159,9 +210,9 @@ def _parse_recipients(
             return [], "No valid email addresses were found in the recipient list."
         return results, None
     
-    # String provided — extract all email addresses
-    # Handles: "a@x.com, b@y.com and c@z.com" or "John <john@example.com>"
-    emails_found = re.findall(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', to_str)
+    # String provided — normalize spoken phonetics and extract all email addresses
+    norm_to_str = normalize_spoken_email(to_str)
+    emails_found = re.findall(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', norm_to_str)
     if emails_found:
         results = []
         for em in emails_found:

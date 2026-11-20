@@ -627,38 +627,54 @@ for idx, msg in enumerate(st.session_state.messages):
                     )
 
 # --------------------------------------------------------------------------- #
-# Unified Voice & Text Search Capsule (ChatGPT Style)
+# Unified Voice & Text Search Capsule (ChatGPT Style with Auto-Silence Detection)
 # --------------------------------------------------------------------------- #
 st.markdown(
     """
-    <div style="max-width: 768px; margin: 24px auto 8px auto; display: flex; align-items: center; justify-content: space-between; padding: 0 6px;">
+    <div style="max-width: 768px; margin: 20px auto 6px auto; display: flex; align-items: center; justify-content: space-between; padding: 0 6px;">
         <div style="display: flex; align-items: center; gap: 8px;">
             <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; background: #ef4444; border-radius: 50%; font-size: 12px; color: white;">🎙️</span>
-            <span style="font-size: 13px; font-weight: 600; color: #ececec;">Voice Mode (Click red mic button to speak):</span>
+            <span style="font-size: 13px; font-weight: 600; color: #ececec;">Voice Search (Auto-stops when you pause):</span>
         </div>
-        <span style="font-size: 11px; color: #9ca3af; background: rgba(255,255,255,0.06); padding: 3px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">Whisper AI Active</span>
+        <span style="font-size: 11px; color: #9ca3af; background: rgba(255,255,255,0.06); padding: 3px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">VAD Auto-Silence Active</span>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-voice_audio = st.audio_input(
-    "Voice Search",
-    label_visibility="collapsed",
-    key="chatgpt_voice_recorder",
-)
-if voice_audio is not None:
-    audio_bytes = voice_audio.read()
-    audio_hash = hash(audio_bytes)
-    if st.session_state.last_processed_audio != audio_hash:
-        st.session_state.last_processed_audio = audio_hash
-        with st.spinner("Transcribing speech with Whisper AI..."):
-            transcribed_text = transcribe_uploaded_audio(audio_bytes)
-            if transcribed_text:
-                execute_turn(transcribed_text, input_mode="voice")
-                st.rerun()
-            else:
-                st.warning("Could not detect clear speech. Please speak again.")
+v_col1, v_col2 = st.columns([1, 1])
+
+with v_col1:
+    if st.button("🎙️ Speak Now (Auto-Stops When You Pause)", key="btn_auto_vad_listen", use_container_width=True):
+        from agent.voice import record_audio_vad, transcribe_audio
+        with st.spinner("🎙️ Listening to microphone... Speak your query (will auto-stop when you pause)..."):
+            audio_np = record_audio_vad(silence_timeout=1.2, max_duration=15.0)
+            if audio_np is not None and len(audio_np) > 0:
+                spoken_text = transcribe_audio(audio_np)
+                if spoken_text:
+                    execute_turn(spoken_text, input_mode="voice")
+                    st.rerun()
+                else:
+                    st.warning("No speech detected. Please speak into your microphone.")
+
+with v_col2:
+    voice_audio = st.audio_input(
+        "Browser Audio Recording",
+        label_visibility="collapsed",
+        key="chatgpt_voice_recorder",
+    )
+    if voice_audio is not None:
+        audio_bytes = voice_audio.read()
+        audio_hash = hash(audio_bytes)
+        if st.session_state.last_processed_audio != audio_hash:
+            st.session_state.last_processed_audio = audio_hash
+            with st.spinner("Transcribing speech with Whisper AI..."):
+                transcribed_text = transcribe_uploaded_audio(audio_bytes)
+                if transcribed_text:
+                    execute_turn(transcribed_text, input_mode="voice")
+                    st.rerun()
+                else:
+                    st.warning("Could not detect clear speech. Please speak again.")
 
 # ChatGPT Capsule Text Input Bar
 user_chat = st.chat_input("Ask anything or search the web...")

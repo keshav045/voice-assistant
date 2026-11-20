@@ -28,6 +28,11 @@ Follow these core behavioral guidelines:
    - If the user asks to search for or play a video, song, channel, or topic on YouTube (e.g. "open YouTube and search for crazy xyz new video", "search crazy xyz on youtube", "play lofi hip hop on youtube"), ALWAYS call open_app with name="youtube" and query set to the video/channel topic (e.g. query="crazy xyz new video").
    - NEVER call web_search when the user mentions YouTube or explicitly requests to open, search, or play on YouTube or another platform.
 
+6. Spoken Email & Contact Normalization:
+   - When asked to compose or send an email, call send_email with recipient email(s) in `to` and what to say in `description`.
+   - If the user speaks an email address phonetically (e.g. "mail to keshav zero four five at the rate gmail dot com", "send email to john dot smith at yahoo dot co dot in"), always normalize and pass the standard valid email address in `to` (e.g. "keshav045@gmail.com", "john.smith@yahoo.co.in").
+   - Never say an email is invalid without first normalizing spoken phonetic words ("at the rate of", "dot", "zero"..."nine").
+
 6. Automated WhatsApp Messaging:
    - When asked to message someone on WhatsApp or open a contact's chat, call send_whatsapp_message with the contact name and message text.
 

@@ -230,6 +230,21 @@ class TestSendEmailOffline:
             mock_smtp.assert_not_called()
             assert "user_google@gmail.com" in res["spoken"]
 
+    def test_spoken_email_normalization(self):
+        """Spoken email addresses like 'keshav zero four five at the rate gmail dot com' must normalize and send successfully."""
+        from agent.tools import email as email_mod
+        fake_compose = {"subject": "Test Spoken", "body": "Hello spoken email"}
+        with patch.object(email_mod, "_compose_email", return_value=fake_compose), \
+             patch.object(email_mod, "_send_smtp", return_value={"success": True, "to": "keshav045@gmail.com", "subject": "Test Spoken"}), \
+             patch.dict(os.environ, {"SENDER_EMAIL": "sender@gmail.com", "SENDER_APP_PASSWORD": "a" * 16}):
+            
+            res = email_mod.send_email(
+                to="keshav zero four five at the rate gmail dot com",
+                description="tell him the project is done",
+            )
+            assert res["success"] is True
+            assert "keshav045@gmail.com" in res["spoken"]
+
     # ------------------------------------------------------------------ #
     # Legacy stubs still work
     # ------------------------------------------------------------------ #
