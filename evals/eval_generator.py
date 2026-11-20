@@ -17,7 +17,7 @@ def run_generator_eval(harness: EvalHarness) -> Dict[str, Any]:
     samples = [
         "**Note**: The answer is `42`. See [guide](https://example.com) for more.",
         "### Chapter 1: Newton's Laws\n- Law 1: Inertia\n- Law 2: F=ma\n- Law 3: Equal reaction",
-        "Calculated **15 * 8** = `120` 🎉.",
+        "Calculated **15 * 8** = `120` .",
     ]
 
     clean_count = 0

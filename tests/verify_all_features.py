@@ -30,7 +30,7 @@ def record(category: str, feature: str, passed: bool, details: str = "", latency
         "details": details,
         "latency_ms": round(latency_ms, 2),
     })
-    status_icon = "✓ PASS" if passed else "✗ FAIL"
+    status_icon = "[OK] PASS" if passed else "[FAIL] FAIL"
     print(f"[{status_icon}] {category:25} | {feature:32} | {details}")
 
 

@@ -360,14 +360,14 @@ def generate_markdown_report(bench: Dict[str, Any]) -> str:
     md.append("## 2. Tool Execution Accuracy")
     md.append(f"**Score:** `{bench['accuracy']['accuracy_pct']}%` ({bench['accuracy']['passed']}/{bench['accuracy']['total']} Passed)\n")
     for t in bench["accuracy"]["tests"]:
-        icon = "✅" if t["passed"] else "❌"
+        icon = "[PASS]" if t["passed"] else "[FAIL]"
         md.append(f"- {icon} **{t['name']}**: {t['details']}")
     md.append("")
 
     md.append("## 3. Error Detection & Resilience Testing")
     md.append(f"**Score:** `{bench['error_resilience']['resilience_pct']}%` ({bench['error_resilience']['handled']}/{bench['error_resilience']['total']} Gracefully Handled)\n")
     for c in bench["error_resilience"]["cases"]:
-        icon = "🛡️" if c["handled_gracefully"] else "⚠️"
+        icon = "[SAFE]" if c["handled_gracefully"] else "[WARN]"
         md.append(f"- {icon} **{c['test']}**: {c['details']}")
     md.append("")
 

@@ -376,14 +376,14 @@ def db_list_chat_history(user_id: str, session_id: Optional[str] = None, limit: 
             cur = conn.execute(
                 """SELECT * FROM chat_history 
                    WHERE user_id = ? AND session_id = ? 
-                   ORDER BY created_at DESC LIMIT ?""",
+                   ORDER BY created_at DESC, rowid DESC LIMIT ?""",
                 (user_id, session_id, limit),
             )
         else:
             cur = conn.execute(
                 """SELECT * FROM chat_history 
                    WHERE user_id = ? 
-                   ORDER BY created_at DESC LIMIT ?""",
+                   ORDER BY created_at DESC, rowid DESC LIMIT ?""",
                 (user_id, limit),
             )
         rows = [dict(r) for r in cur.fetchall()]

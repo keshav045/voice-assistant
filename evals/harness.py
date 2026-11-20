@@ -40,7 +40,7 @@ class EvalHarness:
 
     def record_test(self, module: str, name: str, passed: bool, value: Any = None, details: str = ""):
         self.registry.record(module=module, name=name, value=value, passed=passed, details=details)
-        status_icon = "✅ PASS" if passed else "❌ FAIL"
+        status_icon = "[PASS] PASS" if passed else "[FAIL] FAIL"
         print(f"  [{status_icon}] {module:24} | {name:30} | {details}")
 
     def export_report(self, output_path: Optional[str] = None) -> Dict[str, Any]:

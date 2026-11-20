@@ -55,7 +55,7 @@ logger = logging.getLogger("ai_assistant.streamlit")
 # --------------------------------------------------------------------------- #
 st.set_page_config(
     page_title="AI Assistant — Voice & Web Search AI",
-    page_icon="🤖",
+    page_icon="AI",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -386,7 +386,7 @@ def execute_turn(user_prompt: str, input_mode: str = "voice"):
     })
 
     # Render user message immediately so it is never hidden while thinking
-    prefix = "🎙️ " if input_mode == "voice" else ""
+    prefix = "[Voice] " if input_mode == "voice" else ""
     st.markdown(
         f"""
         <div class="chatgpt-bubble-user">
@@ -457,7 +457,7 @@ with st.sidebar:
     st.markdown(
         """
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px; padding: 4px;">
-            <div style="font-size: 20px; background: #2f2f2f; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1);">🤖</div>
+            <div style="font-size: 20px; background: #2f2f2f; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1);">AI</div>
             <div>
                 <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #ececec;">AI Assistant</h3>
                 <p style="margin: 0; font-size: 11px; color: #9ca3af;">Web Search & Real-Time Voice</p>
@@ -467,7 +467,7 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-    st.markdown("#### 🔊 Voice Settings")
+    st.markdown("#### Voice Settings")
     st.session_state.auto_speech = st.toggle("Auto-Play Voice", value=st.session_state.auto_speech)
     st.session_state.voice_name = st.selectbox(
         "Persona:",
@@ -482,10 +482,10 @@ with st.sidebar:
     )
 
     st.markdown("---")
-    st.markdown("#### 🤖 Model Engine")
+    st.markdown("#### AI Model Engine")
     model_choice = st.radio(
         "Engine:",
-        options=["☁️ OpenAI GPT-4o (Recommended)", "🖥️ Local Ollama"],
+        options=["OpenAI GPT-4o (Recommended)", "Local Ollama"],
         index=0,
         key="model_engine_choice",
     )
@@ -505,7 +505,7 @@ with st.sidebar:
         st.caption("Using Cloud OpenAI GPT-4o with Web Search & Multilingual Support")
 
     st.markdown("---")
-    st.markdown("#### 📧 Google Account (1-Click Login)")
+    st.markdown("#### Google Account (1-Click Login)")
 
     oauth_rec = db_get_user_oauth("krish") or db_get_user_oauth("guest")
     google_connected_email = oauth_rec.get("email") if oauth_rec and (oauth_rec.get("access_token") or oauth_rec.get("refresh_token")) else None
@@ -539,16 +539,16 @@ with st.sidebar:
             f"""
             <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 14px; padding: 14px; margin-bottom: 12px;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                    <span style="font-size: 13px; font-weight: 700; color: #10b981;">✓ Logged In With Google</span>
+                    <span style="font-size: 13px; font-weight: 700; color: #10b981;">Logged In With Google</span>
                     <span style="font-size: 10px; background: rgba(16, 185, 129, 0.25); color: #10b981; padding: 2px 8px; border-radius: 10px; font-weight: 700;">Gmail OAuth</span>
                 </div>
                 <div style="font-size: 13px; color: #ececec; font-weight: 600; word-break: break-all;">{google_connected_email}</div>
-                <div style="font-size: 11px; color: #9ca3af; margin-top: 6px;">✨ No App Password needed! All emails will be sent directly from this address.</div>
+                <div style="font-size: 11px; color: #9ca3af; margin-top: 6px;">No App Password needed! All emails will be sent directly from this address.</div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-        if st.button("🚪 Logout from Google", use_container_width=True):
+        if st.button("Logout from Google", use_container_width=True):
             db_delete_user_oauth("krish")
             db_delete_user_oauth("guest")
             st.success("Logged out successfully!")
@@ -565,11 +565,11 @@ with st.sidebar:
         )
         login_url = get_google_login_url()
         if login_url:
-            st.link_button("🔑 Login with Google", login_url, use_container_width=True)
+            st.link_button("Login with Google", login_url, use_container_width=True)
         else:
             st.warning("Google OAuth credentials missing in .env")
 
-    with st.expander("⚙️ Alternative: Manual App Password (Optional)"):
+    with st.expander("Alternative: Manual App Password (Optional)"):
         existing_profile = db_get_user_email_profile("krish") or {}
         default_name = existing_profile.get("sender_name") or "Krish"
         default_email = existing_profile.get("sender_email") or os.environ.get("SENDER_EMAIL", "")
@@ -583,7 +583,7 @@ with st.sidebar:
             placeholder="•••• •••• •••• ••••" if default_has_pw else "Enter 16-character password",
             key="profile_pw_input",
         )
-        if st.button("💾 Save App Password", use_container_width=True):
+        if st.button("Save App Password", use_container_width=True):
             pw_to_save = prof_password.strip() if prof_password.strip() else (existing_profile.get("sender_password") or os.environ.get("SENDER_APP_PASSWORD"))
             db_save_user_email_profile(
                 user_id="krish",
@@ -595,18 +595,18 @@ with st.sidebar:
                 os.environ["SENDER_EMAIL"] = prof_email.strip()
             if pw_to_save:
                 os.environ["SENDER_APP_PASSWORD"] = pw_to_save
-            st.success(f"✓ Saved sender profile: {prof_name} <{prof_email}>")
+            st.success(f"Saved sender profile: {prof_name} <{prof_email}>")
             st.rerun()
 
     st.markdown("---")
     col_new, col_del = st.columns(2)
     with col_new:
-        if st.button("➕ New Chat", use_container_width=True):
+        if st.button("New Chat", use_container_width=True):
             st.session_state.session_id = f"sess-{uuid.uuid4().hex[:8]}"
             st.session_state.messages = []
             st.rerun()
     with col_del:
-        if st.button("🗑️ Clear", use_container_width=True):
+        if st.button("Clear", use_container_width=True):
             db_clear_chat_history(user_id="guest", session_id=st.session_state.session_id)
             st.session_state.messages = []
             st.rerun()
@@ -631,17 +631,17 @@ if not st.session_state.messages:
     # 4 Quick Web Search & Assistant Suggestions (2x2 Grid like ChatGPT)
     p_col1, p_col2 = st.columns(2)
     with p_col1:
-        if st.button("🔍 Search latest world news\n\nFind top breaking headlines and tech stories today", key="sug_1", use_container_width=True):
+        if st.button("Search latest world news\n\nFind top breaking headlines and tech stories today", key="sug_1", use_container_width=True):
             execute_turn("Search the web for the latest world news and top headlines today", input_mode="text")
             st.rerun()
-        if st.button("🏏 Live cricket scores & updates\n\nCheck current international match scorecards", key="sug_2", use_container_width=True):
+        if st.button("Live cricket scores & updates\n\nCheck current international match scorecards", key="sug_2", use_container_width=True):
             execute_turn("What is the latest cricket match score and status?", input_mode="text")
             st.rerun()
     with p_col2:
-        if st.button("💡 How do quantum computers work?\n\nExplain qubits, superposition, and entanglement", key="sug_3", use_container_width=True):
+        if st.button("How do quantum computers work?\n\nExplain qubits, superposition, and entanglement", key="sug_3", use_container_width=True):
             execute_turn("Explain how quantum computers work in simple terms", input_mode="text")
             st.rerun()
-        if st.button("🧮 Math & Finance Calculation\n\nCalculate 18% GST on $1,250 and split 3 ways", key="sug_4", use_container_width=True):
+        if st.button("Math & Finance Calculation\n\nCalculate 18% GST on $1,250 and split 3 ways", key="sug_4", use_container_width=True):
             execute_turn("What is 1250 * 1.18 / 3?", input_mode="text")
             st.rerun()
 
@@ -666,7 +666,7 @@ for idx, msg in enumerate(st.session_state.messages):
             f"""
             <div class="chatgpt-bubble-assistant">
                 <div class="chatgpt-avatar-header">
-                    <div class="chatgpt-avatar-icon">🤖</div>
+                    <div class="chatgpt-avatar-icon">AI</div>
                     <span class="chatgpt-author-name">Assistant</span>
                     <span class="chatgpt-latency-pill">{lat}</span>
                     <span class="chatgpt-latency-pill">{ts}</span>
@@ -692,7 +692,7 @@ for idx, msg in enumerate(st.session_state.messages):
                     st.markdown(
                         f"""
                         <div class="chatgpt-tool-card">
-                            <div>🔍 <strong>Web Search:</strong> <code>{t_args.get('query')}</code></div>
+                            <div><strong>Web Search:</strong> <code>{t_args.get('query')}</code></div>
                             <span style="font-size: 11px; color: #9ca3af;">{len(t_res.get('results', []))} web sources referenced</span>
                         </div>
                         """,
@@ -705,8 +705,8 @@ for idx, msg in enumerate(st.session_state.messages):
                     st.markdown(
                         f"""
                         <div class="chatgpt-tool-card">
-                            <div>🚀 <strong>Opening {t_label}:</strong> <code>{t_args.get('query') or t_label}</code></div>
-                            <a href="{t_url}" target="_blank" class="chatgpt-tool-btn">Open {t_label} ↗</a>
+                            <div><strong>Opening {t_label}:</strong> <code>{t_args.get('query') or t_label}</code></div>
+                            <a href="{t_url}" target="_blank" class="chatgpt-tool-btn">Open {t_label}</a>
                         </div>
                         """,
                         unsafe_allow_html=True,
@@ -727,7 +727,7 @@ for idx, msg in enumerate(st.session_state.messages):
                     st.markdown(
                         f"""
                         <div class="chatgpt-tool-card">
-                            <div>🧮 <strong>Math Calculation:</strong> <code>{t_args.get('expression')}</code></div>
+                            <div><strong>Math Calculation:</strong> <code>{t_args.get('expression')}</code></div>
                             <span style="font-size: 15px; font-weight: 700; color: #38bdf8;">= {t_res.get('formatted', t_res.get('result'))}</span>
                         </div>
                         """,
@@ -881,17 +881,17 @@ if livekit_data:
             <div class="lk-left">
               <div id="lk-dot" class="lk-status-indicator"></div>
               <div>
-                <div id="lk-title" class="lk-title">⚡ LiveKit Voice Agent (Sub-400ms)</div>
+                <div id="lk-title" class="lk-title">LiveKit Voice Agent (Sub-400ms)</div>
                 <div id="lk-sub" class="lk-sub">Auto-VAD • Cloud WebRTC • Hands-Free (Speak naturally)</div>
               </div>
             </div>
             <div class="lk-right">
               <button id="lk-btn" class="lk-btn" onclick="toggleVoice()">
-                <span id="lk-icon">🎙️</span>
+                <span id="lk-icon">MIC</span>
                 <span id="lk-btn-text">Start LiveKit Voice</span>
               </button>
               <a href="http://localhost:8000/" target="_blank" class="lk-hub-btn" title="Open Full Standalone Voice Hub">
-                Full Web Hub ↗
+                Full Web Hub
               </a>
             </div>
           </div>
@@ -952,14 +952,14 @@ if livekit_data:
                   if (speakers.length > 0) {{
                     const isAssistant = speakers.some(s => !s.isLocal);
                     if (isAssistant) {{
-                      title.innerText = "🗣️ AI Assistant is speaking...";
+                      title.innerText = "AI Assistant is speaking...";
                       sub.innerText = "You can speak to interrupt anytime";
                     }} else {{
-                      title.innerText = "🎙️ Listening to Krish...";
+                      title.innerText = "Listening to Krish...";
                       sub.innerText = "Silero VAD active (auto-stops when you pause)";
                     }}
                   }} else {{
-                    title.innerText = "🟢 Connected to LiveKit (Listening...)";
+                    title.innerText = "Connected to LiveKit (Listening...)";
                     sub.innerText = "Speak into microphone — auto-processes on silence";
                   }}
                 }});
@@ -976,10 +976,10 @@ if livekit_data:
                 }});
 
                 btn.className = "lk-btn connected";
-                icon.innerText = "⏹️";
+                icon.innerText = "STOP";
                 btnText.innerText = "Disconnect Voice";
                 dot.className = "lk-status-indicator connected";
-                title.innerText = "🟢 Connected to LiveKit (Listening...)";
+                title.innerText = "Connected to LiveKit (Listening...)";
                 sub.innerText = "Speak into microphone — auto-processes on silence";
               }} catch (err) {{
                 console.error("LiveKit connection error:", err);
@@ -1009,10 +1009,10 @@ if livekit_data:
               const sub = document.getElementById("lk-sub");
 
               if (btn) btn.className = "lk-btn";
-              if (icon) icon.innerText = "🎙️";
+              if (icon) icon.innerText = "MIC";
               if (btnText) btnText.innerText = "Start LiveKit Voice";
               if (dot) dot.className = "lk-status-indicator";
-              if (title) title.innerText = "⚡ LiveKit Voice Agent (Sub-400ms)";
+              if (title) title.innerText = "LiveKit Voice Agent (Sub-400ms)";
               if (sub) sub.innerText = "Auto-VAD • Cloud WebRTC • Hands-Free (Speak naturally)";
             }}
           </script>

@@ -648,7 +648,7 @@ def google_auth_callback(request: Request, code: Optional[str] = None, state: Op
         <html>
         <head><title>Gmail Connected</title></head>
         <body style="font-family:sans-serif; text-align:center; padding: 50px; background:#18181b; color:#ececec;">
-          <h2 style="color: #16a34a;">✓ Logged In With Google Successfully!</h2>
+          <h2 style="color: #16a34a;">[OK] Logged In With Google Successfully!</h2>
           <p style="font-size: 16px;">Connected account: <strong>{user_email}</strong></p>
           <p style="color: #9ca3af;">All emails will now send directly from this account without any App Password.</p>
           <p style="color: #9ca3af; margin-top: 20px;">Redirecting back to AI Assistant...</p>

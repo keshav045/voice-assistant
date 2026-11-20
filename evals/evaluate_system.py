@@ -119,7 +119,7 @@ def evaluate_generation() -> Dict[str, Any]:
     sample_raw_outputs = [
         "**Sure!** Here is the result: `42`. Check out [Google](https://google.com) for details.",
         "### Project Update\n- Item 1\n- Item 2\n* Done!",
-        "Calculated **15 * 8** = `120` 🎉.",
+        "Calculated **15 * 8** = `120` .",
     ]
 
     # 1. Clean speech compliance (must contain zero markdown stars, backticks, or raw hashes)

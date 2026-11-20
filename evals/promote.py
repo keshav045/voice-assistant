@@ -22,7 +22,7 @@ def check_promotion_readiness(report: Dict[str, Any]) -> bool:
     print("=" * 64)
     print(f"  Current Pass Rate: {pass_rate}% (Minimum Required: {min_pass_rate}%)")
     print(f"  Failed Tests:      {failed} (Maximum Allowed: {max_allowed_failures})")
-    print(f"  PROMOTION STATUS:  {'✅ APPROVED FOR PRODUCTION' if is_promotable else '❌ BLOCKED (Quality Gate Failed)'}")
+    print(f"  PROMOTION STATUS:  {'[PASS] APPROVED FOR PRODUCTION' if is_promotable else '[FAIL] BLOCKED (Quality Gate Failed)'}")
     print("=" * 64)
 
     return is_promotable

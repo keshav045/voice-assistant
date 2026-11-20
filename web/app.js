@@ -537,7 +537,7 @@ function showOpenTabToast(url, label) {
       <span>Open</span>
       <span class="material-symbols-outlined text-[13px]">north_east</span>
     </a>
-    <button onclick="this.parentElement.remove()" class="text-on-surface-variant hover:text-on-surface text-sm ml-1 p-1">✕</button>
+    <button onclick="this.parentElement.remove()" class="text-on-surface-variant hover:text-on-surface text-sm ml-1 p-1">X</button>
   `;
   document.body.appendChild(toast);
   setTimeout(() => {
@@ -1009,7 +1009,7 @@ async function connectLiveKit() {
           triggerOpenUrl(dataPacket.url, dataPacket.target || "App");
         } else if (dataPacket.type === "EMAIL_SENT") {
           const fromDesc = dataPacket.sender ? ` from ${dataPacket.sender}` : "";
-          showOpenTabToast(`✓ Email sent to ${dataPacket.to}${fromDesc}: "${dataPacket.subject}"`, "https://mail.google.com");
+          showOpenTabToast(`[OK] Email sent to ${dataPacket.to}${fromDesc}: "${dataPacket.subject}"`, "https://mail.google.com");
         }
       } catch (e) {
         console.warn("Could not process LiveKit data packet:", e);
