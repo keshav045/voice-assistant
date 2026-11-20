@@ -385,13 +385,11 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
 
             # 5. Email & Meeting Inquiries / Personal Mail ID Fallback
             elif any(w in lower for w in ["mail", "email", "gmail", "send email", "send a mail"]):
-                if "how" in lower and any(w in lower for w in ["mail from", "send from", "my mail", "my email", "own email", "krish"]):
+                if "how" in lower and any(w in lower for w in ["mail from", "send from", "my mail", "my email", "own email", "krish", "without app password"]):
                     spoken = (
-                        "To send emails from your own mail ID as Krish: "
-                        "First, enter your name and email in the sidebar Sender Profile. "
-                        "Second, enter your 16-character Google App Password generated from your Google Account Security settings. "
-                        "Once saved, whenever you ask me to mail someone about a meeting, "
-                        "I will send the email directly from your email address with your signature."
+                        "You do not need a Gmail App Password! Simply click 'Sign in with Google' in the sidebar "
+                        "to log in with your Gmail account. Once logged in, every email or meeting invite you ask me to send "
+                        "will automatically be delivered directly from your logged-in Gmail address."
                     )
                 else:
                     to_cand = "recipient@example.com"
@@ -636,21 +634,32 @@ def google_auth_callback(request: Request, code: Optional[str] = None, state: Op
             access_token=access_token,
             refresh_token=refresh_token,
         )
+        if user_id != "krish":
+            db_save_user_oauth(
+                user_id="krish",
+                email=user_email,
+                access_token=access_token,
+                refresh_token=refresh_token,
+            )
+        os.environ["SENDER_EMAIL"] = user_email
 
         return HTMLResponse(f"""
         <!DOCTYPE html>
         <html>
         <head><title>Gmail Connected</title></head>
-        <body style="font-family:sans-serif; text-align:center; padding: 50px;">
-          <h2 style="color: #16a34a;">✓ Gmail Connected Successfully!</h2>
-          <p>Linked account: <strong>{user_email}</strong></p>
-          <p>This window will close automatically...</p>
+        <body style="font-family:sans-serif; text-align:center; padding: 50px; background:#18181b; color:#ececec;">
+          <h2 style="color: #16a34a;">✓ Logged In With Google Successfully!</h2>
+          <p style="font-size: 16px;">Connected account: <strong>{user_email}</strong></p>
+          <p style="color: #9ca3af;">All emails will now send directly from this account without any App Password.</p>
+          <p style="color: #9ca3af; margin-top: 20px;">Redirecting back to AI Assistant...</p>
           <script>
             if (window.opener) {{
-              window.opener.postMessage({{ type: 'GMAIL_CONNECTED', email: '{user_email}' }}, '*');
-              setTimeout(() => window.close(), 1500);
+              try {{
+                window.opener.postMessage({{ type: 'GMAIL_CONNECTED', email: '{user_email}' }}, '*');
+              }} catch(e) {{}}
+              setTimeout(() => window.close(), 1200);
             }} else {{
-              setTimeout(() => {{ window.location.href = '/?gmail_connected=1'; }}, 1500);
+              setTimeout(() => {{ window.location.href = 'http://localhost:8501/?gmail_connected=1'; }}, 1200);
             }}
           </script>
         </body>

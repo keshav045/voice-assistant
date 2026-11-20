@@ -44,6 +44,8 @@ from db.models import (
     db_clear_chat_history,
     db_get_user_email_profile,
     db_save_user_email_profile,
+    db_get_user_oauth,
+    db_delete_user_oauth,
 )
 
 logger = logging.getLogger("ai_assistant.streamlit")
@@ -282,8 +284,12 @@ st.markdown(
 )
 
 # --------------------------------------------------------------------------- #
-# Session State Initialization
+# Session State & Query Param Initialization
 # --------------------------------------------------------------------------- #
+if "gmail_connected" in st.query_params:
+    st.query_params.clear()
+    st.rerun()
+
 if "session_id" not in st.session_state:
     st.session_state.session_id = f"sess-{uuid.uuid4().hex[:8]}"
 
@@ -499,57 +505,98 @@ with st.sidebar:
         st.caption("Using Cloud OpenAI GPT-4o with Web Search & Multilingual Support")
 
     st.markdown("---")
-    st.markdown("#### 📧 Sender Profile (Krish)")
+    st.markdown("#### 📧 Google Account (1-Click Login)")
 
-    existing_profile = db_get_user_email_profile("krish") or {}
-    default_name = existing_profile.get("sender_name") or "Krish"
-    default_email = existing_profile.get("sender_email") or os.environ.get("SENDER_EMAIL", "")
-    default_has_pw = bool(existing_profile.get("sender_password") or os.environ.get("SENDER_APP_PASSWORD"))
+    oauth_rec = db_get_user_oauth("krish") or db_get_user_oauth("guest")
+    google_connected_email = oauth_rec.get("email") if oauth_rec and (oauth_rec.get("access_token") or oauth_rec.get("refresh_token")) else None
 
-    prof_name = st.text_input("Name:", value=default_name, key="profile_name_input")
-    prof_email = st.text_input("Sender Email ID:", value=default_email, key="profile_email_input", placeholder="krish@gmail.com")
+    def get_google_login_url():
+        import urllib.parse
+        import base64
+        client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+        redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/auth/google/callback").strip()
+        if not client_id:
+            return ""
+        scopes = [
+            "https://www.googleapis.com/auth/gmail.send",
+            "https://www.googleapis.com/auth/userinfo.email",
+        ]
+        state_payload = json.dumps({"user_id": "krish", "source": "streamlit"})
+        state_b64 = base64.urlsafe_b64encode(state_payload.encode("utf-8")).decode("utf-8")
+        params = {
+            "client_id": client_id,
+            "redirect_uri": redirect_uri,
+            "response_type": "code",
+            "scope": " ".join(scopes),
+            "access_type": "offline",
+            "prompt": "consent",
+            "state": state_b64,
+        }
+        return f"https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(params)}"
 
-    prof_password = st.text_input(
-        "Gmail App Password (16-char):",
-        type="password",
-        placeholder="•••• •••• •••• ••••" if default_has_pw else "Enter 16-character password",
-        help="Generate at myaccount.google.com/apppasswords under 2-Step Verification",
-        key="profile_pw_input",
-    )
-
-    if st.button("💾 Save Sender Profile", use_container_width=True):
-        pw_to_save = prof_password.strip() if prof_password.strip() else (existing_profile.get("sender_password") or os.environ.get("SENDER_APP_PASSWORD"))
-        db_save_user_email_profile(
-            user_id="krish",
-            sender_name=prof_name.strip() or "Krish",
-            sender_email=prof_email.strip(),
-            sender_password=pw_to_save,
+    if google_connected_email:
+        st.markdown(
+            f"""
+            <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 14px; padding: 14px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-size: 13px; font-weight: 700; color: #10b981;">✓ Logged In With Google</span>
+                    <span style="font-size: 10px; background: rgba(16, 185, 129, 0.25); color: #10b981; padding: 2px 8px; border-radius: 10px; font-weight: 700;">Gmail OAuth</span>
+                </div>
+                <div style="font-size: 13px; color: #ececec; font-weight: 600; word-break: break-all;">{google_connected_email}</div>
+                <div style="font-size: 11px; color: #9ca3af; margin-top: 6px;">✨ No App Password needed! All emails will be sent directly from this address.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
-        if prof_email.strip():
-            os.environ["SENDER_EMAIL"] = prof_email.strip()
-        if pw_to_save:
-            os.environ["SENDER_APP_PASSWORD"] = pw_to_save
-        st.success(f"✓ Saved sender profile: {prof_name} <{prof_email}>")
-        st.rerun()
-
-    if prof_email:
-        st.caption(f"Active Sender: **{prof_name}** (`{prof_email}`)")
+        if st.button("🚪 Logout from Google", use_container_width=True):
+            db_delete_user_oauth("krish")
+            db_delete_user_oauth("guest")
+            st.success("Logged out successfully!")
+            st.rerun()
     else:
-        st.caption("Active Sender: Default System")
-
-    with st.expander("ℹ️ How Krish sends emails from his mail ID"):
         st.markdown(
             """
-            1. **Set Email & Name**: Enter your name (`Krish`) and email ID above.
-            2. **Gmail App Password**:
-               - Open [Google Security Settings](https://myaccount.google.com/apppasswords).
-               - Under 2-Step Verification, generate an **App Password** for 'Mail'.
-               - Paste the 16-character code above and click **Save Sender Profile**.
-            3. **Ask the Assistant**:
-               - Speak or type: *"Mail John (john@example.com) that our meeting is tomorrow at 3 PM"*.
-               - The AI automatically delivers the meeting invitation from **Krish's mail ID** (`From: Krish <krish@...>` with signature `Best regards, Krish`).
-            """
+            <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px;">
+                <div style="font-size: 13px; font-weight: 600; color: #ececec; margin-bottom: 4px;">Sign in with your Google account</div>
+                <div style="font-size: 11px; color: #9ca3af;">No App Passwords required. 1-click login allows AI Assistant to send emails from your own Gmail ID.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
+        login_url = get_google_login_url()
+        if login_url:
+            st.link_button("🔑 Login with Google", login_url, use_container_width=True)
+        else:
+            st.warning("Google OAuth credentials missing in .env")
+
+    with st.expander("⚙️ Alternative: Manual App Password (Optional)"):
+        existing_profile = db_get_user_email_profile("krish") or {}
+        default_name = existing_profile.get("sender_name") or "Krish"
+        default_email = existing_profile.get("sender_email") or os.environ.get("SENDER_EMAIL", "")
+        default_has_pw = bool(existing_profile.get("sender_password") or os.environ.get("SENDER_APP_PASSWORD"))
+
+        prof_name = st.text_input("Name:", value=default_name, key="profile_name_input")
+        prof_email = st.text_input("Sender Email ID:", value=default_email, key="profile_email_input", placeholder="krish@gmail.com")
+        prof_password = st.text_input(
+            "Gmail App Password (16-char):",
+            type="password",
+            placeholder="•••• •••• •••• ••••" if default_has_pw else "Enter 16-character password",
+            key="profile_pw_input",
+        )
+        if st.button("💾 Save App Password", use_container_width=True):
+            pw_to_save = prof_password.strip() if prof_password.strip() else (existing_profile.get("sender_password") or os.environ.get("SENDER_APP_PASSWORD"))
+            db_save_user_email_profile(
+                user_id="krish",
+                sender_name=prof_name.strip() or "Krish",
+                sender_email=prof_email.strip(),
+                sender_password=pw_to_save,
+            )
+            if prof_email.strip():
+                os.environ["SENDER_EMAIL"] = prof_email.strip()
+            if pw_to_save:
+                os.environ["SENDER_APP_PASSWORD"] = pw_to_save
+            st.success(f"✓ Saved sender profile: {prof_name} <{prof_email}>")
+            st.rerun()
 
     st.markdown("---")
     col_new, col_del = st.columns(2)
