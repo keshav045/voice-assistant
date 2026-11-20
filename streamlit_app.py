@@ -384,13 +384,16 @@ def execute_turn(user_prompt: str, input_mode: str = "voice"):
 
 
 def generate_tutor_response(prompt: str, system_role: str) -> str:
-    """Generate high-quality academic tutor output using OpenAI GPT-4o."""
+    """Generate high-quality academic tutor output using OpenAI GPT-4o or Local Ollama."""
     openai_key = os.environ.get("OPENAI_API_KEY", "")
-    if openai_key and not openai_key.startswith("your-"):
+    openai_base = os.environ.get("OPENAI_BASE_URL", "").strip() or None
+    current_model = os.environ.get("OPENAI_MODEL", OPENAI_MODEL)
+
+    if (openai_key and not openai_key.startswith("your-")) or openai_base:
         try:
-            client = OpenAI(api_key=openai_key)
+            client = OpenAI(api_key=openai_key or "local-model", base_url=openai_base)
             completion = client.chat.completions.create(
-                model=OPENAI_MODEL or "gpt-4o",
+                model=current_model,
                 messages=[
                     {"role": "system", "content": system_role},
                     {"role": "user", "content": prompt},
@@ -442,6 +445,28 @@ with st.sidebar:
         options=["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
         index=["alloy", "echo", "fable", "onyx", "nova", "shimmer"].index(st.session_state.voice_name),
     )
+
+    st.markdown("---")
+    st.markdown("#### 🤖 AI Model Engine")
+    model_mode = st.radio(
+        "Mode:",
+        options=["☁️ Cloud API (OpenAI GPT-4o)", "🖥️ Local Model (Ollama)"],
+        index=0 if not os.environ.get("OPENAI_BASE_URL") else 1,
+    )
+    if "Local Model" in model_mode:
+        local_model = st.selectbox(
+            "Select Local Ollama Model:",
+            options=["rtu-senior:latest", "qwen2.5:1.5b", "llama3.2", "mistral"],
+            index=0,
+        )
+        local_url = st.text_input("Ollama Endpoint:", value="http://localhost:11434/v1")
+        os.environ["OPENAI_BASE_URL"] = local_url
+        os.environ["OPENAI_MODEL"] = local_model
+        st.success(f"🟢 Using `{local_model}` on localhost:11434")
+    else:
+        os.environ.pop("OPENAI_BASE_URL", None)
+        os.environ["OPENAI_MODEL"] = "gpt-4o"
+        st.caption("Using Cloud OpenAI GPT-4o API")
 
     st.markdown("---")
     st.markdown("#### 📚 Revision Sessions")

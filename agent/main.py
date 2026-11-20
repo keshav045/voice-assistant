@@ -69,6 +69,7 @@ app.add_middleware(
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o")
+OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "").strip() or None
 
 # Pending confirmations cache per session
 _PENDING_CONFIRMATIONS: Dict[str, Dict[str, Any]] = {}
@@ -170,9 +171,13 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
     spoken = ""
     executed_tools: List[Dict[str, Any]] = []
 
-    if OPENAI_API_KEY and not OPENAI_API_KEY.startswith("your-"):
+    curr_key = os.environ.get("OPENAI_API_KEY", OPENAI_API_KEY)
+    curr_base = os.environ.get("OPENAI_BASE_URL", "").strip() or None
+    curr_model = os.environ.get("OPENAI_MODEL", OPENAI_MODEL)
+
+    if (curr_key and not curr_key.startswith("your-")) or curr_base:
         try:
-            client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+            client = AsyncOpenAI(api_key=curr_key or "local-model", base_url=curr_base)
             history = get_messages_for_prompt(session_id)
             messages = [{"role": "system", "content": SYSTEM_PROMPT}]
             messages.extend(history)
@@ -181,7 +186,7 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
             # Fast multi-step tool reasoning loop (capped at 3 steps)
             for _step in range(3):
                 response = await client.chat.completions.create(
-                    model=OPENAI_MODEL,
+                    model=curr_model,
                     messages=messages,
                     tools=ACTIVE_TOOL_SCHEMAS,
                     tool_choice="auto",
