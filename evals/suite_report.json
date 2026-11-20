@@ -1,6 +1,6 @@
 {
   "harness": "NexusMasterSuite",
-  "timestamp": 1795188412.0874603,
+  "timestamp": 1795192058.1913888,
   "summary": {
     "total_tests": 35,
     "passed_tests": 35,
@@ -65,9 +65,9 @@
     "eval_retriever": [
       {
         "name": "Document Hit@1",
-        "value": 100.0,
+        "value": 87.5,
         "passed": true,
-        "details": "100.0% top-1 retrieval"
+        "details": "87.5% top-1 retrieval"
       },
       {
         "name": "Document Hit@3",
@@ -77,9 +77,9 @@
       },
       {
         "name": "MRR Score",
-        "value": 1.0,
+        "value": 0.917,
         "passed": true,
-        "details": "MRR: 1.0"
+        "details": "MRR: 0.917"
       },
       {
         "name": "Semantic Memory Fact",
@@ -115,19 +115,19 @@
         "name": "Math Calculator Latency",
         "value": 0.07,
         "passed": true,
-        "details": "p95: 0.24ms (target <10ms)"
+        "details": "p95: 0.23ms (target <10ms)"
       },
       {
         "name": "Clock Latency",
-        "value": 1.21,
+        "value": 2.57,
         "passed": true,
-        "details": "p95: 5.99ms (target <25ms)"
+        "details": "p95: 12.79ms (target <25ms)"
       },
       {
         "name": "Python Sandbox Latency",
         "value": 0.06,
         "passed": true,
-        "details": "p95: 0.09ms (target <50ms)"
+        "details": "p95: 0.1ms (target <50ms)"
       }
     ],
     "eval_cost": [
@@ -300,18 +300,18 @@
     ]
   },
   "timings": {
-    "Retrieval & Memory": 66.28,
+    "Retrieval & Memory": 125.33,
     "Reranker Two-Stage": 0.03,
-    "Speech Generation": 1.15,
-    "Latency Profiling": 148.06,
+    "Speech Generation": 0.66,
+    "Latency Profiling": 291.6,
     "Cost & Budgeting": 0.03,
-    "Leakage Protection": 0.09,
-    "Infrastructure Ops": 11.25,
-    "End-to-End RAG": 19.01,
-    "Error Reliability": 23.85,
-    "Safety Gating": 0.19,
+    "Leakage Protection": 0.1,
+    "Infrastructure Ops": 41.73,
+    "End-to-End RAG": 59.86,
+    "Error Reliability": 176.35,
+    "Safety Gating": 0.26,
     "Domain Scope": 0.01,
-    "Toxicity Defense": 0.01,
-    "Application Session": 37.78
+    "Toxicity Defense": 0.02,
+    "Application Session": 116.54
   }
 }
