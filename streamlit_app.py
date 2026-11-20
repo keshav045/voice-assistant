@@ -42,6 +42,8 @@ from db.models import (
     db_get_session_turns,
     db_save_chat_turn,
     db_clear_chat_history,
+    db_get_user_email_profile,
+    db_save_user_email_profile,
 )
 
 logger = logging.getLogger("ai_assistant.streamlit")
@@ -498,8 +500,6 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("#### 📧 Sender Profile (Krish)")
-
-    from db.models import db_get_user_email_profile, db_save_user_email_profile
 
     existing_profile = db_get_user_email_profile("krish") or {}
     default_name = existing_profile.get("sender_name") or "Krish"
