@@ -246,48 +246,28 @@ st.markdown(
         background-color: #e5e7eb !important;
     }
 
-    /* Inside Search Chat: Plus and Mic Buttons */
-    .chatgpt-plus-btn {
-        background: transparent !important;
-        border: none !important;
-        color: #9ca3af !important;
-        cursor: pointer !important;
-        font-size: 24px !important;
-        font-weight: 300 !important;
-        padding: 0 10px 0 4px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        line-height: 1 !important;
-        transition: color 0.2s ease !important;
+    /* Voice Search Capsule Styling (ChatGPT Aesthetic) */
+    div[data-testid="stAudioInput"] {
+        max-width: 768px !important;
+        margin: 0 auto 12px auto !important;
+        background-color: #2f2f2f !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 28px !important;
+        padding: 4px 16px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
     }
-    .chatgpt-plus-btn:hover {
+    div[data-testid="stAudioInput"] > div {
+        background-color: transparent !important;
+    }
+    div[data-testid="stAudioInput"] button {
+        background-color: #ef4444 !important;
         color: #ffffff !important;
-    }
-    .chatgpt-mic-btn {
-        background: transparent !important;
-        border: none !important;
-        color: #9ca3af !important;
-        cursor: pointer !important;
-        padding: 6px 10px !important;
         border-radius: 50% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin-right: 6px !important;
-        transition: all 0.2s ease !important;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.4) !important;
+        border: none !important;
     }
-    .chatgpt-mic-btn:hover {
-        color: #ffffff !important;
-        background: rgba(255, 255, 255, 0.08) !important;
-    }
-    .chatgpt-mic-btn.recording {
-        color: #ef4444 !important;
-        animation: micPulse 1.2s infinite ease-in-out !important;
-    }
-    @keyframes micPulse {
-        0%, 100% { transform: scale(1); filter: drop-shadow(0 0 3px #ef4444); }
-        50% { transform: scale(1.2); filter: drop-shadow(0 0 10px #ef4444); }
+    div[data-testid="stAudioInput"] * {
+        color: #ececec !important;
     }
     </style>
     """,
@@ -635,119 +615,42 @@ for idx, msg in enumerate(st.session_state.messages):
                         unsafe_allow_html=True,
                     )
 
-# ChatGPT Capsule Input Bar with Voice & Search Integration (Matches Image 2)
-user_chat = st.chat_input("Ask anything or search the web...")
-
-# Client-Side DOM Injection: Adds [+] button and [🎙️] Mic button directly INSIDE the search chat pill capsule
-import streamlit.components.v1 as components
-components.html(
+# --------------------------------------------------------------------------- #
+# Unified Voice & Text Search Capsule (ChatGPT Style)
+# --------------------------------------------------------------------------- #
+st.markdown(
     """
-    <script>
-    function injectChatGPTControls() {
-        try {
-            const doc = window.parent.document;
-            const container = doc.querySelector('[data-testid="stChatInput"] > div');
-            if (!container) return;
-
-            const textarea = container.querySelector('textarea');
-            const submitBtn = container.querySelector('button[data-testid="stChatInputSubmitButton"]') || container.querySelector('button');
-            if (!textarea || !submitBtn) return;
-
-            // 1. Inject '+' button on left
-            if (!container.querySelector('.chatgpt-plus-btn')) {
-                const plusBtn = doc.createElement('button');
-                plusBtn.className = 'chatgpt-plus-btn';
-                plusBtn.innerHTML = '+';
-                plusBtn.title = 'Add attachment or search';
-                plusBtn.type = 'button';
-                container.insertBefore(plusBtn, textarea);
-            }
-
-            // 2. Inject '🎙️' microphone right before send button
-            if (!container.querySelector('.chatgpt-mic-btn')) {
-                const micBtn = doc.createElement('button');
-                micBtn.className = 'chatgpt-mic-btn';
-                micBtn.type = 'button';
-                micBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>`;
-                micBtn.title = 'Voice Search (Click to speak)';
-                container.insertBefore(micBtn, submitBtn);
-
-                let recognition = null;
-                let isListening = false;
-                const SpeechRec = window.parent.SpeechRecognition || window.parent.webkitSpeechRecognition;
-
-                micBtn.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    if (!SpeechRec) {
-                        alert("Speech recognition is not supported in this browser. Please open in Google Chrome or Microsoft Edge.");
-                        return;
-                    }
-
-                    if (isListening) {
-                        if (recognition) recognition.stop();
-                        return;
-                    }
-
-                    recognition = new SpeechRec();
-                    recognition.continuous = false;
-                    recognition.interimResults = true;
-                    recognition.lang = 'en-US';
-
-                    recognition.onstart = () => {
-                        isListening = true;
-                        micBtn.classList.add('recording');
-                        textarea.placeholder = "Listening... Speak your query...";
-                    };
-
-                    recognition.onresult = (ev) => {
-                        let transcript = '';
-                        for (let i = ev.resultIndex; i < ev.results.length; ++i) {
-                            transcript += ev.results[i][0].transcript;
-                        }
-                        if (transcript) {
-                            textarea.value = transcript;
-                            textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                        }
-                    };
-
-                    recognition.onerror = (err) => {
-                        console.log("Speech recognition error:", err);
-                        stop();
-                    };
-
-                    recognition.onend = () => {
-                        stop();
-                        const val = textarea.value.trim();
-                        if (val.length > 0) {
-                            setTimeout(() => {
-                                submitBtn.click();
-                            }, 300);
-                        }
-                    };
-
-                    function stop() {
-                        isListening = false;
-                        micBtn.classList.remove('recording');
-                        textarea.placeholder = "Ask anything or search the web...";
-                    }
-
-                    recognition.start();
-                };
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    setInterval(injectChatGPTControls, 300);
-    injectChatGPTControls();
-    </script>
+    <div style="max-width: 768px; margin: 24px auto 8px auto; display: flex; align-items: center; justify-content: space-between; padding: 0 6px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; background: #ef4444; border-radius: 50%; font-size: 12px; color: white;">🎙️</span>
+            <span style="font-size: 13px; font-weight: 600; color: #ececec;">Voice Mode (Click red mic button to speak):</span>
+        </div>
+        <span style="font-size: 11px; color: #9ca3af; background: rgba(255,255,255,0.06); padding: 3px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">Whisper AI Active</span>
+    </div>
     """,
-    height=0,
-    width=0,
+    unsafe_allow_html=True,
 )
+
+voice_audio = st.audio_input(
+    "Voice Search",
+    label_visibility="collapsed",
+    key="chatgpt_voice_recorder",
+)
+if voice_audio is not None:
+    audio_bytes = voice_audio.read()
+    audio_hash = hash(audio_bytes)
+    if st.session_state.last_processed_audio != audio_hash:
+        st.session_state.last_processed_audio = audio_hash
+        with st.spinner("Transcribing speech with Whisper AI..."):
+            transcribed_text = transcribe_uploaded_audio(audio_bytes)
+            if transcribed_text:
+                execute_turn(transcribed_text, input_mode="voice")
+                st.rerun()
+            else:
+                st.warning("Could not detect clear speech. Please speak again.")
+
+# ChatGPT Capsule Text Input Bar
+user_chat = st.chat_input("Ask anything or search the web...")
 
 if user_chat:
     execute_turn(user_chat, input_mode="text")
