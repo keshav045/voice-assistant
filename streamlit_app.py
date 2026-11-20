@@ -634,12 +634,12 @@ if not st.session_state.messages:
         if st.button("Search latest world news\n\nFind top breaking headlines and tech stories today", key="sug_1", use_container_width=True):
             execute_turn("Search the web for the latest world news and top headlines today", input_mode="text")
             st.rerun()
-        if st.button("Live cricket scores & updates\n\nCheck current international match scorecards", key="sug_2", use_container_width=True):
-            execute_turn("What is the latest cricket match score and status?", input_mode="text")
+        if st.button("Medicine Information Guide\n\nAsk about uses, dosage, and side effects of Dolo 650 or Paracetamol", key="sug_2", use_container_width=True):
+            execute_turn("What is Dolo 650 used for and what are its dosage and side effects?", input_mode="text")
             st.rerun()
     with p_col2:
-        if st.button("How do quantum computers work?\n\nExplain qubits, superposition, and entanglement", key="sug_3", use_container_width=True):
-            execute_turn("Explain how quantum computers work in simple terms", input_mode="text")
+        if st.button("Live cricket scores & updates\n\nCheck current international match scorecards", key="sug_3", use_container_width=True):
+            execute_turn("What is the latest cricket match score and status?", input_mode="text")
             st.rerun()
         if st.button("Math & Finance Calculation\n\nCalculate 18% GST on $1,250 and split 3 ways", key="sug_4", use_container_width=True):
             execute_turn("What is 1250 * 1.18 / 3?", input_mode="text")
@@ -729,6 +729,36 @@ for idx, msg in enumerate(st.session_state.messages):
                         <div class="chatgpt-tool-card">
                             <div><strong>Math Calculation:</strong> <code>{t_args.get('expression')}</code></div>
                             <span style="font-size: 15px; font-weight: 700; color: #38bdf8;">= {t_res.get('formatted', t_res.get('result'))}</span>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+                elif t_name == "medical_search" and t_res.get("success"):
+                    med_item = t_res.get("medicine", t_args.get("medicine_name", "Medicine"))
+                    gen_name = t_res.get("generic_name", "")
+                    drug_cl = t_res.get("drug_class", "")
+                    uses_txt = t_res.get("uses", "")
+                    dosage_txt = t_res.get("dosage_guidelines", "")
+                    side_eff = t_res.get("side_effects", "")
+                    precaut = t_res.get("precautions", "")
+                    st.markdown(
+                        f"""
+                        <div class="chatgpt-tool-card" style="border-left: 3px solid #10b981; flex-direction: column; align-items: flex-start; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                                <div><strong>Medicine Information:</strong> <code>{med_item}</code> <span style="font-size: 11px; color: #10b981; margin-left: 8px;">{drug_cl}</span></div>
+                                <span style="font-size: 11px; color: #9ca3af;">Clinical Reference</span>
+                            </div>
+                            <div style="font-size: 12px; color: #d1d5db; line-height: 1.5;">
+                                <div><strong>Generic:</strong> {gen_name}</div>
+                                <div><strong>Uses:</strong> {uses_txt}</div>
+                                <div><strong>Dosage:</strong> {dosage_txt}</div>
+                                <div><strong>Side Effects:</strong> {side_eff}</div>
+                                <div><strong>Precautions:</strong> {precaut}</div>
+                            </div>
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px; font-style: italic;">
+                                {t_res.get('disclaimer', '')}
+                            </div>
                         </div>
                         """,
                         unsafe_allow_html=True,

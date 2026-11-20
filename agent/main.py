@@ -149,7 +149,7 @@ def _extract_youtube_query(text: str) -> Optional[str]:
     return None
 
 
-ACTIVE_TOOL_NAMES = {"web_search", "calculator", "run_python_code", "get_current_time", "open_app", "send_whatsapp_message", "send_email"}
+ACTIVE_TOOL_NAMES = {"web_search", "calculator", "medical_search", "run_python_code", "get_current_time", "open_app", "send_whatsapp_message", "send_email"}
 ACTIVE_TOOL_SCHEMAS = [s for s in TOOL_SCHEMAS if s.get("function", {}).get("name") in ACTIVE_TOOL_NAMES]
 
 
@@ -406,7 +406,37 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                     executed_tools.append({"tool": "send_email", "args": {"to": to_cand, "description": desc, "sender_name": "Krish"}, "result": res})
                     spoken = res.get("spoken") or "Processed your email request."
 
-            # 6. Universal Web Search Fallback (Cricket scores, news, multilingual facts, queries)
+            # 6. Medical and Medicine Information Search
+            elif any(w in lower for w in [
+                "medicine", "tablet", "capsule", "drug", "dosage", "side effect", "side effects",
+                "precaution", "precautions", "paracetamol", "dolo", "ibuprofen", "crocin", "metformin",
+                "amoxicillin", "azithromycin", "omeprazole", "pantoprazole", "cetirizine", "aspirin", "atorvastatin"
+            ]):
+                med_match = re.search(
+                    r"(?:about|for|of|is|medicine|tablet|drug)\s+([a-zA-Z0-9\s-]+?)(?:\s+(?:uses|dosage|dose|side effects|precautions|interactions|safe)|\?|$)",
+                    clean_text,
+                    re.IGNORECASE,
+                )
+                if med_match:
+                    med_name = med_match.group(1).strip()
+                else:
+                    med_name = re.sub(r"^(tell me about|what is|how to take|information on|details of)\s+", "", clean_text, flags=re.IGNORECASE).strip()
+
+                topic_val = "all"
+                if any(w in lower for w in ["side effect", "side effects", "adverse"]):
+                    topic_val = "side_effects"
+                elif any(w in lower for w in ["dose", "dosage", "how to take", "how much"]):
+                    topic_val = "dosage"
+                elif any(w in lower for w in ["use", "uses", "what is it for", "used for"]):
+                    topic_val = "uses"
+                elif any(w in lower for w in ["precaution", "precautions", "warning"]):
+                    topic_val = "precautions"
+
+                res = TOOLS_REGISTRY["medical_search"](medicine_name=med_name or clean_text, topic=topic_val)
+                executed_tools.append({"tool": "medical_search", "args": {"medicine_name": med_name or clean_text, "topic": topic_val}, "result": res})
+                spoken = res.get("spoken") or f"Retrieved medical details for {med_name}."
+
+            # 7. Universal Web Search Fallback (Cricket scores, news, multilingual facts, queries)
             else:
                 search_q = clean_text
                 search_q = re.sub(r"^(search\s+(for\s+)?|who\s+is\s+|what\s+is\s+|tell\s+me\s+about\s+)", "", clean_text, flags=re.IGNORECASE).strip()

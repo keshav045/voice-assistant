@@ -11,11 +11,13 @@ from agent.tools.calc import calculator
 from agent.tools.coding import run_python_code
 from agent.tools.launcher import open_app
 from agent.tools.whatsapp import send_whatsapp_message
+from agent.tools.medical import medical_search
 
 TOOLS_REGISTRY: Dict[str, Callable[..., Any]] = {
     "web_search": web_search,
     "get_current_time": get_current_time,
     "calculator": calculator,
+    "medical_search": medical_search,
     "run_python_code": run_python_code,
     "open_app": open_app,
     "send_whatsapp_message": send_whatsapp_message,
@@ -37,6 +39,28 @@ TOOLS_REGISTRY: Dict[str, Callable[..., Any]] = {
 CONFIRMATION_REQUIRED_TOOLS = {"create_event", "send_email"}
 
 TOOL_SCHEMAS: List[Dict[str, Any]] = [
+    {
+        "type": "function",
+        "function": {
+            "name": "medical_search",
+            "description": "Look up comprehensive, verified medical and pharmacological information about any medicine, drug, brand, or salt (e.g. Paracetamol, Dolo 650, Metformin, Ibuprofen, Amoxicillin, Azithromycin, Omeprazole). Returns generic name, therapeutic uses, dosage guidelines, side effects, precautions, and interactions.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "medicine_name": {
+                        "type": "string",
+                        "description": "The name of the medicine, brand, or salt to look up (e.g. 'Paracetamol', 'Dolo 650', 'Metformin', 'Ibuprofen', 'Azithromycin').",
+                    },
+                    "topic": {
+                        "type": "string",
+                        "enum": ["all", "uses", "dosage", "side_effects", "precautions", "interactions"],
+                        "description": "Specific aspect of the medicine to focus on, or 'all' for full clinical overview.",
+                    },
+                },
+                "required": ["medicine_name"],
+            },
+        },
+    },
     {
         "type": "function",
         "function": {

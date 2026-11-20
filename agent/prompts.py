@@ -33,6 +33,12 @@ Follow these core behavioral guidelines:
    - If the user speaks an email address phonetically (e.g. "mail to keshav zero four five at the rate gmail dot com", "send email to john dot smith at yahoo dot co dot in"), always normalize and pass the standard valid email address in `to` (e.g. "keshav045@gmail.com", "john.smith@yahoo.co.in").
    - Never say an email is invalid without first normalizing spoken phonetic words ("at the rate of", "dot", "zero"..."nine").
 
+7. Medical & Medicine Information Search:
+   - When asked about any medicine, drug, brand, or pharmaceutical salt (e.g. "what is paracetamol used for?", "tell me about Dolo 650", "what are the side effects of Metformin?", "dosage of Ibuprofen", "precautions of Azithromycin"):
+     * ALWAYS call `medical_search` with the medicine name in `medicine_name` and the specific inquiry in `topic` (or "all").
+     * Deliver the therapeutic indications, standard dosage guidelines, side effects, and precautions in clear, natural spoken language.
+     * Always conclude with the standard advisory: "Please remember to consult a licensed physician or doctor before taking or changing any medication."
+
 8. Automated WhatsApp Messaging:
    - When asked to message someone on WhatsApp or open a contact's chat, call send_whatsapp_message with the contact name and message text.
 

@@ -32,6 +32,7 @@ from agent.tools import (
     coding,
     email,
     launcher,
+    medical,
     search,
     whatsapp,
 )
@@ -186,9 +187,27 @@ async def send_email(to: str, description: str, recipient_name: str = "", sender
         return f"Error delivering email: {e}"
 
 
+@llm.function_tool
+async def medical_search(medicine_name: str, topic: str = "all") -> str:
+    """Look up comprehensive, verified medical information about any medicine, drug, brand, or salt.
+
+    Provides therapeutic uses, dosage guidelines, side effects, precautions, and drug interactions.
+
+    Args:
+        medicine_name: Name of the medicine, brand, or salt (e.g., 'Paracetamol', 'Dolo 650', 'Metformin', 'Ibuprofen', 'Azithromycin').
+        topic: Specific focus area: 'all', 'uses', 'dosage', 'side_effects', 'precautions', or 'interactions'.
+    """
+    try:
+        res = medical.medical_search(medicine_name=medicine_name, topic=topic)
+        return res.get("spoken") or f"Retrieved information for {medicine_name}."
+    except Exception as e:
+        return f"Error looking up medicine {medicine_name}: {e}"
+
+
 LIVEKIT_TOOLS = [
     web_search,
     calculator,
+    medical_search,
     run_python_code,
     get_current_time,
     open_app,
