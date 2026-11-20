@@ -14,32 +14,13 @@ from evals.metric_registry import compute_hit_at_k, compute_mrr, compute_ndcg_at
 from evals.harness import EvalHarness
 
 
-TEST_DOCS = [
-    {
-        "file": "wifi_guide.txt",
-        "text": "The guest Wi-Fi network SSID is OfficeGuest and the password is securePass2026. Use this guide to connect to wifi.",
-        "queries": ["What is the guest wifi password?", "How do I connect to wifi?"]
-    },
-    {
-        "file": "q4_roadmap.txt",
-        "text": "Project Nexus aims to launch LiveKit real-time voice streaming and Gmail OAuth in Q4 goals and product roadmap.",
-        "queries": ["When is Nexus launching voice streaming?", "What are the Q4 goals?"]
-    },
-    {
-        "file": "leave_policy.pdf",
-        "text": "Employees receive 24 days of paid time off PTO per calendar year and 10 public holidays according to the annual leave policy.",
-        "queries": ["How many PTO days do we get?", "What is the annual leave policy?"]
-    },
-    {
-        "file": "deployment.md",
-        "text": "Deployments to Vercel require setting OPENAI_API_KEY and LIVEKIT credentials in environment variables.",
-        "queries": ["How to deploy on Vercel?", "What env vars are needed for Vercel?"]
-    },
-]
-
-
 def run_retriever_eval(harness: EvalHarness) -> Dict[str, Any]:
-    test_docs = TEST_DOCS
+    test_docs = [
+        {"file": "wifi_guide.txt", "text": "The guest Wi-Fi network SSID is OfficeGuest and the password is securePass2026.", "queries": ["What is the guest wifi password?", "How do I connect to wifi?"]},
+        {"file": "q4_roadmap.txt", "text": "Project Nexus aims to launch LiveKit real-time voice streaming and Gmail OAuth in Q4.", "queries": ["When is Nexus launching voice streaming?", "What are the Q4 goals?"]},
+        {"file": "leave_policy.pdf", "text": "Employees receive 24 days of paid time off per calendar year and 10 public holidays.", "queries": ["How many PTO days do we get?", "What is the annual leave policy?"]},
+        {"file": "deployment.md", "text": "Deployments to Vercel require setting OPENAI_API_KEY and LIVEKIT credentials in environment variables.", "queries": ["How to deploy on Vercel?", "What env vars are needed for Vercel?"]},
+    ]
 
     chunk_ids = []
     for d in test_docs:
