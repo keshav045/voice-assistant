@@ -25,7 +25,7 @@ if __name__ == "__main__":
     log_level = os.environ.get("LOG_LEVEL", "info").lower()
 
     print("=" * 65)
-    print("   Starting Nexus AI Personal Voice Assistant (Production)")
+    print("   Starting AI Assistant (Production)")
     print(f"   Listening on: http://{host}:{port}")
     print(f"   API Docs:     http://{host}:{port}/docs")
     print(f"   Health Check: http://{host}:{port}/health")

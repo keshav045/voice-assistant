@@ -121,7 +121,7 @@ def test_health_probes():
     d1 = r1.json()
     assert d1["status"] == "healthy"
     assert d1["database"] == "ok"
-    assert d1["service"] == "Nexus Personal Voice Assistant"
+    assert d1["service"] == "AI Assistant"
 
     r2 = client.get("/api/health")
     assert r2.status_code == 200

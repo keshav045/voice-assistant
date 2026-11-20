@@ -57,7 +57,7 @@ init_db()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("voice_assistant")
 
-app = FastAPI(title="Personal Voice Assistant", version="1.0.0")
+app = FastAPI(title="AI Assistant", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -312,7 +312,7 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                 spoken = res.get("spoken", "Found search information.")
 
             else:
-                spoken = f"I am your personal voice assistant. You said: '{clean_text}'. How can I help you today?"
+                spoken = f"I am your AI assistant. You said: '{clean_text}'. How can I help you today?"
 
     add_turn(session_id, clean_text, spoken)
     latency = round((time.perf_counter() - start_time) * 1000, 2)
@@ -336,10 +336,10 @@ if os.path.exists(WEB_DIR):
 
 @app.get("/")
 def index_page():
-    """Serve Voice Assistant Web Interface."""
+    """Serve AI Assistant Web Interface."""
     if os.path.exists(INDEX_PATH):
         return FileResponse(INDEX_PATH)
-    return {"message": "Nexus Voice Assistant running on localhost:8000."}
+    return {"message": "AI Assistant running on localhost:8000."}
 
 
 @app.get("/health")
@@ -360,7 +360,7 @@ def health_check():
         "database": db_status,
         "model": OPENAI_MODEL,
         "llm_ready": bool(OPENAI_API_KEY and not OPENAI_API_KEY.startswith("your-")),
-        "service": "Nexus Personal Voice Assistant",
+        "service": "AI Assistant",
         "version": "1.0.0",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }

@@ -1,6 +1,6 @@
-# Nexus AI — Personal Voice Assistant & Autonomous Agent
+# AI Assistant — Personal Voice & Autonomous Web Agent
 
-> A voice-first AI assistant that doesn't just chat — it actually takes action on your computer.
+> An AI assistant that doesn't just chat — it actually takes action on your computer.
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)

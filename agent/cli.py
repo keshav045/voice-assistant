@@ -103,7 +103,7 @@ async def execute_turn(user_text: str, session_id: str, voice: str = "alloy", sp
         print("----------------------------------------\n")
 
     # Display spoken reply
-    print(f"[Nexus Voice Assistant]: {spoken}\n")
+    print(f"[AI Assistant]: {spoken}\n")
 
     # Speak aloud through speaker/headphones
     if speak and spoken:
@@ -118,7 +118,7 @@ async def execute_turn(user_text: str, session_id: str, voice: str = "alloy", sp
 
 
 async def main():
-    parser = argparse.ArgumentParser(description="Nexus Personal Voice Assistant")
+    parser = argparse.ArgumentParser(description="AI Assistant")
     parser.add_argument("--auto", action="store_true", help="Hands-free mode using Voice Activity Detection")
     parser.add_argument("--mute", action="store_true", help="Mute audio output (terminal text only)")
     parser.add_argument("--voice", type=str, default="alloy", help="OpenAI TTS voice (alloy, echo, fable, onyx, nova, shimmer)")
@@ -129,7 +129,7 @@ async def main():
     auto_mode = args.auto
 
     print("=" * 65)
-    print("   NEXUS PERSONAL VOICE ASSISTANT")
+    print("   AI ASSISTANT")
     print("   Voice-first, LLM-powered with Live Web & Sports Search")
     print(f"   Audio Input Mode:  {'Hands-Free (Auto-VAD)' if auto_mode else 'Push-to-Talk (Press Enter to Speak)'}")
     print(f"   Audio Output Mode: {'ON (Speaker / Headphones)' if speak else 'MUTED'}")
@@ -148,9 +148,9 @@ async def main():
                 if not user_text:
                     continue
             else:
-                prompt_line = input("\nNexus [Press Enter to Speak, or type] > ").strip()
+                prompt_line = input("\nAI Assistant [Press Enter to Speak, or type] > ").strip()
                 if prompt_line.lower() in ["exit", "quit", "q"]:
-                    print("Exiting Voice Assistant. Goodbye!")
+                    print("Exiting AI Assistant. Goodbye!")
                     break
                 if prompt_line.lower() == "mode":
                     auto_mode = not auto_mode

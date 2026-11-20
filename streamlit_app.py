@@ -1,4 +1,4 @@
-"""Nexus AI Voice & Web Search Assistant — Streamlit Web & Cloud Application.
+"""AI Assistant — Streamlit Web & Cloud Application.
 ChatGPT-style Minimalist UI with Real-Time Web Search, Voice Synthesis & App Launching.
 """
 
@@ -39,13 +39,13 @@ from db.models import (
     db_clear_chat_history,
 )
 
-logger = logging.getLogger("nexus.streamlit")
+logger = logging.getLogger("ai_assistant.streamlit")
 
 # --------------------------------------------------------------------------- #
 # Streamlit Page Setup & Custom Styling (ChatGPT Aesthetic)
 # --------------------------------------------------------------------------- #
 st.set_page_config(
-    page_title="ChatGPT — Voice & Web Search AI",
+    page_title="AI Assistant — Voice & Web Search AI",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -455,7 +455,7 @@ with st.sidebar:
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px; padding: 4px;">
             <div style="font-size: 20px; background: #2f2f2f; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1);">🤖</div>
             <div>
-                <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #ececec;">ChatGPT Assistant</h3>
+                <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #ececec;">AI Assistant</h3>
                 <p style="margin: 0; font-size: 11px; color: #9ca3af;">Web Search & Real-Time Voice</p>
             </div>
         </div>
