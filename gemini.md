@@ -46,7 +46,7 @@ For each script, the following specifications are detailed:
   backend\.venv\Scripts\streamlit.exe run streamlit_app.py --server.port 8501
   ```
 - **Inputs**: User text input via chat capsule, voice audio via embedded LiveKit WebRTC component, model engine selection (Cloud GPT-4o vs Local Ollama), Google 1-Click Login button, and optional email profile settings.
-- **Outputs**: Renders modern dark-mode web application at `http://localhost:8501`. Renders ChatGPT-style conversational history, tool execution cards (Web Search, Math, Medicine Information, Application Opening), and real-time WebRTC audio controls.
+- **Outputs**: Renders modern dark-mode web application at `http://localhost:8501`. Renders ChatGPT-style conversational history, tool execution cards (Web Search, Math, Medicine Information, Application Opening), real-time WebRTC audio waveform visualizer, and hands-free microphone controls.
 - **End-to-End Use Case**: The primary graphical desktop interface for end-users to interact with the assistant via text and voice, manage their Google OAuth connection, view structured tool results, and review chat history.
 
 ### 1.4 `run_voice.py`
@@ -77,7 +77,7 @@ For each script, the following specifications are detailed:
 - **Path**: `agent/livekit_worker.py`
 - **Role**: LiveKit WebRTC Agent worker definition, local Silero VAD turn detection, and tool execution loop.
 - **Key Functions**:
-  - `entrypoint(ctx)`: Initializes WebRTC audio room session, configures local Silero VAD (activation threshold 0.50, silence cutoff 0.40s, max endpoint delay 0.8s), binds OpenAI LLM and TTS plugins, and starts listener with local turn detection (`turn_detection="vad"`).
+  - `entrypoint(ctx)`: Initializes WebRTC audio room session, configures local Silero VAD (activation threshold 0.50, silence cutoff 0.40s, max endpoint delay 0.8s), binds OpenAI LLM and TTS plugins, and starts listener with local turn detection (`turn_detection="vad"`). Employs zero-latency startup without blocking greeting synthesis.
   - `@llm.function_tool` definitions: Registers `web_search`, `calculator`, `medical_search`, `run_python_code`, `get_current_time`, `open_app`, `send_whatsapp_message`, and `send_email`.
   - `_broadcast_client_action(action_type, data)`: Sends real-time data packets to the browser client (e.g. triggering URL navigation for YouTube/WhatsApp or showing email sent toasts).
 - **End-to-End Use Case**: Powers hands-free, auto-silence conversational voice. When Krish speaks, local Silero VAD detects speech onset instantly, cuts off within 400ms of user silence, executes tools asynchronously, and returns audio answers in real time without cloud inference gateway timeouts.

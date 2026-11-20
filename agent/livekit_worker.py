@@ -275,16 +275,7 @@ async def entrypoint(ctx: JobContext):
 
     # Start audio pipeline on room (must be awaited so listening loop starts!)
     await session.start(agent, room=ctx.room)
-    logger.info("AgentSession started and listening for voice input")
-
-    # Greet participant on join
-    try:
-        await session.say(
-            "Hello! I am Nexus AI. I'm connected via LiveKit WebRTC and listening. How can I help you?",
-            allow_interruptions=True,
-        )
-    except Exception as e:
-        logger.warning(f"Initial greeting skipped: {e}")
+    logger.info("AgentSession started and immediately listening for voice input (zero-latency startup)")
 
 
 server_options = WorkerOptions(entrypoint_fnc=entrypoint)

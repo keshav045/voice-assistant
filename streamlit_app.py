@@ -845,6 +845,29 @@ if livekit_data:
               box-shadow: 0 0 14px rgba(239, 68, 68, 0.8);
               animation: lk-pulse 1.4s infinite;
             }}
+            .lk-wave {{
+              display: none;
+              align-items: center;
+              gap: 3px;
+              height: 16px;
+            }}
+            .lk-wave.active {{
+              display: flex;
+            }}
+            .lk-wave .bar {{
+              width: 3px;
+              height: 100%;
+              background: #10b981;
+              border-radius: 2px;
+              animation: wave-bar 0.8s ease-in-out infinite alternate;
+            }}
+            .lk-wave .bar:nth-child(2) {{ animation-delay: 0.15s; }}
+            .lk-wave .bar:nth-child(3) {{ animation-delay: 0.30s; }}
+            .lk-wave .bar:nth-child(4) {{ animation-delay: 0.45s; }}
+            @keyframes wave-bar {{
+              0% {{ height: 4px; }}
+              100% {{ height: 16px; }}
+            }}
             @keyframes lk-pulse {{
               0% {{ transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }}
               70% {{ transform: scale(1.15); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }}
@@ -910,6 +933,12 @@ if livekit_data:
           <div class="lk-box">
             <div class="lk-left">
               <div id="lk-dot" class="lk-status-indicator"></div>
+              <div id="lk-wave" class="lk-wave">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+              </div>
               <div>
                 <div id="lk-title" class="lk-title">LiveKit Voice Agent (Sub-400ms)</div>
                 <div id="lk-sub" class="lk-sub">Auto-VAD • Cloud WebRTC • Hands-Free (Speak naturally)</div>
@@ -982,8 +1011,10 @@ if livekit_data:
                 }});
 
                 currentRoom.on(LivekitClient.RoomEvent.ActiveSpeakersChanged, (speakers) => {{
+                  const wave = document.getElementById("lk-wave");
                   if (speakers.length > 0) {{
                     const isAssistant = speakers.some(s => !s.isLocal);
+                    if (wave) wave.className = "lk-wave active";
                     if (isAssistant) {{
                       title.innerText = "AI Assistant is speaking...";
                       sub.innerText = "You can speak to interrupt anytime";
@@ -992,6 +1023,7 @@ if livekit_data:
                       sub.innerText = "Silero VAD active (auto-stops when you pause)";
                     }}
                   }} else {{
+                    if (wave) wave.className = "lk-wave";
                     title.innerText = "Connected to LiveKit (Listening...)";
                     sub.innerText = "Speak into microphone — auto-processes on silence";
                   }}
@@ -1068,6 +1100,7 @@ if livekit_data:
               const btnText = document.getElementById("lk-btn-text");
               const icon = document.getElementById("lk-icon");
               const dot = document.getElementById("lk-dot");
+              const wave = document.getElementById("lk-wave");
               const title = document.getElementById("lk-title");
               const sub = document.getElementById("lk-sub");
 
@@ -1075,6 +1108,7 @@ if livekit_data:
               if (icon) icon.innerText = "MIC";
               if (btnText) btnText.innerText = "Start LiveKit Voice";
               if (dot) dot.className = "lk-status-indicator";
+              if (wave) wave.className = "lk-wave";
               if (title) title.innerText = "LiveKit Voice Agent (Sub-400ms)";
               if (sub) sub.innerText = "Auto-VAD • Cloud WebRTC • Hands-Free (Speak naturally)";
             }}

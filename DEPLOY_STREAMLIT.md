@@ -16,11 +16,11 @@ This will launch the app in your browser at:
 `http://localhost:8501`
 
 ### What You Can Do in the Streamlit UI:
-- **🎙️ Voice Input**: Click the microphone icon under **Voice Input**, speak your command, and click stop. The audio is automatically transcribed using OpenAI Whisper.
-- **💬 Chat Input**: Type messages, math expressions, and tool requests.
-- **🔊 Auto-Speech**: The assistant speaks back using OpenAI TTS-1 with your selected voice.
-- **🚀 Tool Launcher**: YouTube, WhatsApp, calculations, email composer, and web search execute with visual status badges and links to open in a new tab.
-- **📁 Conversation Sessions**: Create new conversations, switch between previous chats, and clear history.
+- **Voice Input**: Click the microphone icon under **Voice Input**, speak your command, and click stop. The audio is automatically transcribed using OpenAI Whisper.
+- **Chat Input**: Type messages, math expressions, and tool requests.
+- **Auto-Speech**: The assistant speaks back using OpenAI TTS-1 with your selected voice.
+- **Tool Launcher**: YouTube, WhatsApp, calculations, email composer, and web search execute with visual status badges and links to open in a new tab.
+- **Conversation Sessions**: Create new conversations, switch between previous chats, and clear history.
 
 ---
 
