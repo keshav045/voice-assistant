@@ -72,3 +72,37 @@ def validate_tool_args(tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
             raise ValueError("Task title cannot be blank.")
 
     return args
+
+
+# --------------------------------------------------------------------------- #
+# Toxicity, Profanity & Harm Prevention System
+# --------------------------------------------------------------------------- #
+TOXIC_PATTERNS = [
+    r"\b(kill\s+yourself|kys|commit\s+suicide|die\s+in\s+a\s+fire)\b",
+    r"\b(how\s+to\s+(build|make|manufacture)\s+(a\s+)?(bomb|weapon|explosive|anthrax))\b",
+    r"\b(f[\*u]ck\s+you|b[\*i]tch|bastard|asshole|idiot|retard)\b",
+    r"\b(hate\s+(all\s+)?(black|white|jew|muslim|asian|gay|trans)\b)",
+    r"\b(genocide|white\s+supremacy|terrorist\s+attack\s+guide)\b",
+]
+
+
+def check_toxicity(text: str) -> Dict[str, Any]:
+    """Inspect text for toxic phrases, hate speech, threats, harassment, and severe profanity.
+    Returns:
+        dict: {"is_toxic": bool, "category": str, "sanitized": str}
+    """
+    if not text or not isinstance(text, str):
+        return {"is_toxic": False, "category": "clean", "sanitized": text}
+
+    lower = text.lower()
+    for pattern in TOXIC_PATTERNS:
+        match = re.search(pattern, lower, flags=re.IGNORECASE)
+        if match:
+            return {
+                "is_toxic": True,
+                "category": "harmful_content",
+                "matched_pattern": match.group(0),
+                "sanitized": "I cannot fulfill this request. I am designed to be a safe, helpful, and respectful AI assistant.",
+            }
+
+    return {"is_toxic": False, "category": "clean", "sanitized": text}

@@ -171,6 +171,22 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
     spoken = ""
     executed_tools: List[Dict[str, Any]] = []
 
+    # Toxicity & Content Safety Guardrail
+    from agent.safety import check_toxicity
+    tox_check = check_toxicity(clean_text)
+    if tox_check["is_toxic"]:
+        spoken = tox_check["sanitized"]
+        add_turn(session_id, clean_text, spoken)
+        latency = round((time.perf_counter() - start_time) * 1000, 2)
+        return {
+            "spoken_reply": spoken,
+            "tool_calls_executed": [],
+            "requires_confirmation": False,
+            "session_id": session_id,
+            "latency_ms": latency,
+            "is_toxic": True,
+        }
+
     curr_key = os.environ.get("OPENAI_API_KEY", OPENAI_API_KEY)
     curr_base = os.environ.get("OPENAI_BASE_URL", "").strip() or None
     curr_model = os.environ.get("OPENAI_MODEL", OPENAI_MODEL)

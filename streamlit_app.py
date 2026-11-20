@@ -372,6 +372,17 @@ def execute_turn(user_prompt: str, input_mode: str = "voice"):
         "input_mode": input_mode,
     })
 
+    # Render user message immediately so it is never hidden while thinking
+    prefix = "🎙️ " if input_mode == "voice" else ""
+    st.markdown(
+        f"""
+        <div class="chatgpt-bubble-user">
+            {prefix}{clean_prompt}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     with st.spinner("Searching & thinking..."):
         try:
             result = asyncio.run(process_user_turn(

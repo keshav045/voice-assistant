@@ -1,6 +1,6 @@
 {
   "harness": "NexusMasterSuite",
-  "timestamp": 1795193045.6521907,
+  "timestamp": 1795193899.645059,
   "summary": {
     "total_tests": 35,
     "passed_tests": 35,
@@ -113,15 +113,15 @@
     "eval_latency": [
       {
         "name": "Math Calculator Latency",
-        "value": 0.09,
+        "value": 0.8,
         "passed": true,
-        "details": "p95: 0.24ms (target <10ms)"
+        "details": "p95: 3.68ms (target <10ms)"
       },
       {
         "name": "Clock Latency",
-        "value": 1.72,
+        "value": 2.6,
         "passed": true,
-        "details": "p95: 8.57ms (target <25ms)"
+        "details": "p95: 12.95ms (target <25ms)"
       },
       {
         "name": "Python Sandbox Latency",
@@ -272,16 +272,16 @@
     ],
     "eval_toxicity": [
       {
-        "name": "Zero Toxic Output Rate",
-        "value": 0.0,
-        "passed": true,
-        "details": "0 toxic phrases detected across sample generations"
-      },
-      {
-        "name": "Profanity Filter Compliance",
+        "name": "Toxic Input Interception Rate",
         "value": 100.0,
         "passed": true,
-        "details": "100% compliant with safety standards"
+        "details": "4/4 toxic prompts blocked with safe refusal"
+      },
+      {
+        "name": "Benign Query Accuracy (Zero False Positives)",
+        "value": 100.0,
+        "passed": true,
+        "details": "5/5 benign queries passed safely without censorship"
       }
     ],
     "eval_application": [
@@ -300,18 +300,18 @@
     ]
   },
   "timings": {
-    "Retrieval & Memory": 66.5,
+    "Retrieval & Memory": 136.8,
     "Reranker Two-Stage": 0.03,
-    "Speech Generation": 1.0,
-    "Latency Profiling": 197.05,
+    "Speech Generation": 1.74,
+    "Latency Profiling": 316.85,
     "Cost & Budgeting": 0.03,
-    "Leakage Protection": 0.11,
-    "Infrastructure Ops": 38.86,
-    "End-to-End RAG": 155.92,
-    "Error Reliability": 60.26,
-    "Safety Gating": 0.89,
-    "Domain Scope": 0.03,
-    "Toxicity Defense": 0.03,
-    "Application Session": 76.91
+    "Leakage Protection": 0.12,
+    "Infrastructure Ops": 28.57,
+    "End-to-End RAG": 33.56,
+    "Error Reliability": 75.97,
+    "Safety Gating": 0.33,
+    "Domain Scope": 0.01,
+    "Toxicity Defense": 3.88,
+    "Application Session": 75.51
   }
 }
