@@ -1,5 +1,5 @@
 """Nexus AI Senior Tutor & Exam Suite — Streamlit Web & Cloud Application.
-Real-Time Line-by-Line Voice Conversation, Crash Course Planner, High-Yield Topics, Practice Quiz & Past Papers.
+ChatGPT-style Minimalist UI with Real-Time Line-by-Line Voice Conversation & Study Suite.
 """
 
 import asyncio
@@ -52,10 +52,10 @@ from evals.benchmark import (
 logger = logging.getLogger("nexus.streamlit")
 
 # --------------------------------------------------------------------------- #
-# Streamlit Page Setup & Custom Styling
+# Streamlit Page Setup & Custom Styling (ChatGPT Aesthetic)
 # --------------------------------------------------------------------------- #
 st.set_page_config(
-    page_title="Nexus Senior Tutor & Study Portal",
+    page_title="Senior Tutor — ChatGPT Edition",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -66,241 +66,227 @@ st.markdown(
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-    /* Global Base */
+    /* Global Base - ChatGPT Dark Palette */
     .stApp {
-        background-color: #070b14;
-        color: #f1f5f9;
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: #212121 !important;
+        color: #ececec !important;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     }
 
-    /* Top Horizontal Navigation Tab Bar */
-    .top-nav-container {
+    /* Sidebar Styling */
+    section[data-testid="stSidebar"] {
+        background-color: #171717 !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+
+    /* Top Horizontal Module Tabs */
+    .module-nav-wrap {
         display: flex;
         align-items: center;
-        gap: 28px;
-        border-bottom: 2px solid rgba(255, 255, 255, 0.08);
-        padding-bottom: 12px;
-        margin-bottom: 24px;
+        gap: 10px;
+        padding: 4px 0 16px 0;
+        margin-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         overflow-x: auto;
     }
-    .top-nav-item {
-        font-size: 15px;
+
+    /* ChatGPT Centered Welcome Screen */
+    .chatgpt-center-hero {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        margin-top: 50px;
+        margin-bottom: 30px;
+    }
+    .chatgpt-title {
+        font-size: 34px;
         font-weight: 600;
-        color: #94a3b8;
-        text-decoration: none;
-        padding-bottom: 8px;
-        position: relative;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        white-space: nowrap;
+        color: #ececec;
+        letter-spacing: -0.6px;
+        margin-bottom: 12px;
     }
-    .top-nav-item:hover {
-        color: #e2e8f0;
-    }
-    .top-nav-active {
-        color: #38bdf8 !important;
-        font-weight: 700;
-        border-bottom: 3px solid #38bdf8;
+    .chatgpt-sub {
+        font-size: 15px;
+        color: #b4b4b4;
+        margin-bottom: 36px;
     }
 
-    /* Header Hero Banner */
-    .nexus-hero {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 20px 28px;
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.95));
-        border: 1px solid rgba(99, 102, 241, 0.3);
-        border-radius: 18px;
-        margin-bottom: 24px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-        backdrop-filter: blur(14px);
+    /* ChatGPT Suggestion Cards Grid */
+    .chatgpt-prompt-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 12px;
+        max-width: 760px;
+        width: 100%;
+        margin: 0 auto 30px auto;
     }
-    .nexus-title-wrap {
-        display: flex;
-        align-items: center;
-        gap: 18px;
-    }
-    .nexus-orb-glow {
-        width: 52px;
-        height: 52px;
+    .chatgpt-prompt-box {
+        background: #2f2f2f;
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 16px;
-        background: linear-gradient(135deg, #6366f1, #a855f7);
+        padding: 16px 20px;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .chatgpt-prompt-box:hover {
+        background: #383838;
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    .chatgpt-prompt-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #ececec;
+        margin-bottom: 4px;
+    }
+    .chatgpt-prompt-desc {
+        font-size: 12px;
+        color: #9ca3af;
+    }
+
+    /* Line-by-Line Chat Bubbles */
+    .chatgpt-bubble-user {
+        background-color: #2f2f2f;
+        color: #f3f4f6;
+        border-radius: 24px;
+        padding: 14px 22px;
+        max-width: 76%;
+        margin-left: auto;
+        margin-bottom: 24px;
+        font-size: 15px;
+        line-height: 1.6;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        word-wrap: break-word;
+    }
+    .chatgpt-bubble-assistant {
+        background-color: transparent;
+        color: #ececec;
+        padding: 4px 12px;
+        max-width: 90%;
+        margin-right: auto;
+        margin-bottom: 32px;
+        font-size: 15px;
+        line-height: 1.7;
+    }
+    .chatgpt-avatar-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    .chatgpt-avatar-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #10b981, #059669);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 26px;
-        box-shadow: 0 0 24px rgba(99, 102, 241, 0.55);
+        font-size: 15px;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
     }
-    .nexus-h1 {
-        font-size: 24px;
-        font-weight: 800;
-        margin: 0;
-        background: linear-gradient(90deg, #ffffff, #c7d2fe);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        letter-spacing: -0.5px;
-    }
-    .nexus-sub {
+    .chatgpt-author-name {
         font-size: 13px;
-        color: #94a3b8;
-        margin: 4px 0 0 0;
-    }
-
-    /* Waveform visualizer */
-    .waveform-bar-box {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 18px;
-        background: rgba(15, 23, 42, 0.9);
-        border: 1px solid rgba(99, 102, 241, 0.35);
-        border-radius: 30px;
-    }
-    .wave-line {
-        width: 4px;
-        height: 14px;
-        background: #818cf8;
-        border-radius: 4px;
-        animation: waveAnim 1.2s infinite ease-in-out;
-    }
-    .wave-line:nth-child(2) { animation-delay: 0.2s; height: 22px; background: #a855f7; }
-    .wave-line:nth-child(3) { animation-delay: 0.4s; height: 28px; background: #ec4899; }
-    .wave-line:nth-child(4) { animation-delay: 0.6s; height: 18px; background: #6366f1; }
-    .wave-line:nth-child(5) { animation-delay: 0.8s; height: 12px; background: #38bdf8; }
-    @keyframes waveAnim {
-        0%, 100% { transform: scaleY(0.4); }
-        50% { transform: scaleY(1.3); }
-    }
-    .status-text {
-        font-size: 11px;
-        font-weight: 800;
-        color: #38bdf8;
-        margin-left: 8px;
-        letter-spacing: 0.8px;
-    }
-
-    /* Line-by-Line Conversation Styling */
-    .chat-line-user {
-        background: rgba(30, 41, 59, 0.55);
-        border: 1px solid rgba(99, 102, 241, 0.25);
-        border-left: 4px solid #6366f1;
-        border-radius: 14px;
-        padding: 16px 20px;
-        margin-bottom: 14px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-    }
-    .chat-line-assistant {
-        background: rgba(15, 23, 42, 0.8);
-        border: 1px solid rgba(16, 185, 129, 0.25);
-        border-left: 4px solid #10b981;
-        border-radius: 14px;
-        padding: 18px 22px;
-        margin-bottom: 18px;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
-    }
-    .speaker-meta {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 10px;
-        font-size: 12px;
-        color: #94a3b8;
-    }
-    .speaker-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
         font-weight: 700;
-        letter-spacing: 0.5px;
+        color: #e5e7eb;
     }
-    .speaker-tag-user { color: #a5b4fc; }
-    .speaker-tag-assistant { color: #6ee7b7; }
-    .badge-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
+    .chatgpt-latency-pill {
         font-size: 11px;
         font-weight: 600;
-        padding: 3px 10px;
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.08);
-        color: #cbd5e1;
-    }
-    .chat-text {
-        font-size: 15px;
-        line-height: 1.65;
-        color: #f8fafc;
-        margin: 0;
+        color: #9ca3af;
+        background: rgba(255, 255, 255, 0.06);
+        padding: 2px 8px;
+        border-radius: 12px;
     }
 
-    /* Cards & Blocks */
-    .study-card {
-        background: rgba(15, 23, 42, 0.7);
-        border: 1px solid rgba(99, 102, 241, 0.25);
-        border-radius: 16px;
-        padding: 20px 24px;
-        margin-bottom: 18px;
-        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
-    }
-    .tool-action-card {
-        margin-top: 12px;
-        padding: 12px 16px;
-        background: rgba(2, 6, 23, 0.7);
-        border: 1px solid rgba(99, 102, 241, 0.35);
-        border-radius: 12px;
+    /* Tool Action Cards */
+    .chatgpt-tool-card {
+        margin-top: 14px;
+        padding: 12px 18px;
+        background: #1e1e1e;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 12px;
     }
-    .tool-link-btn {
+    .chatgpt-tool-btn {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 8px 16px;
-        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        padding: 7px 16px;
+        background: #2563eb;
         color: #ffffff !important;
-        font-weight: 700;
+        font-weight: 600;
         font-size: 12px;
-        border-radius: 8px;
+        border-radius: 10px;
         text-decoration: none !important;
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
         transition: all 0.2s ease;
     }
-    .tool-link-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 16px rgba(79, 70, 229, 0.6);
+    .chatgpt-tool-btn:hover {
+        background: #1d4ed8;
     }
 
-    /* Priority Badges */
-    .badge-p0 {
-        background: rgba(239, 68, 68, 0.15);
-        color: #fca5a5;
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        padding: 3px 8px;
-        border-radius: 8px;
-        font-size: 11px;
-        font-weight: 700;
+    /* ChatGPT Pill Input Styling */
+    div[data-testid="stChatInput"] {
+        background: transparent !important;
+        padding-bottom: 20px;
     }
-    .badge-p1 {
-        background: rgba(245, 158, 11, 0.15);
-        color: #fcd34d;
-        border: 1px solid rgba(245, 158, 11, 0.3);
-        padding: 3px 8px;
-        border-radius: 8px;
-        font-size: 11px;
-        font-weight: 700;
+    div[data-testid="stChatInput"] > div {
+        background-color: #2f2f2f !important;
+        border: 1px solid rgba(255, 255, 255, 0.18) !important;
+        border-radius: 32px !important;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35) !important;
+        padding: 8px 18px !important;
+        transition: border-color 0.2s ease;
     }
-    .badge-p2 {
-        background: rgba(16, 185, 129, 0.15);
-        color: #6ee7b7;
-        border: 1px solid rgba(16, 185, 129, 0.3);
-        padding: 3px 8px;
-        border-radius: 8px;
-        font-size: 11px;
-        font-weight: 700;
+    div[data-testid="stChatInput"] > div:focus-within {
+        border-color: rgba(255, 255, 255, 0.35) !important;
+    }
+    div[data-testid="stChatInput"] textarea {
+        color: #ececec !important;
+        font-size: 15px !important;
+        font-family: inherit !important;
+    }
+    div[data-testid="stChatInput"] button {
+        background-color: #ffffff !important;
+        border-radius: 50% !important;
+        color: #000000 !important;
+        width: 34px !important;
+        height: 34px !important;
+        border: none !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    div[data-testid="stChatInput"] button:hover {
+        background-color: #e5e7eb !important;
+    }
+
+    /* Voice Mode Compact Bar */
+    .voice-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 18px;
+        background: #1a1a1a;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        margin-bottom: 16px;
+    }
+
+    /* Generic Study Cards */
+    .study-card {
+        background: #282828;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 22px 26px;
+        margin-bottom: 20px;
+        color: #ececec;
     }
     </style>
     """,
@@ -414,7 +400,7 @@ def execute_turn(user_prompt: str, input_mode: str = "voice"):
         "input_mode": input_mode,
     })
 
-    with st.spinner("Senior Tutor is reasoning & solving..."):
+    with st.spinner("Thinking..."):
         try:
             result = asyncio.run(process_user_turn(
                 user_text=clean_prompt,
@@ -469,7 +455,7 @@ def execute_turn(user_prompt: str, input_mode: str = "voice"):
 
 
 def generate_tutor_response(prompt: str, system_role: str) -> str:
-    """Generate high-quality academic tutor output using OpenAI GPT-4o or Local Ollama."""
+    """Generate academic output using OpenAI GPT-4o or Local Ollama."""
     openai_key = os.environ.get("OPENAI_API_KEY", "")
     openai_base = os.environ.get("OPENAI_BASE_URL", "").strip() or None
     current_model = os.environ.get("OPENAI_MODEL", OPENAI_MODEL)
@@ -489,20 +475,20 @@ def generate_tutor_response(prompt: str, system_role: str) -> str:
         except Exception as e:
             logger.error(f"Tutor generation failed: {e}")
     # Local fallback
-    return f"Prepared tutor analysis for: {prompt}\n\nPlease review key concepts, formulas, and step-by-step notes in your textbooks."
+    return f"Prepared analysis for: {prompt}\n\nPlease review key concepts and formulas in your textbook."
 
 
 # --------------------------------------------------------------------------- #
-# STUDENT SIDEBAR: Clean, Focused Navigation Menu & Revision Sessions
+# STUDENT SIDEBAR: Clean, Focused Navigation Menu (ChatGPT Style)
 # --------------------------------------------------------------------------- #
 with st.sidebar:
     st.markdown(
         """
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-            <div style="font-size: 26px; background: linear-gradient(135deg, #6366f1, #a855f7); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(99,102,241,0.4);">🎓</div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px; padding: 4px;">
+            <div style="font-size: 22px; background: #2f2f2f; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1);">🎓</div>
             <div>
-                <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #f8fafc;">Nexus Study Portal</h3>
-                <p style="margin: 0; font-size: 12px; color: #94a3b8;">Senior Tutor & Exam Suite</p>
+                <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #ececec;">Senior Tutor</h3>
+                <p style="margin: 0; font-size: 11px; color: #9ca3af;">Academic AI Suite</p>
             </div>
         </div>
         """,
@@ -518,7 +504,7 @@ with st.sidebar:
     ]
 
     selected_sidebar_tab = st.radio(
-        "STUDY MODULES",
+        "NAVIGATION",
         options=MODULE_NAMES,
         index=MODULE_NAMES.index(st.session_state.active_tab),
         key="sidebar_module_radio",
@@ -528,41 +514,41 @@ with st.sidebar:
         st.rerun()
 
     st.markdown("---")
-    st.markdown("#### 🔊 Tutor Voice Controls")
-    st.session_state.auto_speech = st.toggle("Auto-Play Spoken Voice", value=st.session_state.auto_speech)
+    st.markdown("#### 🔊 Voice Settings")
+    st.session_state.auto_speech = st.toggle("Auto-Play Voice", value=st.session_state.auto_speech)
     st.session_state.voice_name = st.selectbox(
-        "Tutor Voice Persona",
+        "Persona:",
         options=["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
         index=["alloy", "echo", "fable", "onyx", "nova", "shimmer"].index(st.session_state.voice_name),
     )
     st.session_state.speech_speed = st.select_slider(
-        "Voice Speed:",
+        "Speed:",
         options=[0.85, 1.0, 1.15, 1.25, 1.5],
         value=st.session_state.speech_speed,
-        format_func=lambda s: f"{s}x {'(Fast)' if s > 1.0 else '(Normal)' if s == 1.0 else '(Slow)'}",
+        format_func=lambda s: f"{s}x",
     )
 
     st.markdown("---")
-    st.markdown("#### 🤖 AI Model Engine")
+    st.markdown("#### 🤖 Model Engine")
     model_mode = st.radio(
-        "Mode:",
-        options=["☁️ Cloud API (OpenAI GPT-4o)", "🖥️ Local Model (Ollama)"],
+        "Engine:",
+        options=["☁️ OpenAI GPT-4o", "🖥️ Local Ollama"],
         index=0 if not os.environ.get("OPENAI_BASE_URL") else 1,
     )
-    if "Local Model" in model_mode:
+    if "Local" in model_mode:
         local_model = st.selectbox(
-            "Select Local Ollama Model:",
+            "Ollama Model:",
             options=["rtu-senior:latest", "qwen2.5:1.5b"],
             index=0,
         )
-        local_url = st.text_input("Ollama Endpoint:", value="http://localhost:11434/v1")
+        local_url = st.text_input("Endpoint:", value="http://localhost:11434/v1")
         os.environ["OPENAI_BASE_URL"] = local_url
         os.environ["OPENAI_MODEL"] = local_model
-        st.success(f"🟢 Using `{local_model}` on localhost:11434")
+        st.caption(f"Connected to local `{local_model}`")
     else:
         os.environ.pop("OPENAI_BASE_URL", None)
         os.environ["OPENAI_MODEL"] = "gpt-4o"
-        st.caption("Using Cloud OpenAI GPT-4o API")
+        st.caption("Using Cloud OpenAI GPT-4o")
 
     st.markdown("---")
     col_new, col_del = st.columns(2)
@@ -572,141 +558,91 @@ with st.sidebar:
             st.session_state.messages = []
             st.rerun()
     with col_del:
-        if st.button("🗑️ Clear Chat", use_container_width=True):
+        if st.button("🗑️ Clear", use_container_width=True):
             db_clear_chat_history(user_id="guest", session_id=st.session_state.session_id)
             st.session_state.messages = []
             st.rerun()
 
 
 # --------------------------------------------------------------------------- #
-# Top Navigation Bar & Hero Banner (Matches Screenshot 1)
+# Top Horizontal Navigation Tabs (Matches Screenshot 1 & ChatGPT Style)
 # --------------------------------------------------------------------------- #
-# Render the 5 horizontal navigation tabs exactly matching the student portal design
-top_nav_cols = st.columns(5)
+top_cols = st.columns(5)
 for i, m_name in enumerate(MODULE_NAMES):
-    with top_nav_cols[i]:
+    with top_cols[i]:
         is_active = (m_name == st.session_state.active_tab)
         btn_type = "primary" if is_active else "secondary"
         if st.button(m_name, key=f"nav_top_{i}", type=btn_type, use_container_width=True):
             st.session_state.active_tab = m_name
             st.rerun()
 
-st.markdown(
-    f"""
-    <div class="nexus-hero">
-        <div class="nexus-title-wrap">
-            <div class="nexus-orb-glow">🎓</div>
-            <div>
-                <h1 class="nexus-h1">{st.session_state.active_tab}</h1>
-                <p class="nexus-sub">Nexus AI Senior Academic Tutor • Real-Time Voice • Exam Strategy & Evaluation</p>
-            </div>
-        </div>
-        <div class="waveform-bar-box">
-            <div class="wave-line"></div>
-            <div class="wave-line"></div>
-            <div class="wave-line"></div>
-            <div class="wave-line"></div>
-            <div class="wave-line"></div>
-            <span class="status-text">TUTOR ONLINE</span>
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
 
 # =========================================================================== #
-# MODULE 1: Senior Tutor Chat (Line-by-Line Voice Conversation)
+# MODULE 1: Senior Tutor Chat (ChatGPT Design Matching Image 2)
 # =========================================================================== #
 if st.session_state.active_tab == "Senior Tutor Chat":
-    st.markdown("#### 🎤 Voice Recording Station")
-    col_mic, col_tips = st.columns([2, 1])
 
-    with col_mic:
-        audio_input_data = st.audio_input("Ask Senior Tutor via Voice (click mic, speak question, click stop):")
-        if audio_input_data is not None:
-            audio_bytes = audio_input_data.read()
-            audio_hash = hash(audio_bytes)
-            if st.session_state.last_processed_audio != audio_hash:
-                st.session_state.last_processed_audio = audio_hash
-                with st.spinner("Transcribing speech with OpenAI Whisper..."):
-                    transcribed_text = transcribe_uploaded_audio(audio_bytes)
-                    if transcribed_text:
-                        execute_turn(transcribed_text, input_mode="voice")
-                        st.rerun()
-                    else:
-                        st.warning("Could not detect clear speech. Please speak again.")
-
-    with col_tips:
-        st.markdown("**⚡ Quick Academic Prompts:**")
-        student_prompts = [
-            "Explain QuickSort vs MergeSort step by step",
-            "Solve: integral of x * e^(2x) dx",
-            "What are the 3 laws of Thermodynamics with examples?",
-            "What is 25 * 40 + 15% of 1000?",
-        ]
-        for p in student_prompts:
-            if st.button(f"🗣️ {p}", key=f"chip_{p[:18]}", use_container_width=True):
-                execute_turn(p, input_mode="text")
-                st.rerun()
-
-    st.markdown("---")
-    st.markdown("### 💬 Line-by-Line Tutor Dialogue")
-
+    # ChatGPT Centered Welcome Screen (When no messages yet)
     if not st.session_state.messages:
         st.markdown(
             """
-            <div style="text-align: center; padding: 48px 24px; color: #64748b; background: rgba(15, 23, 42, 0.45); border-radius: 18px; border: 1px dashed rgba(99, 102, 241, 0.35);">
-                <div style="font-size: 46px; margin-bottom: 14px;">👋 🎓</div>
-                <h3 style="color: #cbd5e1; font-weight: 700;">How can Senior Tutor help your exam prep today?</h3>
-                <p style="font-size: 14px; max-width: 500px; margin: 0 auto; line-height: 1.6;">
-                    Speak using the microphone above, click a quick academic prompt, or type any formula, derivation, or concept below!
-                </p>
+            <div class="chatgpt-center-hero">
+                <h1 class="chatgpt-title">What’s on your mind today?</h1>
+                <p class="chatgpt-sub">Ask Senior Tutor any university question, formula derivation, or exam strategy.</p>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
+        # 4 Prompt Suggestions (2x2 Grid like ChatGPT)
+        p_col1, p_col2 = st.columns(2)
+        with p_col1:
+            if st.button("⚡ Explain QuickSort vs MergeSort\n\nCompare step-by-step with time complexities", key="sug_1", use_container_width=True):
+                execute_turn("Explain QuickSort vs MergeSort step by step with time complexities", input_mode="text")
+                st.rerun()
+            if st.button("🧮 Solve: integral of x * e^(2x) dx\n\nShow complete integration by parts steps", key="sug_2", use_container_width=True):
+                execute_turn("Solve: integral of x * e^(2x) dx step by step", input_mode="text")
+                st.rerun()
+        with p_col2:
+            if st.button("🔬 What are the 3 laws of Thermodynamics?\n\nExplain with practical engineering examples", key="sug_3", use_container_width=True):
+                execute_turn("What are the 3 laws of Thermodynamics with practical examples?", input_mode="text")
+                st.rerun()
+            if st.button("📋 Create a 7-day crash study roadmap\n\nFor high-yield exam preparation", key="sug_4", use_container_width=True):
+                execute_turn("Create a 7-day crash study roadmap for my upcoming exams", input_mode="text")
+                st.rerun()
+
+    # Active Conversation View (Clean Line-by-Line Bubbles)
     for idx, msg in enumerate(st.session_state.messages):
         ts = msg.get("timestamp", "")
         role = msg.get("role")
         content = msg.get("content", "")
 
         if role == "user":
-            mode_badge = "🎙️ VOICE INPUT" if msg.get("input_mode") == "voice" else "⌨️ TEXT INPUT"
             st.markdown(
                 f"""
-                <div class="chat-line-user">
-                    <div class="speaker-meta">
-                        <span class="speaker-tag speaker-tag-user">👨‍🎓 STUDENT</span>
-                        <div style="display: flex; gap: 8px;">
-                            <span class="badge-pill">{mode_badge}</span>
-                            <span class="badge-pill">⏱️ {ts}</span>
-                        </div>
-                    </div>
-                    <p class="chat-text">"{content}"</p>
+                <div class="chatgpt-bubble-user">
+                    {content}
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
         else:
-            lat = f"{msg.get('latency_ms', 0):.0f}ms" if msg.get("latency_ms") else "<1s"
+            lat = f"{msg.get('latency_ms', 0):.0f}ms" if msg.get("latency_ms") else ""
             st.markdown(
                 f"""
-                <div class="chat-line-assistant">
-                    <div class="speaker-meta">
-                        <span class="speaker-tag speaker-tag-assistant">🎓 SENIOR TUTOR</span>
-                        <div style="display: flex; gap: 8px;">
-                            <span class="badge-pill">⚡ {lat}</span>
-                            <span class="badge-pill">🗣️ {st.session_state.voice_name.capitalize()}</span>
-                            <span class="badge-pill">⏱️ {ts}</span>
-                        </div>
+                <div class="chatgpt-bubble-assistant">
+                    <div class="chatgpt-avatar-header">
+                        <div class="chatgpt-avatar-icon">🎓</div>
+                        <span class="chatgpt-author-name">Senior Tutor</span>
+                        <span class="chatgpt-latency-pill">{lat}</span>
+                        <span class="chatgpt-latency-pill">{ts}</span>
                     </div>
-                    <p class="chat-text">{content}</p>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
+            # Render markdown with KaTeX math cleanly
+            st.markdown(content)
 
             if msg.get("audio_bytes"):
                 st.audio(msg["audio_bytes"], format="audio/mp3", autoplay=(idx == len(st.session_state.messages) - 1))
@@ -723,14 +659,13 @@ if st.session_state.active_tab == "Senior Tutor Chat":
                         t_url = t_res.get("url")
                         st.markdown(
                             f"""
-                            <div class="tool-action-card">
-                                <div>🚀 <strong>Auto-Launching {t_label}:</strong> <code>{t_args.get('query') or t_label}</code></div>
-                                <a href="{t_url}" target="_blank" class="tool-link-btn">Open {t_label} in New Tab ↗</a>
+                            <div class="chatgpt-tool-card">
+                                <div>🚀 <strong>Opening {t_label}:</strong> <code>{t_args.get('query') or t_label}</code></div>
+                                <a href="{t_url}" target="_blank" class="chatgpt-tool-btn">Open {t_label} ↗</a>
                             </div>
                             """,
                             unsafe_allow_html=True,
                         )
-                        # Automatically open new tab in user's browser
                         if idx == len(st.session_state.messages) - 1:
                             import streamlit.components.v1 as components
                             components.html(
@@ -746,15 +681,32 @@ if st.session_state.active_tab == "Senior Tutor Chat":
                     elif t_name == "calculator" and t_res.get("success"):
                         st.markdown(
                             f"""
-                            <div class="tool-action-card">
+                            <div class="chatgpt-tool-card">
                                 <div>🧮 <strong>Math Calculation:</strong> <code>{t_args.get('expression')}</code></div>
-                                <span class="badge-pill" style="font-size: 13px; font-weight: bold; color: #38bdf8;">= {t_res.get('formatted', t_res.get('result'))}</span>
+                                <span style="font-size: 15px; font-weight: 700; color: #38bdf8;">= {t_res.get('formatted', t_res.get('result'))}</span>
                             </div>
                             """,
                             unsafe_allow_html=True,
                         )
 
-    user_chat = st.chat_input("Ask a doubt, formula derivation, or concept to Senior Tutor...")
+    # Sleek Compact Voice Mode Option (Positioned discreetly above input)
+    with st.expander("🎙️ Voice Mode (Click here to speak to Senior Tutor)", expanded=False):
+        audio_input_data = st.audio_input("Speak your question:")
+        if audio_input_data is not None:
+            audio_bytes = audio_input_data.read()
+            audio_hash = hash(audio_bytes)
+            if st.session_state.last_processed_audio != audio_hash:
+                st.session_state.last_processed_audio = audio_hash
+                with st.spinner("Transcribing speech..."):
+                    transcribed_text = transcribe_uploaded_audio(audio_bytes)
+                    if transcribed_text:
+                        execute_turn(transcribed_text, input_mode="voice")
+                        st.rerun()
+                    else:
+                        st.warning("Could not detect clear speech. Please speak again.")
+
+    # ChatGPT Capsule Input Bar (Matches Image 2)
+    user_chat = st.chat_input("Ask Senior Tutor anything...")
     if user_chat:
         execute_turn(user_chat, input_mode="text")
         st.rerun()
@@ -795,7 +747,7 @@ Structure the plan with:
 3. Daily formula & concept checkpoint
 4. Final day mock test & exam strategy checklist"""
 
-        with st.spinner("Senior Tutor is structuring your personalized study roadmap..."):
+        with st.spinner("Structuring your personalized study roadmap..."):
             plan_text = generate_tutor_response(user_prompt, sys_role)
             st.session_state["latest_study_plan"] = plan_text
 
@@ -1023,7 +975,7 @@ elif st.session_state.active_tab == "Past Papers Archive":
         else:
             st.info(f"No direct PDF chunks found for '{paper_query}'. Asking Senior Tutor for standard past year questions...")
             p_prompt = f"Provide 2 typical past year exam questions on '{paper_query}' with complete step-by-step verified solutions and marking scheme breakdown."
-            with st.spinner("Senior Tutor is fetching past exam questions & solutions..."):
+            with st.spinner("Fetching past exam questions & solutions..."):
                 sol_text = generate_tutor_response(p_prompt, "You are a senior university examiner.")
                 st.markdown(sol_text)
 
