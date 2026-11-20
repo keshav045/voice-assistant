@@ -28,6 +28,11 @@ try:
 except Exception:
     pass
 
+# Ensure Cloud GPT-4o is active by default
+if "model_engine_choice" not in st.session_state or "Cloud" in str(st.session_state.get("model_engine_choice", "")):
+    os.environ.pop("OPENAI_BASE_URL", None)
+    os.environ["OPENAI_MODEL"] = "gpt-4o"
+
 from openai import OpenAI
 from agent.main import process_user_turn, OPENAI_MODEL
 from agent.tools import TOOLS_REGISTRY
@@ -470,12 +475,13 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("#### 🤖 Model Engine")
-    model_mode = st.radio(
+    model_choice = st.radio(
         "Engine:",
-        options=["☁️ OpenAI GPT-4o", "🖥️ Local Ollama"],
-        index=0 if not os.environ.get("OPENAI_BASE_URL") else 1,
+        options=["☁️ OpenAI GPT-4o (Recommended)", "🖥️ Local Ollama"],
+        index=0,
+        key="model_engine_choice",
     )
-    if "Local" in model_mode:
+    if "Local" in model_choice:
         local_model = st.selectbox(
             "Ollama Model:",
             options=["rtu-senior:latest", "qwen2.5:1.5b"],
@@ -488,7 +494,7 @@ with st.sidebar:
     else:
         os.environ.pop("OPENAI_BASE_URL", None)
         os.environ["OPENAI_MODEL"] = "gpt-4o"
-        st.caption("Using Cloud OpenAI GPT-4o with Web Search")
+        st.caption("Using Cloud OpenAI GPT-4o with Web Search & Multilingual Support")
 
     st.markdown("---")
     col_new, col_del = st.columns(2)

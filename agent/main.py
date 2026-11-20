@@ -254,6 +254,67 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
 
         except Exception as e:
             logger.error(f"OpenAI turn error: {e}")
+            # Automatic Cloud Failover: if local model failed and an OpenAI key exists, retry with Cloud GPT-4o
+            real_key = os.environ.get("OPENAI_API_KEY", "")
+            if curr_base and real_key and not real_key.startswith("your-"):
+                try:
+                    logger.info("Retrying turn with Cloud OpenAI GPT-4o...")
+                    client = AsyncOpenAI(api_key=real_key, base_url="https://api.openai.com/v1")
+                    history = get_messages_for_prompt(session_id)
+                    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+                    messages.extend(history)
+                    messages.append({"role": "user", "content": clean_text})
+
+                    for _step in range(3):
+                        response = await client.chat.completions.create(
+                            model="gpt-4o",
+                            messages=messages,
+                            tools=ACTIVE_TOOL_SCHEMAS,
+                            tool_choice="auto",
+                            temperature=0.3,
+                            max_tokens=600,
+                        )
+                        msg = response.choices[0].message
+                        finish_reason = response.choices[0].finish_reason
+                        tool_calls = msg.tool_calls or []
+
+                        if finish_reason != "tool_calls" or not tool_calls:
+                            raw = (msg.content or "").strip()
+                            spoken = _clean_spoken_text(raw)
+                            break
+
+                        messages.append(msg)
+                        step_tool_results = []
+                        for tc in tool_calls:
+                            t_name = tc.function.name
+                            try:
+                                t_args = json.loads(tc.function.arguments)
+                            except Exception:
+                                t_args = {}
+
+                            if t_name == "send_email" and "user_id" not in t_args:
+                                t_args["user_id"] = effective_user_id
+
+                            handler = TOOLS_REGISTRY.get(t_name)
+                            if handler:
+                                t_start = time.perf_counter()
+                                try:
+                                    t_res = handler(**t_args)
+                                except Exception as h_err:
+                                    t_res = {"success": False, "error": str(h_err), "spoken": f"Error executing {t_name}."}
+                                t_lat = round((time.perf_counter() - t_start) * 1000, 2)
+                                db_log_tool_call(tool=t_name, args=t_args, session_id=session_id, latency_ms=t_lat)
+                                executed_tools.append({
+                                    "tool": t_name, "args": t_args, "result": t_res, "tc_id": tc.id,
+                                })
+                                step_tool_results.append({
+                                    "role": "tool",
+                                    "tool_call_id": tc.id,
+                                    "content": json.dumps(t_res),
+                                })
+                        messages.extend(step_tool_results)
+                except Exception as retry_err:
+                    logger.error(f"Cloud OpenAI failover error: {retry_err}")
 
     # Fallback if no LLM reply
     if not spoken:
@@ -319,16 +380,13 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                 executed_tools.append({"tool": "get_current_time", "args": {}, "result": res})
                 spoken = res.get("spoken", "Checked the current time.")
 
-            # 5. General Web Search (News, Cricket scores, Weather, General facts)
-            elif any(k in lower for k in ["news", "cricket", "score", "vs", "match", "search", "who is", "what is", "tell me about"]):
+            # 5. Universal Web Search Fallback (Cricket scores, news, multilingual facts, queries)
+            else:
                 search_q = clean_text
                 search_q = re.sub(r"^(search\s+(for\s+)?|who\s+is\s+|what\s+is\s+|tell\s+me\s+about\s+)", "", clean_text, flags=re.IGNORECASE).strip()
                 res = TOOLS_REGISTRY["web_search"](query=search_q or clean_text)
                 executed_tools.append({"tool": "web_search", "args": {"query": search_q or clean_text}, "result": res})
-                spoken = res.get("spoken", "Found search information.")
-
-            else:
-                spoken = f"I am your AI assistant. You said: '{clean_text}'. How can I help you today?"
+                spoken = res.get("spoken") or f"Found search information for '{clean_text}'."
 
     add_turn(session_id, clean_text, spoken)
     latency = round((time.perf_counter() - start_time) * 1000, 2)
