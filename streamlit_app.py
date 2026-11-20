@@ -641,12 +641,24 @@ if nav_selection == "Senior Tutor Chat":
                         st.markdown(
                             f"""
                             <div class="tool-action-card">
-                                <div>🚀 <strong>Resource Opened:</strong> <code>{t_label}</code></div>
+                                <div>🚀 <strong>Auto-Launching {t_label}:</strong> <code>{t_args.get('query') or t_label}</code></div>
                                 <a href="{t_url}" target="_blank" class="tool-link-btn">Open {t_label} in New Tab ↗</a>
                             </div>
                             """,
                             unsafe_allow_html=True,
                         )
+                        # Automatically open new tab in user's browser
+                        if idx == len(st.session_state.messages) - 1:
+                            import streamlit.components.v1 as components
+                            components.html(
+                                f"""
+                                <script>
+                                    window.open("{t_url}", "_blank");
+                                </script>
+                                """,
+                                height=0,
+                                width=0,
+                            )
 
                     elif t_name == "calculator" and t_res.get("success"):
                         st.markdown(
@@ -658,9 +670,6 @@ if nav_selection == "Senior Tutor Chat":
                             """,
                             unsafe_allow_html=True,
                         )
-
-                    with st.expander(f"🛠️ View Step Details: `{t_name}`", expanded=False):
-                        st.json({"tool": t_name, "arguments": t_args, "result": t_res})
 
     user_chat = st.chat_input("Ask a doubt, formula derivation, or concept to Senior Tutor...")
     if user_chat:

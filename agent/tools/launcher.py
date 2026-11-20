@@ -6,6 +6,7 @@ to opening the web version in Chrome, Microsoft Edge, or the default browser.
 """
 
 import os
+import re
 import subprocess
 import sys
 import urllib.parse
@@ -205,6 +206,26 @@ def is_windows_app_installed(cmd: str) -> bool:
     return False
 
 
+def _clean_search_query(q: str) -> str:
+    """Strip conversational commands (e.g. 'run new video of', 'play', 'search and run') from query."""
+    if not q:
+        return ""
+    import re
+    cleaned = re.sub(
+        r"^(please\s+)?(search\s+(and\s+)?|find\s+(and\s+)?|open\s+(and\s+)?|run\s+(and\s+)?|play\s+|watch\s+)+",
+        "",
+        q,
+        flags=re.IGNORECASE,
+    ).strip()
+    cleaned = re.sub(
+        r"^(the\s+)?(new\s+video\s+of\s+|latest\s+video\s+of\s+|new\s+video\s+|video\s+of\s+|song\s+of\s+|latest\s+song\s+of\s+)",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    ).strip()
+    return cleaned or q
+
+
 def open_app(
     name: str = "",
     query: Optional[str] = None,
@@ -314,9 +335,38 @@ def open_app(
 
     # Build web URL
     if clean_query and "search_url" in app_info:
-        encoded_q = urllib.parse.quote_plus(clean_query)
-        target_url = app_info["search_url"].format(query=encoded_q)
-        spoken_msg = f"{spoken_base} and searching for '{clean_query}'{b_label}."
+        if matched_key == "youtube":
+            raw_q = clean_query
+            is_playback_request = bool(re.search(r"\b(play|run|watch|listen)\b", raw_q, re.IGNORECASE))
+            clean_query = _clean_search_query(clean_query)
+            video_url = None
+            if is_playback_request:
+                try:
+                    import httpx
+                    yt_res = httpx.get(
+                        "https://www.youtube.com/results",
+                        params={"search_query": clean_query},
+                        headers={"User-Agent": "Mozilla/5.0"},
+                        timeout=3.0,
+                    )
+                    if yt_res.status_code == 200:
+                        vids = re.findall(r"/watch\?v=([a-zA-Z0-9_-]{11})", yt_res.text)
+                        if vids:
+                            video_url = f"https://www.youtube.com/watch?v={vids[0]}"
+                except Exception:
+                    video_url = None
+
+            if video_url:
+                target_url = video_url
+                spoken_msg = f"Opening and playing {clean_query} on YouTube."
+            else:
+                encoded_q = urllib.parse.quote_plus(clean_query)
+                target_url = app_info["search_url"].format(query=encoded_q)
+                spoken_msg = f"{spoken_base} and searching for '{clean_query}'{b_label}."
+        else:
+            encoded_q = urllib.parse.quote_plus(clean_query)
+            target_url = app_info["search_url"].format(query=encoded_q)
+            spoken_msg = f"{spoken_base} and searching for '{clean_query}'{b_label}."
     else:
         target_url = web_fallback_url or f"https://{matched_key}.com"
         spoken_msg = f"{spoken_base}{b_label} for you."
