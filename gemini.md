@@ -453,3 +453,9 @@ backend\.venv\Scripts\python.exe -m pytest tests/ -v
   - **Files Changed**: `agent/livekit_worker.py`, `streamlit_app.py`, `dom_inspect.py`, `DEPLOY_STREAMLIT.md`, `evals/benchmark_report.md`, `gemini.md`, `history.txt`
   - **What Was Changed**: Removed blocking `await session.say(...)` upon LiveKit connection; created `dom_inspect.py` using Playwright headless Chromium for automated DOM inspection; added animated real-time audio waveform visualizer (`.lk-wave`) in `streamlit_app.py`; removed remaining emojis from documentation.
   - **What Was Affected**: Voice connection latency dropped from 7+ seconds to under 3 milliseconds; user microphone is hot immediately upon joining; waveform visualizer provides clear feedback of active speech; verified 0 emojis across entire repository.
+
+### 10.10 Date: 2026-11-22
+- **Entry 2026-11-22.1**:
+  - **Files Changed**: `agent/prompts.py`, `agent/main.py`
+  - **What Was Changed**: Implemented conversational greeting and pleasantry fallback handler in `agent/main.py` to prevent basic greetings ("hello", "hi", "hey", "namaste", "good morning", "how are you") from executing web searches; gated fallback search to informational questions or queries with 3+ words; added `COMPACT_SYSTEM_PROMPT` in `agent/prompts.py` with `num_ctx=4096` parameter passing for local Ollama models.
+  - **What Was Affected**: Basic greetings return an immediate, natural spoken greeting without invoking external search engines; resolves 400 Bad Request context limit errors on local Ollama models; preserves conversational continuity even if Cloud OpenAI credits are exhausted.

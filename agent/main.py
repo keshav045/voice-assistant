@@ -45,6 +45,7 @@ from db.models import (
     db_delete_chat_session,
 )
 from agent.prompts import SYSTEM_PROMPT
+from agent.prompts import SYSTEM_PROMPT, COMPACT_SYSTEM_PROMPT
 from agent.confirm import requires_confirmation, format_read_back, is_confirmed
 from agent.memory import get_memory_context
 from agent.tools import TOOLS_REGISTRY, TOOL_SCHEMAS
@@ -196,6 +197,8 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
             client = AsyncOpenAI(api_key=curr_key or "local-model", base_url=curr_base)
             history = get_messages_for_prompt(session_id)
             messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+            sys_prompt = COMPACT_SYSTEM_PROMPT if (curr_base and "11434" in curr_base) else SYSTEM_PROMPT
+            messages = [{"role": "system", "content": sys_prompt}]
             messages.extend(history)
             messages.append({"role": "user", "content": clean_text})
 
@@ -209,6 +212,18 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                     temperature=0.3,
                     max_tokens=600,
                 )
+                req_kwargs = {
+                    "model": curr_model,
+                    "messages": messages,
+                    "tools": ACTIVE_TOOL_SCHEMAS,
+                    "tool_choice": "auto",
+                    "temperature": 0.3,
+                    "max_tokens": 600,
+                }
+                if curr_base and "11434" in curr_base:
+                    req_kwargs["extra_body"] = {"options": {"num_ctx": 4096}}
+
+                response = await client.chat.completions.create(**req_kwargs)
 
                 msg = response.choices[0].message
                 finish_reason = response.choices[0].finish_reason
@@ -326,10 +341,22 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
             if isinstance(last_tool, dict) and last_tool.get("spoken"):
                 spoken = last_tool["spoken"]
         else:
-            lower = clean_text.lower()
+            lower = clean_text.lower().strip()
 
-            # 1. WhatsApp Messaging & Chat Automation
-            if "whatsapp" in lower and any(w in lower for w in ["message", "text", "send", "chat", "to", "him", "her"]):
+            # 1. Greetings, Pleasantries & Conversational Responses
+            greetings = {
+                "hello", "hi", "hey", "hola", "namaste", "sup", "yo",
+                "good morning", "good afternoon", "good evening", "good night",
+                "how are you", "how are you doing", "what's up", "whats up",
+                "who are you", "what can you do", "help",
+            }
+            if lower in greetings or any(lower.startswith(g + " ") for g in ["hello", "hi", "hey", "namaste", "good morning", "good evening"]):
+                spoken = "Hello! I am Nexus AI, your personal voice and productivity assistant. How can I help you today?"
+            elif lower in ["thanks", "thank you", "ok", "okay", "cool", "great", "nice", "bye", "goodbye"]:
+                spoken = "You are welcome! Let me know if you need anything else."
+
+            # 2. WhatsApp Messaging & Chat Automation
+            elif "whatsapp" in lower and any(w in lower for w in ["message", "text", "send", "chat", "to", "him", "her"]):
                 contact = "Krish" if "krish" in lower else "Contact"
                 msg_body = None
                 match_name = re.search(r"(?:open|find|to|chat of)\s+([A-Za-z]+)(?:'s)?\s+chat", clean_text, re.IGNORECASE)
@@ -436,13 +463,19 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                 executed_tools.append({"tool": "medical_search", "args": {"medicine_name": med_name or clean_text, "topic": topic_val}, "result": res})
                 spoken = res.get("spoken") or f"Retrieved medical details for {med_name}."
 
-            # 7. Universal Web Search Fallback (Cricket scores, news, multilingual facts, queries)
-            else:
+            # 8. Universal Web Search Fallback (Cricket scores, news, multilingual facts, queries)
+            elif any(w in lower for w in [
+                "search", "who", "what", "where", "when", "why", "how", "score", "scores",
+                "news", "match", "vs", "cricket", "weather", "latest", "price", "stock",
+                "tell me", "information", "find", "update", "updates"
+            ]) or len(clean_text.split()) >= 3:
                 search_q = clean_text
                 search_q = re.sub(r"^(search\s+(for\s+)?|who\s+is\s+|what\s+is\s+|tell\s+me\s+about\s+)", "", clean_text, flags=re.IGNORECASE).strip()
                 res = TOOLS_REGISTRY["web_search"](query=search_q or clean_text)
                 executed_tools.append({"tool": "web_search", "args": {"query": search_q or clean_text}, "result": res})
                 spoken = res.get("spoken") or f"Found search information for '{clean_text}'."
+            else:
+                spoken = f"I am Nexus AI. You said: '{clean_text}'. How can I help you today?"
 
     add_turn(session_id, clean_text, spoken)
     latency = round((time.perf_counter() - start_time) * 1000, 2)

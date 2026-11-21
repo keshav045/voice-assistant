@@ -406,6 +406,32 @@ Entry 2026-11-21.5 [2026-11-21 00:47:49 +0530]
 
 
 ================================================================================
+DATE: 2026-11-22 (GREETING FALLBACK GATING & OLLAMA CONTEXT EXPANSION)
+================================================================================
+
+Entry 2026-11-22.1 [2026-11-22 00:51:00 +0530]
+- Files Changed:
+  * agent/prompts.py
+  * agent/main.py
+- Change Details:
+  * Implemented conversational greeting and pleasantry handler in agent/main.py fallback
+    routine to intercept simple conversational phrases ("hello", "hi", "hey", "namaste",
+    "good morning", "how are you", "who are you") and reply with natural spoken text
+    instead of triggering DuckDuckGo/Bing web searches.
+  * Added query gating on universal fallback web search, restricting web queries to
+    explicit informational questions or phrases containing 3 or more words.
+  * Created COMPACT_SYSTEM_PROMPT in agent/prompts.py for local Ollama instances and
+    configured extra_body options (num_ctx=4096) to prevent 400 Bad Request context
+    window overflow errors on 2048-token local models.
+- What was Affected:
+  * Conversational Quality: Saying "hello" or casual phrases returns an immediate friendly
+    greeting rather than searching for Windows Hello TPM articles.
+  * Local LLM Resilience: Prevents local Ollama crashes caused by prompt token overflow.
+  * Fallback Integrity: Assistant maintains intelligent dialogue even when Cloud OpenAI
+    API credits run out (HTTP 429).
+
+
+================================================================================
 VERIFICATION SUMMARY
 ================================================================================
 - Total Pytest Unit Tests: 79/79 Passed (100%)
