@@ -626,17 +626,20 @@ def db_get_user_oauth(user_id: Optional[str] = None, provider: str = "google") -
                 if row:
                     return dict(row)
 
-            # 4. Fallback to 'guest' if user_id was non-guest
-            if uid_str != "guest":
-                cur = conn.execute(
-                    "SELECT * FROM user_oauth_tokens WHERE user_id = 'guest' AND provider = ? ORDER BY updated_at DESC LIMIT 1",
-                    (provider,),
-                )
-                row = cur.fetchone()
-                if row:
-                    return dict(row)
+            # If an explicit non-guest user_id was queried and not found, do not leak other users' tokens
+            if uid_str not in ("guest", ""):
+                return None
 
-        # 5. Fallback to the latest connected OAuth token in the database
+        # 4. Fallback to 'guest' user_id
+        cur = conn.execute(
+            "SELECT * FROM user_oauth_tokens WHERE user_id = 'guest' AND provider = ? ORDER BY updated_at DESC LIMIT 1",
+            (provider,),
+        )
+        row = cur.fetchone()
+        if row:
+            return dict(row)
+
+        # 5. Fallback to latest connected account for this provider
         cur = conn.execute(
             "SELECT * FROM user_oauth_tokens WHERE provider = ? ORDER BY updated_at DESC LIMIT 1",
             (provider,),

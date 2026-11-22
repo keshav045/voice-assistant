@@ -6,6 +6,7 @@ Tests run in offline mode (SMTP mocked) so they pass without real credentials.
 import os
 import sys
 import unittest
+import pytest
 from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
@@ -13,6 +14,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 class TestSendEmailOffline:
     """Tests that work without a real Gmail account (SMTP is mocked)."""
+
+    @pytest.fixture(autouse=True)
+    def default_mock_oauth(self, request):
+        if "oauth" in request.node.name.lower() or "google" in request.node.name.lower():
+            yield
+            return
+        with patch("db.models.db_get_user_oauth", return_value=None):
+            yield
 
     def _get_tool(self):
         from agent.tools.email import send_email

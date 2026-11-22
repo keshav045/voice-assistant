@@ -1,6 +1,6 @@
 {
   "harness": "NexusMasterSuite",
-  "timestamp": 1795339982.035229,
+  "timestamp": 1795342307.088065,
   "summary": {
     "total_tests": 35,
     "passed_tests": 35,
@@ -113,21 +113,21 @@
     "eval_latency": [
       {
         "name": "Math Calculator Latency",
-        "value": 0.29,
+        "value": 0.17,
         "passed": true,
-        "details": "p95: 1.14ms (target <10ms)"
+        "details": "p95: 0.68ms (target <10ms)"
       },
       {
         "name": "Clock Latency",
-        "value": 2.0,
+        "value": 3.15,
         "passed": true,
-        "details": "p95: 9.95ms (target <25ms)"
+        "details": "p95: 15.7ms (target <25ms)"
       },
       {
         "name": "Python Sandbox Latency",
-        "value": 78.58,
+        "value": 54.49,
         "passed": true,
-        "details": "p95: 82.14ms (target <150ms)"
+        "details": "p95: 57.53ms (target <150ms)"
       }
     ],
     "eval_cost": [
@@ -300,18 +300,18 @@
     ]
   },
   "timings": {
-    "Retrieval & Memory": 117.13,
-    "Reranker Two-Stage": 0.04,
-    "Speech Generation": 0.82,
-    "Latency Profiling": 494.0,
-    "Cost & Budgeting": 0.05,
-    "Leakage Protection": 0.12,
-    "Infrastructure Ops": 30.67,
-    "End-to-End RAG": 163.06,
-    "Error Reliability": 2.57,
-    "Safety Gating": 0.2,
+    "Retrieval & Memory": 69.89,
+    "Reranker Two-Stage": 0.03,
+    "Speech Generation": 0.99,
+    "Latency Profiling": 402.46,
+    "Cost & Budgeting": 0.03,
+    "Leakage Protection": 0.1,
+    "Infrastructure Ops": 14.17,
+    "End-to-End RAG": 64.8,
+    "Error Reliability": 6.21,
+    "Safety Gating": 0.21,
     "Domain Scope": 0.01,
-    "Toxicity Defense": 1.66,
-    "Application Session": 31.65
+    "Toxicity Defense": 1.43,
+    "Application Session": 123.44
   }
 }

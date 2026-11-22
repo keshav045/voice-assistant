@@ -1069,7 +1069,7 @@ def health_check():
         "status": "healthy" if is_healthy else "degraded",
         "database": db_status,
         "model": OPENAI_MODEL,
-        "llm_ready": bool(OPENAI_API_KEY and not OPENAI_API_KEY.startswith("your-")),
+        "llm_ready": bool((OPENAI_API_KEY and not OPENAI_API_KEY.startswith("your-")) or OPENAI_BASE_URL),
         "service": "AI Assistant",
         "version": "1.0.0",
         "timestamp": datetime.now(timezone.utc).isoformat(),

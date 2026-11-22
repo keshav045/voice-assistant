@@ -2,6 +2,7 @@
 
 import pytest
 import uuid
+from unittest.mock import patch
 from db.models import (
     init_db,
     db_create_user,
@@ -199,9 +200,10 @@ def test_google_oauth_endpoints():
     assert "configured" in res_url.json()
 
     # 2. Status endpoint
-    res_status = client.get("/api/auth/google/status")
-    assert res_status.status_code == 200
-    assert res_status.json()["connected"] is False
+    with patch("db.models.db_get_user_oauth", return_value=None):
+        res_status = client.get("/api/auth/google/status")
+        assert res_status.status_code == 200
+        assert res_status.json()["connected"] is False
 
     # 3. Simulate connected state
     uid = f"usr_{uuid.uuid4().hex[:6]}"

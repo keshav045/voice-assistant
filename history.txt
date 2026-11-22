@@ -723,6 +723,21 @@ Entry 2026-11-22.12 [2026-11-22 15:00:00 +0530]
   * Emoji Count: Exactly 0 emojis across all files.
 
 
+- **Entry 2026-11-22.13**:
+  - **Files Changed**: `agent/main.py`, `db/models.py`, `tests/test_auth_and_history.py`, `tests/test_email.py`, `evals/suite_report.json`, `golden_report.json`, `history.txt`, `GEMINI.md`
+  - **What Was Changed**:
+    * Performed comprehensive audit regarding OpenAI API key configuration. Verified that OPENAI_API_KEY is empty in .env and unset in Windows system environment. Confirmed that all OpenAI library references (AsyncOpenAI in agent/main.py and openai.LLM in agent/livekit_worker.py) function strictly as client wrappers pointing to Local Ollama at http://localhost:11434/v1 with model qwen2.5:1.5b. Zero external OpenAI API keys or cloud endpoints are connected, active, or billed.
+    * Updated health_check in agent/main.py so llm_ready evaluates to True when OPENAI_BASE_URL (Local Ollama) is configured, even with an empty cloud key.
+    * Hardened db_get_user_oauth in db/models.py to strictly limit single-user fallback to sessions where user_id is None, empty, or 'guest', preventing token leaks during explicit queries for non-existent users.
+    * Isolated Google OAuth testing in tests/test_auth_and_history.py and added default_mock_oauth in tests/test_email.py to guarantee deterministic offline SMTP test execution when a live Google account is connected in nexus.db.
+  - **What Was Affected**:
+    * Confirmed 100% free, local-first operation on Ollama (qwen2.5:1.5b), faster-whisper (CPU), and local Edge-TTS.
+    * Pytest Unit Test Suite: 83/83 PASSED (100.0%).
+    * Master Evaluation Suite: 35/35 PASSED (100.0%) with Production Promotion Gate APPROVED.
+    * Golden Dataset Benchmark: 79/79 PASSED (100.0%).
+    * Zero emojis across all code and documentation.
+
+
 ================================================================================
 VERIFICATION SUMMARY
 ================================================================================

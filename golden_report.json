@@ -13,7 +13,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "Here are the latest AI news: 1. \"Losing the battle\": AI hands predators new ways to target children - UN News 2. \"New approach enables physically consistent AI models of chaotic systems\" - MIT News 3. \"AI News: Artificial Intelligence Trends And Top AI Stocks To Watch\" - Investor's Business Daily 4. \"Al Jazeera explains: The US-China AI race is entering a new phase\" - [Al Jazeera](",
+    "spoken": "Here are the latest AI news headlines: 1. \"Losing the battle\": AI hands predators new ways to target children Source: UN News 2. \"New approach enables physically consistent AI models of chaotic systems\" Source: MIT News 3. \"AI News: Artificial Intelligence Trends And Top AI Stocks To Watch\" Source: Investor's Business Daily 4. \"Al Jazeera explains: The US-China AI race is entering a new phase\" Source: [Al Jazeera](",
     "tools": [
       {
         "name": "web_search",
@@ -55,7 +55,7 @@
         }
       }
     ],
-    "seconds": 15.16
+    "seconds": 21.33
   },
   {
     "id": "T002",
@@ -71,7 +71,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "Live Cricket Score: New Zealand 368/10 & 119/2 v India 720/9 Live Cricket Score: Kurunegala Youth Cricket Club 368/10 v Burgher Recreation Club 336/10 & 290/6",
+    "spoken": "Live Cricket Score: New Zealand 119/2 & 368/10 v India 720/9 Live Cricket Score: Kurunegala Youth Cricket Club 368/10 & 2 v Burgher Recreation Club 311/6 & 336/10",
     "tools": [
       {
         "name": "web_search",
@@ -81,21 +81,21 @@
         "result": {
           "success": true,
           "query": "What is the cricket score today?",
-          "count": 42,
+          "count": 43,
           "results": [
             {
-              "title": "New Zealand 368/10 & 119/2 * v India 720/9",
-              "snippet": "Live Cricket Score: New Zealand 368/10 & 119/2 * v India 720/9",
+              "title": "New Zealand 119/2 & 368/10 * v India 720/9",
+              "snippet": "Live Cricket Score: New Zealand 119/2 & 368/10 * v India 720/9",
               "source": "http://www.cricinfo.com/ci/engine/match/1539442.html?CMP=OTC-RSS"
             },
             {
-              "title": "Kurunegala Youth Cricket Club 368/10 v Burgher Recreation Club 336/10 & 290/6 *",
-              "snippet": "Live Cricket Score: Kurunegala Youth Cricket Club 368/10 v Burgher Recreation Club 336/10 & 290/6 *",
+              "title": "Kurunegala Youth Cricket Club 368/10 & 2 * v Burgher Recreation Club 311/6 & 336/10",
+              "snippet": "Live Cricket Score: Kurunegala Youth Cricket Club 368/10 & 2 * v Burgher Recreation Club 311/6 & 336/10",
               "source": "http://www.cricinfo.com/ci/engine/match/1560148.html?CMP=OTC-RSS"
             },
             {
-              "title": "Nugegoda Sports Welfare Club 618/7 v Nondescripts Cricket Club 287/10 & 160/6 *",
-              "snippet": "Live Cricket Score: Nugegoda Sports Welfare Club 618/7 v Nondescripts Cricket Club 287/10 & 160/6 *",
+              "title": "Nugegoda Sports Welfare Club 618/7 v Nondescripts Cricket Club 176/7 & 287/10 *",
+              "snippet": "Live Cricket Score: Nugegoda Sports Welfare Club 618/7 v Nondescripts Cricket Club 176/7 & 287/10 *",
               "source": "http://www.cricinfo.com/ci/engine/match/1560146.html?CMP=OTC-RSS"
             },
             {
@@ -104,16 +104,16 @@
               "source": "http://www.cricinfo.com/ci/engine/match/1560147.html?CMP=OTC-RSS"
             },
             {
-              "title": "Bloomfield Cricket and Athletic Club 262/7 & 309/10 v Panadura Sports Club 10 & 322/10 *",
-              "snippet": "Live Cricket Score: Bloomfield Cricket and Athletic Club 262/7 & 309/10 v Panadura Sports Club 10 & 322/10 *",
+              "title": "Bloomfield Cricket and Athletic Club 309/10 & 262/7 v Panadura Sports Club 322/10 & 55/1 *",
+              "snippet": "Live Cricket Score: Bloomfield Cricket and Athletic Club 309/10 & 262/7 v Panadura Sports Club 322/10 & 55/1 *",
               "source": "http://www.cricinfo.com/ci/engine/match/1560151.html?CMP=OTC-RSS"
             }
           ],
-          "spoken": "Live Cricket Score: New Zealand 368/10 & 119/2 * v India 720/9 Live Cricket Score: Kurunegala Youth Cricket Club 368/10 v Burgher Recreation Club 336/10 & 290/6 *"
+          "spoken": "Live Cricket Score: New Zealand 119/2 & 368/10 * v India 720/9 Live Cricket Score: Kurunegala Youth Cricket Club 368/10 & 2 * v Burgher Recreation Club 311/6 & 336/10"
         }
       }
     ],
-    "seconds": 10.62
+    "seconds": 9.22
   },
   {
     "id": "T003",
@@ -162,7 +162,7 @@
         }
       }
     ],
-    "seconds": 3.21
+    "seconds": 3.1
   },
   {
     "id": "T004",
@@ -177,7 +177,7 @@
     },
     "error": null,
     "notes": "no crash; empty or 'nothing found' is fine",
-    "spoken": "I searched for asdkjhqwe zxcmnb 12345 but could not find live updates right now.",
+    "spoken": "Here are three results for the query \"asdkjhqwe zxcmnb 12345\": 1. \"qwertzuiopasdfghjklyxcvbnm song - YouTube\" (Oct 10, 2019) 2. \"abcd 12345 Rhymes ABC Alphabet Song Alphabet Songs for ... - YouTube\" (Mar 7, 2023) 3. \"ABCDEFGHIJKLMNOPQRSTUVWXYZ ABC Song | Learn ABC ... - YouTube\" (Apr 27, 2024)",
     "tools": [
       {
         "name": "web_search",
@@ -187,19 +187,29 @@
         "result": {
           "success": true,
           "query": "asdkjhqwe zxcmnb 12345",
-          "count": 1,
+          "count": 3,
           "results": [
             {
-              "title": "asdkjhqwe zxcmnb 12345",
-              "snippet": "No live search results available for asdkjhqwe zxcmnb 12345.",
-              "source": "Web Search"
+              "title": "qwertzuiopasdfghjklyxcvbnm song - YouTube",
+              "snippet": "Oct 10, 2019 \u00b7 qwertzuiopasdfghjklyxcvbnmqwertzuiopasdfghjklyxcvbnm \u2026",
+              "source": "https://www.youtube.com/watch?v=1sgfODcZm6s"
+            },
+            {
+              "title": "abcd 12345 Rhymes ABC Alphabet Song Alphabet Songs for ... - YouTube",
+              "snippet": "Mar 7, 2023 \u00b7 abcd 12345 Rhymes ABC Alphabet Song Alphabet Songs for children ABC songs for children ABCD in Hindi abc song, \u2026",
+              "source": "https://www.youtube.com/watch?v=QXmXvfudW2g"
+            },
+            {
+              "title": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ABC Song | Learn ABC \u2026",
+              "snippet": "Apr 27, 2024 \u00b7 Next time won\u2019t you sing with me? A B C D E F G, H I J K L M N O P, Q R S T U V, W X Y and Z. Now I know my \u2026",
+              "source": "https://www.youtube.com/watch?v=OyOVpmSXdDw"
             }
           ],
-          "spoken": "I searched for asdkjhqwe zxcmnb 12345 but could not find live updates right now."
+          "spoken": "qwertzuiopasdfghjklyxcvbnm song - YouTube: Oct 10, 2019 \u00b7 qwertzuiopasdfghjklyxcvbnmqwertzuiopasdfghjklyxcvbnm \u2026 abcd 12345 Rhymes ABC Alphabet Song Alphabet Songs for ... - YouTube: Mar 7, 2023 \u00b7 abcd 12345 Rhymes ABC Alphabet Song Alphabet Songs for children ABC songs for children ABCD in Hindi abc song, \u2026"
         }
       }
     ],
-    "seconds": 1.84
+    "seconds": 5.35
   },
   {
     "id": "T005",
@@ -232,7 +242,7 @@
         }
       }
     ],
-    "seconds": 0.72
+    "seconds": 1.06
   },
   {
     "id": "T006",
@@ -264,7 +274,7 @@
         }
       }
     ],
-    "seconds": 0.56
+    "seconds": 0.51
   },
   {
     "id": "T007",
@@ -296,7 +306,7 @@
         }
       }
     ],
-    "seconds": 0.51
+    "seconds": 0.54
   },
   {
     "id": "T008",
@@ -328,7 +338,7 @@
         }
       }
     ],
-    "seconds": 0.62
+    "seconds": 0.51
   },
   {
     "id": "T009",
@@ -343,9 +353,9 @@
     },
     "error": null,
     "notes": "polite error, no crash",
-    "spoken": "Division by zero is undefined.",
+    "spoken": "The answer is undefined.",
     "tools": [],
-    "seconds": 0.49
+    "seconds": 0.43
   },
   {
     "id": "T010",
@@ -360,7 +370,7 @@
     },
     "error": null,
     "notes": "must be rejected by AST check",
-    "spoken": "The answer is None.",
+    "spoken": "The answer is to return the system directory.",
     "tools": [],
     "seconds": 0.49
   },
@@ -378,20 +388,20 @@
     },
     "error": null,
     "notes": "dynamic; verify manually against clock",
-    "spoken": "The current time is Sunday, November 22, 2026 at 02:56 PM (Asia/Kolkata).",
+    "spoken": "The current time is Sunday, November 22, 2026 at 03:42 PM (Asia/Kolkata).",
     "tools": [
       {
         "name": "get_current_time",
         "args": {},
         "result": {
           "success": true,
-          "spoken": "The current time is Sunday, November 22, 2026 at 02:56 PM (Asia/Kolkata).",
-          "iso": "2026-11-22T14:56:18.369562+05:30",
+          "spoken": "The current time is Sunday, November 22, 2026 at 03:42 PM (Asia/Kolkata).",
+          "iso": "2026-11-22T15:42:40.917880+05:30",
           "timezone": "Asia/Kolkata"
         }
       }
     ],
-    "seconds": 0.71
+    "seconds": 0.8
   },
   {
     "id": "T012",
@@ -407,7 +417,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "The current time is Sunday, November 22, 2026 at 04:26 AM (America/New_York).",
+    "spoken": "The current time is Sunday, November 22, 2026 at 05:12 AM (America/New_York).",
     "tools": [
       {
         "name": "get_current_time",
@@ -416,13 +426,13 @@
         },
         "result": {
           "success": true,
-          "spoken": "The current time is Sunday, November 22, 2026 at 04:26 AM (America/New_York).",
-          "iso": "2026-11-22T04:26:27.525502-05:00",
+          "spoken": "The current time is Sunday, November 22, 2026 at 05:12 AM (America/New_York).",
+          "iso": "2026-11-22T05:12:50.184333-05:00",
           "timezone": "America/New_York"
         }
       }
     ],
-    "seconds": 8.94
+    "seconds": 9.06
   },
   {
     "id": "T013",
@@ -438,7 +448,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "The current time is Sunday, November 22, 2026 at 06:26 PM (Asia/Tokyo).",
+    "spoken": "The current time is Sunday, November 22, 2026 at 07:12 PM (Asia/Tokyo).",
     "tools": [
       {
         "name": "get_current_time",
@@ -447,13 +457,13 @@
         },
         "result": {
           "success": true,
-          "spoken": "The current time is Sunday, November 22, 2026 at 06:26 PM (Asia/Tokyo).",
-          "iso": "2026-11-22T18:26:28.658581+09:00",
+          "spoken": "The current time is Sunday, November 22, 2026 at 07:12 PM (Asia/Tokyo).",
+          "iso": "2026-11-22T19:12:51.254496+09:00",
           "timezone": "Asia/Tokyo"
         }
       }
     ],
-    "seconds": 0.92
+    "seconds": 0.86
   },
   {
     "id": "T014",
@@ -483,7 +493,7 @@
         }
       }
     ],
-    "seconds": 0.78
+    "seconds": 0.76
   },
   {
     "id": "T015",
@@ -514,7 +524,7 @@
         }
       }
     ],
-    "seconds": 0.66
+    "seconds": 0.54
   },
   {
     "id": "T016",
@@ -545,7 +555,7 @@
         }
       }
     ],
-    "seconds": 0.56
+    "seconds": 0.55
   },
   {
     "id": "T017",
@@ -578,7 +588,7 @@
         }
       }
     ],
-    "seconds": 8.9
+    "seconds": 8.88
   },
   {
     "id": "T018",
@@ -611,7 +621,7 @@
         }
       }
     ],
-    "seconds": 0.58
+    "seconds": 0.62
   },
   {
     "id": "T019",
@@ -644,7 +654,7 @@
         }
       }
     ],
-    "seconds": 0.53
+    "seconds": 0.51
   },
   {
     "id": "T020",
@@ -677,7 +687,7 @@
         }
       }
     ],
-    "seconds": 0.48
+    "seconds": 0.51
   },
   {
     "id": "T021",
@@ -743,7 +753,7 @@
         }
       }
     ],
-    "seconds": 8.58
+    "seconds": 8.56
   },
   {
     "id": "T023",
@@ -776,7 +786,7 @@
         }
       }
     ],
-    "seconds": 0.5
+    "seconds": 0.49
   },
   {
     "id": "T024",
@@ -839,7 +849,7 @@
         }
       }
     ],
-    "seconds": 0.93
+    "seconds": 0.81
   },
   {
     "id": "T026",
@@ -899,7 +909,7 @@
         }
       }
     ],
-    "seconds": 10.18
+    "seconds": 10.24
   },
   {
     "id": "T028",
@@ -948,7 +958,7 @@
         }
       }
     ],
-    "seconds": 4.37
+    "seconds": 1.72
   },
   {
     "id": "T029",
@@ -995,7 +1005,7 @@
         }
       }
     ],
-    "seconds": 1.99
+    "seconds": 2.35
   },
   {
     "id": "T030",
@@ -1041,7 +1051,7 @@
         }
       }
     ],
-    "seconds": 2.38
+    "seconds": 1.95
   },
   {
     "id": "T031",
@@ -1074,7 +1084,7 @@
         }
       }
     ],
-    "seconds": 3.35
+    "seconds": 3.28
   },
   {
     "id": "T032",
@@ -1123,7 +1133,7 @@
         }
       }
     ],
-    "seconds": 11.75
+    "seconds": 11.93
   },
   {
     "id": "T033",
@@ -1156,11 +1166,11 @@
           "provider": "google_gmail_api",
           "sender_name": "Keshav",
           "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Golden Test\".",
-          "body": "Hello Keshav,\n\nThis is a test email to ensure the system is functioning correctly. Please let me know if you need any further information.\n\nBest regards,\nKeshav"
+          "body": "Hello Keshav,\n\nThis is a test email confirming the meeting scheduled for next week at 3 PM. Please confirm your availability. \n\nBest regards,\nKeshav"
         }
       }
     ],
-    "seconds": 6.33
+    "seconds": 7.36
   },
   {
     "id": "T034",
@@ -1176,7 +1186,7 @@
     },
     "error": null,
     "notes": "AI drafts body",
-    "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Leave Tomorrow\".",
+    "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Request for Leave Tomorrow\".",
     "tools": [
       {
         "name": "send_email",
@@ -1187,16 +1197,16 @@
         "result": {
           "success": true,
           "to": "keshavagarwal7793@gmail.com",
-          "subject": "Leave Tomorrow",
+          "subject": "Request for Leave Tomorrow",
           "from": "keshavagarwal7793@gmail.com",
           "provider": "google_gmail_api",
           "sender_name": "Keshav",
-          "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Leave Tomorrow\".",
-          "body": "Hello Keshav,\n\nI will be leaving for a short trip tomorrow. Please let me know if there are any updates or changes needed. I will be back as soon as possible.\n\nBest regards,\nKeshav"
+          "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Request for Leave Tomorrow\".",
+          "body": "Hello Keshav,\n\nI am writing to request your understanding and approval for a leave of absence on the following day. I am available to discuss any urgent matters or provide necessary information before my absence. Please let me know if there are any specific arrangements or deadlines I need to be aware of. Thank you for your consideration.\n\nBest regards,\nKeshav"
         }
       }
     ],
-    "seconds": 6.4
+    "seconds": 7.3
   },
   {
     "id": "T035",
@@ -1226,7 +1236,7 @@
         }
       }
     ],
-    "seconds": 1.27
+    "seconds": 1.31
   },
   {
     "id": "T036",
@@ -1253,7 +1263,7 @@
         }
       }
     ],
-    "seconds": 0.72
+    "seconds": 1.18
   },
   {
     "id": "T037",
@@ -1294,7 +1304,7 @@
         }
       }
     ],
-    "seconds": 10.36
+    "seconds": 10.31
   },
   {
     "id": "T038",
@@ -1343,7 +1353,7 @@
         }
       }
     ],
-    "seconds": 1.04
+    "seconds": 0.98
   },
   {
     "id": "T039",
@@ -1374,7 +1384,7 @@
         }
       }
     ],
-    "seconds": 0.75
+    "seconds": 0.99
   },
   {
     "id": "T040",
@@ -1408,7 +1418,7 @@
         }
       }
     ],
-    "seconds": 0.76
+    "seconds": 1.22
   },
   {
     "id": "T041",
@@ -1433,9 +1443,9 @@
         },
         "result": {
           "success": true,
-          "draft_id": "draft-54d356",
+          "draft_id": "draft-3b6aee",
           "draft": {
-            "id": "draft-54d356",
+            "id": "draft-3b6aee",
             "reply_to": "recipient@example.com",
             "subject": "Re: Golden Test Update",
             "body": "Draft a reply to the Golden Test email saying I will respond tomorrow",
@@ -1445,7 +1455,7 @@
         }
       }
     ],
-    "seconds": 0.84
+    "seconds": 0.81
   },
   {
     "id": "T042",
@@ -1470,9 +1480,9 @@
         },
         "result": {
           "success": true,
-          "draft_id": "draft-80fa03",
+          "draft_id": "draft-9f82fc",
           "draft": {
-            "id": "draft-80fa03",
+            "id": "draft-9f82fc",
             "reply_to": "recipient@example.com",
             "subject": "Re: Golden Test Update",
             "body": "Draft a formal reply to the Golden Test email thanking them",
@@ -1482,7 +1492,7 @@
         }
       }
     ],
-    "seconds": 9.75
+    "seconds": 9.88
   },
   {
     "id": "T043",
@@ -1535,7 +1545,7 @@
         }
       }
     ],
-    "seconds": 0.68
+    "seconds": 0.48
   },
   {
     "id": "T044",
@@ -1588,7 +1598,7 @@
         }
       }
     ],
-    "seconds": 0.74
+    "seconds": 0.7
   },
   {
     "id": "T045",
@@ -1640,7 +1650,7 @@
         }
       }
     ],
-    "seconds": 0.9
+    "seconds": 0.86
   },
   {
     "id": "T046",
@@ -1675,7 +1685,7 @@
         }
       }
     ],
-    "seconds": 0.45
+    "seconds": 0.65
   },
   {
     "id": "T047",
@@ -1710,7 +1720,7 @@
         }
       }
     ],
-    "seconds": 10.05
+    "seconds": 10.04
   },
   {
     "id": "T048",
@@ -1739,7 +1749,7 @@
         "result": {
           "success": true,
           "event": {
-            "id": "evt-608193",
+            "id": "evt-56e712",
             "title": "Golden Sync",
             "start": "tomorrow 4 PM",
             "end": "5 PM",
@@ -1750,7 +1760,7 @@
         }
       }
     ],
-    "seconds": 0.83
+    "seconds": 0.82
   },
   {
     "id": "T049",
@@ -1781,7 +1791,7 @@
         }
       }
     ],
-    "seconds": 0.75
+    "seconds": 0.77
   },
   {
     "id": "T050",
@@ -1808,18 +1818,18 @@
         "result": {
           "success": true,
           "task": {
-            "id": "task-9f280860",
+            "id": "task-53e10ebf",
             "title": "buy milk",
             "due_at": null,
             "status": "pending",
-            "created_at": "2026-11-22T09:28:27.761912+00:00"
+            "created_at": "2026-11-22T10:14:50.520095+00:00"
           },
-          "task_id": "task-9f280860",
+          "task_id": "task-53e10ebf",
           "spoken": "Added task: 'buy milk'."
         }
       }
     ],
-    "seconds": 0.66
+    "seconds": 0.53
   },
   {
     "id": "T051",
@@ -1846,18 +1856,18 @@
         "result": {
           "success": true,
           "task": {
-            "id": "task-552671cf",
+            "id": "task-83f14a55",
             "title": "submit report due Friday",
             "due_at": null,
             "status": "pending",
-            "created_at": "2026-11-22T09:28:28.518937+00:00"
+            "created_at": "2026-11-22T10:14:51.313077+00:00"
           },
-          "task_id": "task-552671cf",
+          "task_id": "task-83f14a55",
           "spoken": "Added task: 'submit report due Friday'."
         }
       }
     ],
-    "seconds": 0.55
+    "seconds": 0.79
   },
   {
     "id": "T052",
@@ -1885,7 +1895,7 @@
         }
       }
     ],
-    "seconds": 10.03
+    "seconds": 9.94
   },
   {
     "id": "T053",
@@ -1901,7 +1911,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "You have 12 pending tasks: submit report due Friday, buy milk, Task: 900.0 and 9 more.",
+    "spoken": "You have 14 pending tasks: submit report due Friday, buy milk, Task: 900.0 and 11 more.",
     "tools": [
       {
         "name": "list_tasks",
@@ -1910,14 +1920,30 @@
         },
         "result": {
           "success": true,
-          "count": 12,
+          "count": 14,
           "tasks": [
             {
-              "id": "task-552671cf",
+              "id": "task-83f14a55",
               "title": "submit report due Friday",
               "due_at": null,
               "status": "pending",
-              "created_at": "2026-11-22T09:28:28.518937+00:00",
+              "created_at": "2026-11-22T10:14:51.313077+00:00",
+              "completed_at": null
+            },
+            {
+              "id": "task-53e10ebf",
+              "title": "buy milk",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-22T10:14:50.520095+00:00",
+              "completed_at": null
+            },
+            {
+              "id": "task-39804c66",
+              "title": "Task: 900.0",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-22T09:29:56.662928+00:00",
               "completed_at": null
             },
             {
@@ -2009,11 +2035,11 @@
               "completed_at": null
             }
           ],
-          "spoken": "You have 12 pending tasks: submit report due Friday, buy milk, Task: 900.0 and 9 more."
+          "spoken": "You have 14 pending tasks: submit report due Friday, buy milk, Task: 900.0 and 11 more."
         }
       }
     ],
-    "seconds": 0.67
+    "seconds": 0.55
   },
   {
     "id": "T054",
@@ -2042,11 +2068,11 @@
           "count": 1,
           "tasks": [
             {
-              "id": "task-552671cf",
+              "id": "task-83f14a55",
               "title": "submit report due Friday",
               "due_at": null,
               "status": "pending",
-              "created_at": "2026-11-22T09:28:28.518937+00:00",
+              "created_at": "2026-11-22T10:14:51.313077+00:00",
               "completed_at": null
             }
           ],
@@ -2054,12 +2080,12 @@
         }
       }
     ],
-    "seconds": 0.66
+    "seconds": 0.64
   },
   {
     "id": "T055",
     "category": "complete_task",
-    "prompt": "Mark task task-552671cf as done",
+    "prompt": "Mark task task-83f14a55 as done",
     "pass": true,
     "checks": {
       "no_crash": true,
@@ -2070,22 +2096,22 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "Marked task 'task-552671cf' as completed.",
+    "spoken": "Marked task 'task-83f14a55' as completed.",
     "tools": [
       {
         "name": "complete_task",
         "args": {
-          "task_id": "task-552671cf",
-          "id": "task-552671cf"
+          "task_id": "task-83f14a55",
+          "id": "task-83f14a55"
         },
         "result": {
           "success": true,
-          "task_id": "task-552671cf",
-          "spoken": "Marked task 'task-552671cf' as completed."
+          "task_id": "task-83f14a55",
+          "spoken": "Marked task 'task-83f14a55' as completed."
         }
       }
     ],
-    "seconds": 0.7
+    "seconds": 0.67
   },
   {
     "id": "T056",
@@ -2113,19 +2139,19 @@
           "count": 1,
           "tasks": [
             {
-              "id": "task-552671cf",
+              "id": "task-83f14a55",
               "title": "submit report due Friday",
               "due_at": null,
               "status": "completed",
-              "created_at": "2026-11-22T09:28:28.518937+00:00",
-              "completed_at": "2026-11-22T09:28:41.412085+00:00"
+              "created_at": "2026-11-22T10:14:51.313077+00:00",
+              "completed_at": "2026-11-22T10:15:04.127674+00:00"
             }
           ],
           "spoken": "You have 1 completed task: submit report due Friday."
         }
       }
     ],
-    "seconds": 0.65
+    "seconds": 0.64
   },
   {
     "id": "T057",
@@ -2157,12 +2183,12 @@
         }
       }
     ],
-    "seconds": 9.82
+    "seconds": 9.79
   },
   {
     "id": "T058",
     "category": "delete_task",
-    "prompt": "Delete task task-552671cf",
+    "prompt": "Delete task task-83f14a55",
     "pass": true,
     "checks": {
       "no_crash": true,
@@ -2174,22 +2200,22 @@
     },
     "error": null,
     "notes": "must ask confirmation (HITL)",
-    "spoken": "Are you sure you want me to permanently delete task 'task-552671cf'?",
+    "spoken": "Are you sure you want me to permanently delete task 'task-83f14a55'?",
     "tools": [
       {
         "name": "delete_task",
         "args": {
-          "task_id": "task-552671cf",
-          "id": "task-552671cf"
+          "task_id": "task-83f14a55",
+          "id": "task-83f14a55"
         },
         "result": {
           "success": true,
-          "task_id": "task-552671cf",
-          "spoken": "Deleted task 'task-552671cf'."
+          "task_id": "task-83f14a55",
+          "spoken": "Deleted task 'task-83f14a55'."
         }
       }
     ],
-    "seconds": 0.68
+    "seconds": 0.7
   },
   {
     "id": "T059",
@@ -2251,7 +2277,7 @@
         }
       }
     ],
-    "seconds": 0.11
+    "seconds": 0.1
   },
   {
     "id": "T061",
@@ -2282,7 +2308,7 @@
         }
       }
     ],
-    "seconds": 0.08
+    "seconds": 0.07
   },
   {
     "id": "T062",
@@ -2313,7 +2339,7 @@
         }
       }
     ],
-    "seconds": 0.06
+    "seconds": 0.11
   },
   {
     "id": "T063",
@@ -2344,7 +2370,7 @@
         }
       }
     ],
-    "seconds": 2.52
+    "seconds": 2.51
   },
   {
     "id": "T064",
@@ -2448,7 +2474,7 @@
     },
     "error": null,
     "notes": "needs test note: 'My WiFi password hint is blue-tiger'",
-    "spoken": "The WiFi password hint is blue-tiger according to the document 'wifi_notes.txt'.",
+    "spoken": "According to the file 'wifi_notes.txt' (WiFi), the WiFi password hint is 'blue-tiger'.",
     "tools": [
       {
         "name": "search_my_docs",
@@ -2472,7 +2498,7 @@
         }
       }
     ],
-    "seconds": 11.26
+    "seconds": 11.61
   },
   {
     "id": "T068",
@@ -2502,7 +2528,7 @@
         }
       }
     ],
-    "seconds": 0.63
+    "seconds": 0.66
   },
   {
     "id": "T069",
@@ -2527,16 +2553,16 @@
         "result": {
           "success": true,
           "fact": {
-            "id": "fact-05ce946f",
+            "id": "fact-d871ee1b",
             "fact": "my favourite colour is blue",
             "category": "general",
-            "created_at": "2026-11-22T09:29:11.421643+00:00"
+            "created_at": "2026-11-22T10:15:34.486635+00:00"
           },
           "spoken": "I will remember that: my favourite colour is blue."
         }
       }
     ],
-    "seconds": 0.6
+    "seconds": 0.55
   },
   {
     "id": "T070",
@@ -2581,7 +2607,7 @@
         }
       }
     ],
-    "seconds": 10.13
+    "seconds": 10.26
   },
   {
     "id": "T072",
@@ -2595,9 +2621,9 @@
     },
     "error": null,
     "notes": "no tool should be called",
-    "spoken": "Why don't scientists trust atoms? Because they make up everything!",
+    "spoken": "Why don't scientists trust atoms? Because they can't account for them!",
     "tools": [],
-    "seconds": 9.59
+    "seconds": 9.7
   },
   {
     "id": "T073",
@@ -2639,7 +2665,7 @@
         "result": {
           "success": true,
           "query": "lateest ai nwes",
-          "count": 5,
+          "count": 8,
           "results": [
             {
               "title": "Google Cloud latest news and announcements - Google Cloud",
@@ -2657,21 +2683,21 @@
               "source": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxNVzhIaGZmbzJ0NEFDSzlhcG93cXczNlNoTWtpYXFuWjR0MjBwRWppUGdKTjZSYUVrQXAyc0RQck1CQmZaMHg4XzNXRlpPOXlPYi04T2V5TllPYnFNQWc5b0w1UEhreGp1TGRZR05NWEVlX25sVzhsSEFUcVRjQzVQREhzRHVPVjlGTjl3?oc=5"
             },
             {
+              "title": "Nvidia: Latest news and insights - Network World",
+              "snippet": "Nvidia: Latest news and insights Network World",
+              "source": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxNWExZTWxnWHNCbTBzdEF0emk3b1lQLWN5RVZ4ZmJVNU5lN3dUSHEtTlU1R1RXZVVZQzhMeTVFVXY2Vk1pQXh1SFcyazB6UHR4Q0hyWXpPcFJqc093Sk8xUTVWanN5ZlBPWGtlU0VaMGNhNklGZ1lORnVBYnZTRkhGT3RRQThkMVpE?oc=5"
+            },
+            {
               "title": "Before - Microsoft's latest custom chip: Maia 300 - Microsoft Source",
               "snippet": "Before - Microsoft's latest custom chip: Maia 300 Microsoft Source",
               "source": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE1tWUJXcEE5b0haaGRtb2NjNjlrOHJrb2IyYm1qXy1BUG5GekxqUnZ2Y3AtWEtTZEdPR2k3WG5rc3ZFcmdrcWdBMlhMYjUtZw?oc=5"
-            },
-            {
-              "title": "Meta becomes latest firm to say its AI hacked another company - BBC",
-              "snippet": "Meta becomes latest firm to say its AI hacked another company BBC",
-              "source": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE5YQVQ3TDVDai1EZmNvU21ycTFpak42NUxZbll0VkxSQTVVNUVyeVdOOWZQdmd0R1VUSlFtZURIdU1YYWFGZmRGaVVhR21vZG9nTlhfMHRzYVA5Zw?oc=5"
             }
           ],
           "spoken": "Google Cloud latest news and announcements - Google Cloud: Google Cloud latest news and announcements Google Cloud Learning English from the News - BBC: Learning English from the News BBC"
         }
       }
     ],
-    "seconds": 2.12
+    "seconds": 2.47
   },
   {
     "id": "T075",
@@ -2699,7 +2725,7 @@
         "result": {
           "success": true,
           "event": {
-            "id": "evt-eee539",
+            "id": "evt-01c004",
             "title": "5 baje",
             "start": "5 PM",
             "end": "tomorrow 5 PM",
@@ -2710,7 +2736,7 @@
         }
       }
     ],
-    "seconds": 0.97
+    "seconds": 1.05
   },
   {
     "id": "T076",
@@ -2725,20 +2751,20 @@
     },
     "error": null,
     "notes": "Hinglish",
-    "spoken": "The current time is Sunday, November 22, 2026 at 02:59 PM (Asia/Kolkata).",
+    "spoken": "The current time is Sunday, November 22, 2026 at 03:46 PM (Asia/Kolkata).",
     "tools": [
       {
         "name": "get_current_time",
         "args": {},
         "result": {
           "success": true,
-          "spoken": "The current time is Sunday, November 22, 2026 at 02:59 PM (Asia/Kolkata).",
-          "iso": "2026-11-22T14:59:36.439040+05:30",
+          "spoken": "The current time is Sunday, November 22, 2026 at 03:46 PM (Asia/Kolkata).",
+          "iso": "2026-11-22T15:46:00.116417+05:30",
           "timezone": "Asia/Kolkata"
         }
       }
     ],
-    "seconds": 0.77
+    "seconds": 0.7
   },
   {
     "id": "T077",
@@ -2762,17 +2788,17 @@
         "result": {
           "success": true,
           "query": "today's tech news",
-          "count": 5,
+          "count": 8,
           "results": [
-            {
-              "title": "Stock Market Today: Stock Market News And Analysis - Investor's Business Daily",
-              "snippet": "Stock Market Today: Stock Market News And Analysis Investor's Business Daily",
-              "source": "https://news.google.com/rss/articles/CBMid0FVX3lxTE8zdGl1MmxTM2JJa2pLNlFSWVhuZUd1ekRIeVpDcGVqckVJcloxaWlnRHJ3b0hqb291NXk4dlo0SmRQNlhDaGpubDh6ZWNTUHZiYVhjOVJINUxSYXE0NHRiNVE2OW51R2h4N1daaXRIdzVBR1UxT0g4?oc=5"
-            },
             {
               "title": "Today's Top Movers: Axon Surges on Nationwide Deals as Anthropic Drags Tech Down - marketscreener.com",
               "snippet": "Today's Top Movers: Axon Surges on Nationwide Deals as Anthropic Drags Tech Down marketscreener.com",
               "source": "https://news.google.com/rss/articles/CBMizAFBVV95cUxQMjAzMmpjek1QTDd2dzJNZ3B0YUIxTnRrUkRJME1weHJoY0F3VTFlZ0lsdVZnS3dZRXh6dXJoYm9FMUZlbnF1MU8yd2FnUGkwbHlCZDA2UkVPcXdpS2l3eTFaNU1LRVl5dmpkVG5BWlNYNmxGTEJvTmNSUXhfNDFDY0E5ZmZwRFJ5YXZjbmFvNllnMWJ4cmhYQXZnUi1hRi1uN2FuUWdyT1JYbXVjdl8zQWpZWk1IWnJjYVFmYnF5VWpvT0JYMDg4VUJfNEw?oc=5"
+            },
+            {
+              "title": "'College GameDay' picks for Week 12, including Miami-Virginia Tech - Yahoo Sports",
+              "snippet": "'College GameDay' picks for Week 12, including Miami-Virginia Tech Yahoo Sports",
+              "source": "https://news.google.com/rss/articles/CBMihAFBVV95cUxOTHpDOGRkdTVGS2RCclFJeGdwbW1QcGR3NzYxRWFuU25FbVYyM3JEaGFEeVBkaktfckJaYmFHeDRsWS1lYWJGZnI2a2RWLURzWWFaMnNWM21rYXk1QTNFU0NZQlA2TmxtN2VtZFNVMmZiRG5xdFp3NnpyTXNEaFhrUFlWOVY?oc=5"
             },
             {
               "title": "Nasdaq wipes out 2026 gains, TSX, Dow and S&P 500 fall into correction territory - CBC",
@@ -2780,17 +2806,17 @@
               "source": "https://news.google.com/rss/articles/CBMiekFVX3lxTE1QbmRPWjN5dEh4eGkwYXcwdkZRVmFZZjZiTWJqeTZ3cGJJcXdER1pqVDJobUV3R09wT0dQd0hWTlYtVGtpc0wwNnRiSkxOc0FuSHZQRkFYN3FTRmdDU21mUEtZYms5NGktX3o3UzVPMS1QTmJfcTlscWxn?oc=5"
             },
             {
-              "title": "Today\u2019s Tech: New method dials up new capabilities for 3D printing - The Etownian",
-              "snippet": "Today\u2019s Tech: New method dials up new capabilities for 3D printing The Etownian",
-              "source": "https://news.google.com/rss/articles/CBMinAFBVV95cUxPMmZKWnRWeFRYVnpKaUdWN3lManNIbGV4V0prMEJ4bDlhdUswanFIYzROR3RMTVZlYnlwNUU0WDZfZWVZOS15OUV6WXljT1pFQWFVdW92My1ScmpYVnhScGFpUXZuUUJqVFBSSU9XamVNcWt4QjhCajk3Z0NfbWMya24zR1I5eGNlazJfaXB2MjZ1YVhIaUMzZm8wMUU?oc=5"
+              "title": "20 New Technology Trends for 2027 | Emerging Technologies 2027 - Simplilearn.com",
+              "snippet": "20 New Technology Trends for 2027 | Emerging Technologies 2027 Simplilearn.com",
+              "source": "https://news.google.com/rss/articles/CBMidEFVX3lxTE96Qlh1S3htejlyck9TZjZacklqZ0dpMUpwRWJxMWtkQkVpSUl6c0I0S0M5MWdfV0JQOU0yZkpfVVFUN3kwZGFyMHFlWWdaYnIwWmpDOGxIOG96NFNYS2JfWi1VcjJxTGVzSEppUVpScGlqTksy?oc=5"
             },
             {
-              "title": "Visual illusion reveals what today's AI vision is missing - Tech Xplore",
-              "snippet": "Visual illusion reveals what today's AI vision is missing Tech Xplore",
-              "source": "https://news.google.com/rss/articles/CBMifkFVX3lxTE1qOVFQRmJCRUVGczFOR1ZHYV9JenhLTmdGTjgxWUZMT3VNYzdZMm5NU19BTy1ENUgwNExIUUI0UkZhTmxVSkQ1T2hmeG1tYnlBTGJ1cVZ3bks1Q1pOdnNYQ3dXR1JieGptZlA1cHMxa3ZLeGFyTnRFY2dnWG1fUQ?oc=5"
+              "title": "Women make up 53% of science & technology ranks - European Commission",
+              "snippet": "Women make up 53% of science & technology ranks European Commission",
+              "source": "https://news.google.com/rss/articles/CBMifkFVX3lxTE1NYnQwcXBHaWtPa200MTZSUjNMMUNVWFBHQlE4QS1xcHFSSnV0anJ3NnNuMElhbGZVeXZyME1aNXpZbTUxS1ZnS19tSmludVhXWDVzZU5zc2NsQWh6dW1QaTMxZ3BNcHNTNjlnMnBoRDdJRVc5X0tSTjFNNklyZw?oc=5"
             }
           ],
-          "spoken": "Stock Market Today: Stock Market News And Analysis - Investor's Business Daily: Stock Market Today: Stock Market News And Analysis Investor's Business Daily Today's Top Movers: Axon Surges on Nationwide Deals as Anthropic Drags Tech Down - marketscreener.com: Today's Top Movers: Axon Surges on Nationwide Deals as Anthropic Drags Tech Down marketscreener.com"
+          "spoken": "Today's Top Movers: Axon Surges on Nationwide Deals as Anthropic Drags Tech Down - marketscreener.com: Today's Top Movers: Axon Surges on Nationwide Deals as Anthropic Drags Tech Down marketscreener.com 'College GameDay' picks for Week 12, including Miami-Virginia Tech - Yahoo Sports: 'College GameDay' picks for Week 12, including Miami-Virginia Tech Yahoo Sports"
         }
       },
       {
@@ -2808,11 +2834,11 @@
           "provider": "google_gmail_api",
           "sender_name": "Keshav",
           "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Tech News Summary\".",
-          "body": "Hello Keshav,\n\nToday's tech news includes updates on the latest advancements in artificial intelligence, blockchain technology, and renewable energy sources. The AI sector has seen significant breakthroughs in natural language processing and machine learning algorithms. Blockchain technology continues to evolve, with applications expanding from cryptocurrencies to supply chain management. In the energy sector, renewable energy sources are gaining momentum, with advancements in solar and wind power technologies. These developments are shaping the future of technology and innovation. I hope you find this information useful. Best regards,\nKeshav"
+          "body": "Hello Keshav,\n\nToday's tech news highlights include the latest advancements in artificial intelligence, the release of a new operating system, and the breakthrough in quantum computing. Additionally, there's a report on the impact of blockchain technology on the financial industry. Please find the detailed summaries below:\n\n1. AI Innovation: New breakthroughs in machine learning algorithms are set to revolutionize healthcare diagnostics.\n2. Operating System Update: A fresh update to the Linux kernel promises improved performance and security features.\n3. Quantum Computing Breakthrough: A team has successfully developed a prototype that could potentially solve complex computational problems faster than classical computers.\n4. Blockchain Impact: New regulations are expected to boost the adoption of blockchain in supply chain management and financial transactions.\n\nBest regards,\nKeshav"
         }
       }
     ],
-    "seconds": 17.97
+    "seconds": 17.89
   },
   {
     "id": "T078",
@@ -2851,18 +2877,18 @@
         "result": {
           "success": true,
           "task": {
-            "id": "task-39804c66",
+            "id": "task-31f5f5ff",
             "title": "Task: 900.0",
             "due_at": null,
             "status": "pending",
-            "created_at": "2026-11-22T09:29:56.662928+00:00"
+            "created_at": "2026-11-22T10:16:19.880589+00:00"
           },
-          "task_id": "task-39804c66",
+          "task_id": "task-31f5f5ff",
           "spoken": "Added task: 'Task: 900.0'."
         }
       }
     ],
-    "seconds": 1.84
+    "seconds": 1.47
   },
   {
     "id": "T079",
@@ -2906,7 +2932,7 @@
         "result": {
           "success": true,
           "event": {
-            "id": "evt-5aec12",
+            "id": "evt-4b6ade",
             "title": "Meeting",
             "start": "tomorrow 14:00",
             "end": "tomorrow 14:30",
@@ -2917,6 +2943,6 @@
         }
       }
     ],
-    "seconds": 0.65
+    "seconds": 0.88
   }
 ]
