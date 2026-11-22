@@ -1,6 +1,7 @@
 """Unit and integration tests for LiveKit WebRTC endpoints and agent worker."""
 
 import os
+import pytest
 from unittest.mock import patch
 from fastapi.testclient import TestClient
 from agent.main import app
@@ -60,3 +61,44 @@ def test_livekit_tools_instantiation():
     assert "send_email" in tool_names
     assert "open_app" in tool_names
     assert "send_whatsapp_message" in tool_names
+
+
+@pytest.mark.asyncio
+async def test_local_edge_tts_stream_adapter_real_streaming():
+    """Verify that LocalEdgeTTS properly streams audio through LiveKit StreamAdapter without raising NotImplementedError."""
+    from livekit.agents import tts
+    from agent.local_voice import LocalEdgeTTS
+
+    edge = LocalEdgeTTS()
+    adapter = tts.StreamAdapter(tts=edge)
+    stream = adapter.stream()
+    assert stream is not None
+    stream.push_text("Unit test audio synthesis.")
+    stream.flush()
+    stream.end_input()
+    frames = []
+    async for f in stream:
+        frames.append(f)
+    assert len(frames) > 0
+
+
+@pytest.mark.asyncio
+async def test_livekit_tool_pleasantry_guard():
+    """Verify that conversational pleasantries do not trigger unconstrained web searches in LiveKit."""
+    from agent.livekit_worker import web_search
+
+    res = await web_search("hello")
+    assert "listening" in res.lower()
+
+    res2 = await web_search("let me take a look")
+    assert "listening" in res2.lower()
+
+
+@pytest.mark.asyncio
+async def test_livekit_send_email_validation():
+    """Verify that send_email strictly checks recipient address format before dispatching."""
+    from agent.livekit_worker import send_email
+
+    res = await send_email("invalid-address", "test description")
+    assert "valid" in res.lower()
+

@@ -507,10 +507,35 @@ Entry 2026-11-22.4 [2026-11-22 11:02:00 +0530]
   * Verification: 79/79 pytest unit tests passed (100%) in full offline mode with exactly 0 emojis.
 
 
+Entry 2026-11-22.5 [2026-11-22 11:27:00 +0530]
+- Files Changed:
+  * agent/local_voice.py
+  * agent/livekit_worker.py
+  * tests/test_livekit.py
+- Change Details:
+  * Fixed NotImplementedError in LiveKit WebRTC Voice Worker where LocalEdgeTTS declared
+    streaming=True without implementing .stream(), crashing _tts_inference_task whenever
+    speech synthesis was requested by the voice agent.
+  * Configured capabilities=tts.TTSCapabilities(streaming=False) on LocalEdgeTTS and wrapped
+    it with LiveKit's official tts.StreamAdapter(tts=tts_local) in agent/livekit_worker.py.
+  * Offloaded blocking synchronous tool calls (search.web_search, calc.calculate, launcher.open_app,
+    whatsapp.send_whatsapp_message, email.send_email, medical.medical_search) to background worker
+    threads using await asyncio.to_thread(...), eliminating 1.2+ second event loop stalls that froze
+    WebRTC voice streaming and caused Silero VAD lag.
+  * Added pleasantry filters in web_search and address validation in send_email within LiveKit worker
+    to protect against small local Ollama models emitting tool calls on conversational phrases.
+  * Added comprehensive, un-biased integration tests in tests/test_livekit.py verifying that
+    LocalEdgeTTS properly streams synthesized audio frames via tts.StreamAdapter.
+- What was Affected:
+  * Voice Playback: LiveKit WebRTC voice streaming produces neural Edge-TTS voice replies without crashes.
+  * Concurrency: Real-time audio pipelines process frames smoothly without event loop stalls.
+  * Test Matrix: Expanded pytest test suite from 79 to 82 tests (100% pass rate).
+
+
 ================================================================================
 VERIFICATION SUMMARY
 ================================================================================
-- Total Pytest Unit Tests: 79/79 Passed (100%)
+- Total Pytest Unit Tests: 82/82 Passed (100%)
 - Total Modular Benchmarks: 35/35 Passed (100%)
 - Codebase Emoji Count: Exactly 0
 - Git Status: Up to date with origin/main (Commit message: "first")

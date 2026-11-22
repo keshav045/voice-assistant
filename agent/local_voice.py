@@ -90,7 +90,7 @@ class LocalEdgeTTS(tts.TTS):
 
     def __init__(self, voice: str = "en-US-ChristopherNeural"):
         super().__init__(
-            capabilities=tts.TTSCapabilities(streaming=True),
+            capabilities=tts.TTSCapabilities(streaming=False),
             sample_rate=24000,
             num_channels=1,
         )

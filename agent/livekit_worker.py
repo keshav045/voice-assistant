@@ -22,7 +22,7 @@ if ROOT_DIR not in sys.path:
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-from livekit.agents import AutoSubscribe, JobContext, WorkerOptions, llm, stt
+from livekit.agents import AutoSubscribe, JobContext, WorkerOptions, llm, stt, tts
 from livekit.agents.voice import Agent, AgentSession
 from livekit.plugins import openai, silero
 from agent.local_voice import LocalWhisperSTT, LocalEdgeTTS
@@ -69,8 +69,12 @@ async def web_search(query: str) -> str:
     Args:
         query: The search query (e.g., 'latest tech news', 'IND vs NZ cricket score').
     """
+    clean_q = (query or "").strip().lower()
+    greetings = {"hello", "hi", "hey", "let me take a look", "thank you", "thanks", "ok", "okay", "none", "alone", "who are you"}
+    if not clean_q or clean_q in greetings or len(clean_q.split()) < 2:
+        return "I am listening. What would you like to search for?"
     try:
-        res = search.web_search(query=query)
+        res = await asyncio.to_thread(search.web_search, query=query)
         return res.get("spoken") or str(res)
     except Exception as e:
         return f"Error searching the web: {e}"
@@ -84,7 +88,7 @@ async def calculator(expression: str) -> str:
         expression: The math expression to evaluate (e.g., '450 * 12 + 18% of 5000', 'sqrt(144)').
     """
     try:
-        res = calc.calculate(expression=expression)
+        res = await asyncio.to_thread(calc.calculate, expression=expression)
         return res.get("spoken") or str(res.get("result"))
     except Exception as e:
         return f"Error calculating: {e}"
@@ -98,7 +102,7 @@ async def run_python_code(code: str) -> str:
         code: The Python script or code snippet to run.
     """
     try:
-        res = coding.run_python_code(code=code)
+        res = await asyncio.to_thread(coding.run_python_code, code=code)
         return res.get("spoken") or (res.get("output") or "Code executed with no output.")
     except Exception as e:
         return f"Error executing Python code: {e}"
@@ -128,7 +132,7 @@ async def open_app(name: str, query: str = "") -> str:
         query: Optional search topic or query (e.g., 'lofi music' for YouTube).
     """
     try:
-        res = launcher.open_app(name=name, query=query)
+        res = await asyncio.to_thread(launcher.open_app, name=name, query=query)
         if res.get("url"):
             await _broadcast_client_action("OPEN_URL", {"url": res["url"], "target": res.get("target")})
         return res.get("spoken") or f"Opening {name}."
@@ -144,8 +148,11 @@ async def send_whatsapp_message(contact_name: str, message: str = "") -> str:
         contact_name: Name of the recipient contact (e.g., 'Krish', 'Alex', 'Mom').
         message: The message body to type and send.
     """
+    clean_c = (contact_name or "").strip()
+    if not clean_c or clean_c.lower() in {"hello", "none", "me"}:
+        return "Please specify the contact name you want to message on WhatsApp."
     try:
-        res = whatsapp.send_whatsapp_message(contact_name=contact_name, message=message)
+        res = await asyncio.to_thread(whatsapp.send_whatsapp_message, contact_name=contact_name, message=message)
         if res.get("url"):
             await _broadcast_client_action("OPEN_URL", {"url": res["url"], "target": "WhatsApp"})
         return res.get("spoken") or f"Sent WhatsApp message to {contact_name}."
@@ -165,9 +172,12 @@ async def send_email(to: str, description: str, recipient_name: str = "", sender
         sender_name: Optional sender display name (defaults to 'Krish').
     """
     global _active_user_id
+    if not to or "@" not in to:
+        return "To send an email, please specify a valid recipient email address."
     try:
         eff_sender = sender_name or "Krish"
-        res = email.send_email(
+        res = await asyncio.to_thread(
+            email.send_email,
             to=to,
             description=description,
             recipient_name=recipient_name,
@@ -198,8 +208,11 @@ async def medical_search(medicine_name: str, topic: str = "all") -> str:
         medicine_name: Name of the medicine, brand, or salt (e.g., 'Paracetamol', 'Dolo 650', 'Metformin', 'Ibuprofen', 'Azithromycin').
         topic: Specific focus area: 'all', 'uses', 'dosage', 'side_effects', 'precautions', or 'interactions'.
     """
+    clean_med = (medicine_name or "").strip().lower()
+    if not clean_med or clean_med in {"hello", "hi", "none"}:
+        return "Please name the medicine or salt you would like information on."
     try:
-        res = medical.medical_search(medicine_name=medicine_name, topic=topic)
+        res = await asyncio.to_thread(medical.medical_search, medicine_name=medicine_name, topic=topic)
         return res.get("spoken") or f"Retrieved information for {medicine_name}."
     except Exception as e:
         return f"Error looking up medicine {medicine_name}: {e}"
@@ -268,7 +281,8 @@ async def entrypoint(ctx: JobContext):
     else:
         stt_local = LocalWhisperSTT(model_size="tiny.en")
         stt_engine = stt.StreamAdapter(stt=stt_local, vad=vad_detector)
-        tts_engine = LocalEdgeTTS(voice="en-US-ChristopherNeural")
+        tts_local = LocalEdgeTTS(voice="en-US-ChristopherNeural")
+        tts_engine = tts.StreamAdapter(tts=tts_local)
 
     llm_engine = openai.LLM(model=local_model, base_url=local_base, api_key=api_key)
 
