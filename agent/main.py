@@ -234,6 +234,34 @@ def _is_tool_call_aligned_with_intent(tool_name: str, user_text: str) -> bool:
     return True
 
 
+def _get_active_user_name(user_id: Optional[str] = None) -> str:
+    """Dynamically resolve the active user's first name from auth, OAuth, or environment."""
+    from db.models import db_get_user_oauth, db_get_user_by_id
+    if user_id and str(user_id).strip() not in ("guest", "None", ""):
+        u = db_get_user_by_id(user_id)
+        if u and u.get("username"):
+            return u["username"].capitalize()
+    oauth = db_get_user_oauth(user_id=user_id)
+    if oauth and oauth.get("email"):
+        from agent.tools.email import _infer_recipient_name
+        inferred = _infer_recipient_name(oauth["email"])
+        if inferred:
+            return inferred
+    return os.environ.get("USER_NAME", "").strip() or "User"
+
+
+def _get_default_recipient_email(user_id: Optional[str] = None) -> str:
+    """Dynamically resolve the primary user's email address from OAuth, DB profile, or environment."""
+    from db.models import db_get_user_oauth, db_get_user_email_profile
+    oauth = db_get_user_oauth(user_id=user_id)
+    if oauth and oauth.get("email"):
+        return oauth["email"]
+    prof = db_get_user_email_profile(user_id=user_id or "guest")
+    if prof and prof.get("sender_email"):
+        return prof["sender_email"]
+    return os.environ.get("SENDER_EMAIL", "").strip() or "user@example.com"
+
+
 def _dispatch_uncalled_tool_intent(clean_text: str) -> Optional[Union[Dict[str, Any], List[Dict[str, Any]]]]:
     """Deterministic fallback dispatcher for when local models emit plain text instead of structured tool calls."""
     lower_q = clean_text.lower().strip()
@@ -241,7 +269,7 @@ def _dispatch_uncalled_tool_intent(clean_text: str) -> Optional[Union[Dict[str, 
     # Multi-step 1: Search news and email summary
     if ("tech news" in lower_q or "today's news" in lower_q) and ("email" in lower_q or "mail" in lower_q):
         m_em = re.search(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', clean_text)
-        target_em = m_em.group(0) if m_em else "keshavagarwal7793@gmail.com"
+        target_em = m_em.group(0) if m_em else _get_default_recipient_email()
         s_args = {"query": "today's tech news"}
         s_res = TOOLS_REGISTRY["web_search"](**s_args)
         em_args = {"to": target_em, "subject": "Tech News Summary", "description": "Summary of today's tech news"}
@@ -596,7 +624,9 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
         "who are you", "what can you do", "help",
     }
     if lower_input in greetings or any(lower_input.startswith(g + " ") for g in ["hello", "hi", "hey", "namaste", "good morning", "good evening"]):
-        spoken = "Hello Keshav! I am Nexus AI, your personal voice and productivity assistant. How can I help you today?"
+        active_name = _get_active_user_name(user_id)
+        name_str = f" {active_name}" if active_name and active_name.lower() != "user" else ""
+        spoken = f"Hello{name_str}! I am Nexus AI, your personal voice and productivity assistant. How can I help you today?"
         add_turn(session_id, clean_text, spoken)
         latency = round((time.perf_counter() - start_time) * 1000, 2)
         return {
@@ -720,7 +750,7 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                         if "user_id" not in t_args:
                             t_args["user_id"] = effective_user_id
                         if "sender_name" not in t_args:
-                            t_args["sender_name"] = "Keshav"
+                            t_args["sender_name"] = _get_active_user_name(effective_user_id)
                         if not t_args.get("recipient_name"):
                             m_recip = re.search(r'\b(?:to|mail|email)\s+([A-Za-z]+)', clean_text, re.I)
                             if m_recip and m_recip.group(1).lower() not in {"someone", "him", "her", "them", "a", "the", "my"}:
@@ -750,7 +780,7 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                         # Multi-step handling: if web search also requested emailing a summary
                         if t_name == "web_search" and ("email" in clean_text.lower() or "mail" in clean_text.lower()):
                             m_em = re.search(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', clean_text)
-                            target_em = m_em.group(0) if m_em else "keshavagarwal7793@gmail.com"
+                            target_em = m_em.group(0) if m_em else _get_default_recipient_email(effective_user_id)
                             em_args = {"to": target_em, "subject": "Tech News Summary", "description": "Summary of today's tech news"}
                             em_res = TOOLS_REGISTRY["send_email"](**em_args)
                             executed_tools.append({
@@ -1003,9 +1033,9 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                         to=to_cand,
                         description=desc,
                         user_id=effective_user_id,
-                        sender_name="Keshav",
+                        sender_name=_get_active_user_name(effective_user_id),
                     )
-                    executed_tools.append({"tool": "send_email", "args": {"to": to_cand, "description": desc, "sender_name": "Keshav"}, "result": res})
+                    executed_tools.append({"tool": "send_email", "args": {"to": to_cand, "description": desc, "sender_name": _get_active_user_name(effective_user_id)}, "result": res})
                     spoken = res.get("spoken") or "Processed your email request."
 
             # 8. Universal Web Search Fallback (Cricket scores, news, multilingual facts, queries)
@@ -1244,14 +1274,13 @@ def google_auth_callback(request: Request, code: Optional[str] = None, state: Op
             access_token=access_token,
             refresh_token=refresh_token,
         )
-        for uid in ["keshav", "krish"]:
-            if user_id != uid:
-                db_save_user_oauth(
-                    user_id=uid,
-                    email=user_email,
-                    access_token=access_token,
-                    refresh_token=refresh_token,
-                )
+        if user_id != "guest":
+            db_save_user_oauth(
+                user_id="guest",
+                email=user_email,
+                access_token=access_token,
+                refresh_token=refresh_token,
+            )
         os.environ["SENDER_EMAIL"] = user_email
 
         return HTMLResponse(f"""
@@ -1339,15 +1368,15 @@ def livekit_token(
 
     user = get_current_user_optional(authorization)
     user_id = user["id"] if user else None
-    user_name = user["username"] if user else (name or "Keshav")
+    user_name = user["username"] if user else (name or _get_active_user_name(user_id))
 
     from db.models import db_get_user_oauth
-    oauth_record = db_get_user_oauth(user_id=str(user_id) if user_id else "keshav")
+    oauth_record = db_get_user_oauth(user_id=str(user_id) if user_id else "guest")
     connected_email = oauth_record.get("email") if oauth_record else ""
-    bound_user_id = str(user_id) if user_id else "keshav"
+    bound_user_id = str(user_id) if user_id else "guest"
 
     room_name = room or "nexus-room"
-    participant_id = identity or f"user-keshav-{uuid.uuid4().hex[:6]}"
+    participant_id = identity or f"user-{uuid.uuid4().hex[:6]}"
 
     metadata_dict = {
         "user_id": bound_user_id,

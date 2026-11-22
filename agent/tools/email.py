@@ -53,7 +53,7 @@ def _get_smtp_creds(
     if user_id or "PYTEST_CURRENT_TEST" not in os.environ:
         try:
             from db.models import db_get_user_email_profile
-            prof = db_get_user_email_profile(user_id or "keshav")
+            prof = db_get_user_email_profile(user_id or "guest")
             if prof and prof.get("sender_email") and prof.get("sender_password"):
                 return prof["sender_email"].strip(), prof["sender_password"].strip()
         except Exception:
@@ -269,7 +269,7 @@ def _compose_email(description: str, recipient_name: str = "", sender_name: Opti
     """Use OpenAI or local LLM to generate a professional subject and body from a brief description.
     Ensures the greeting is addressed to the recipient and sign-off is from the sender.
     """
-    effective_sender = sender_name or "Keshav"
+    effective_sender = sender_name or os.environ.get("USER_NAME", "").strip() or "User"
     target_name = (recipient_name or "").strip()
 
     # If target_name is missing, extract from description if present
@@ -605,7 +605,7 @@ def send_email(
     Supports custom sender identity (e.g. Keshav sending from his own email ID),
     Google OAuth 2.0 Gmail REST API, and Gmail SMTP with App Passwords.
     """
-    effective_user_id = user_id or "keshav"
+    effective_user_id = user_id or "guest"
 
     # 1. Parse Recipients (single, multi, or CSV)
     recipients, parse_err = _parse_recipients(to=to, csv_path=csv_path)
@@ -622,16 +622,17 @@ def send_email(
     if not effective_recipient_name and len(recipients) == 1:
         effective_recipient_name = recipients[0].get("name") or _infer_recipient_name(recipients[0].get("email", ""), "")
 
-    # Resolve sender name: if not explicitly customized (or defaulting), check OAuth profile or default to Keshav
-    effective_sender_name = sender_name or "Keshav"
+    # Resolve sender name: if not explicitly customized (or defaulting), check OAuth profile or default from env
+    env_default_name = os.environ.get("USER_NAME", "").strip() or "User"
+    effective_sender_name = sender_name or env_default_name
     if sender_name in (None, "", "Krish"):
         # Check OAuth token to see authenticated email
         token_info = _get_fresh_google_access_token(user_id=effective_user_id)
         if token_info and token_info[1]:
             extracted = _infer_recipient_name(token_info[1])
-            effective_sender_name = extracted or "Keshav"
+            effective_sender_name = extracted or env_default_name
         elif sender_name != "Krish":
-            effective_sender_name = "Keshav"
+            effective_sender_name = env_default_name
         else:
             # If sender_name was explicitly passed as "Krish", keep "Krish"
             effective_sender_name = "Krish"
