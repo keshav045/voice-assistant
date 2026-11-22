@@ -26,18 +26,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // --- User Authentication ---
 async function checkAuthStatus() {
-  if (!authToken) {
-    updateAuthUI(null);
-    return;
-  }
+  const token = authToken || localStorage.getItem("nexus_auth_token") || "";
   try {
     const res = await fetch("/api/auth/me", {
-      headers: { "Authorization": `Bearer ${authToken}` }
+      headers: token ? { "Authorization": `Bearer ${token}` } : {}
     });
     const data = await res.json();
     if (data.authenticated && data.user) {
       currentUser = data.user;
-      updateAuthUI(currentUser);
+      if (data.token) {
+        authToken = data.token;
+        localStorage.setItem("nexus_auth_token", authToken);
+      }
+      updateAuthUI(currentUser, data.google_connected, data.google_email);
     } else {
       localStorage.removeItem("nexus_auth_token");
       authToken = "";
@@ -50,22 +51,32 @@ async function checkAuthStatus() {
   }
 }
 
-function updateAuthUI(user) {
+function updateAuthUI(user, googleConnected = false, googleEmail = "") {
   const loggedOutCard = document.getElementById("sidebar-auth-logged-out");
   const loggedInCard = document.getElementById("sidebar-auth-logged-in");
   const displayName = document.getElementById("user-display-name");
+  const displayEmail = document.getElementById("user-display-email");
   const avatarInitial = document.getElementById("user-avatar-initial");
+  const googleBadge = document.getElementById("user-google-badge");
 
   if (user) {
     if (loggedOutCard) loggedOutCard.classList.add("hidden");
     if (loggedInCard) loggedInCard.classList.remove("hidden");
-    if (displayName) displayName.innerText = user.username;
-    if (avatarInitial) avatarInitial.innerText = (user.username || "U")[0].toUpperCase();
+    const nameStr = user.username || (googleEmail ? googleEmail.split("@")[0] : "User");
+    if (displayName) displayName.innerText = nameStr;
+    if (displayEmail) displayEmail.innerText = googleEmail || user.email || "";
+    if (avatarInitial) avatarInitial.innerText = (nameStr || "U")[0].toUpperCase();
+    if (googleBadge) {
+      if (googleConnected || googleEmail) {
+        googleBadge.classList.remove("hidden");
+      } else {
+        googleBadge.classList.add("hidden");
+      }
+    }
   } else {
     if (loggedOutCard) loggedOutCard.classList.remove("hidden");
     if (loggedInCard) loggedInCard.classList.add("hidden");
   }
-  checkGmailStatus();
 }
 
 function openAuthModal(tab = "login") {
@@ -171,6 +182,10 @@ async function logoutUser() {
         headers: { "Authorization": `Bearer ${authToken}` }
       });
     }
+    await fetch("/api/auth/google/disconnect", {
+      method: "POST",
+      headers: authToken ? { "Authorization": `Bearer ${authToken}` } : {}
+    });
   } catch (e) {
     // Continue
   }
@@ -956,8 +971,17 @@ async function disconnectGmailAccount() {
 
 // Window listener for OAuth popup completion
 window.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "GMAIL_CONNECTED") {
-    checkGmailStatus();
+  if (event.data && (event.data.type === "GOOGLE_AUTH_SUCCESS" || event.data.type === "GMAIL_CONNECTED")) {
+    if (event.data.token) {
+      authToken = event.data.token;
+      localStorage.setItem("nexus_auth_token", authToken);
+    }
+    if (event.data.user) {
+      currentUser = event.data.user;
+    }
+    closeAuthModal();
+    checkAuthStatus();
+    loadHistory();
   }
 });
 

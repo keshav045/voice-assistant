@@ -311,6 +311,35 @@ def db_create_user(username: str, password: str, email: Optional[str] = None) ->
         return None
 
 
+def db_get_or_create_google_user(email: str, name: Optional[str] = None) -> Dict[str, Any]:
+    """Get existing user by email or register a new user from Google OAuth."""
+    import re
+    clean_e = (email or "").strip().lower()
+    if not clean_e:
+        clean_e = "user@example.com"
+    existing = db_get_user_by_username(clean_e)
+    if existing:
+        return {"id": existing["id"], "username": existing["username"], "email": existing.get("email") or clean_e}
+
+    # Generate clean unique username
+    base_u = (name or clean_e.split("@")[0]).strip().lower().replace(" ", "")
+    base_u = re.sub(r"[^a-z0-9_]", "", base_u) or "user"
+    candidate_u = base_u
+    suffix = 1
+    while db_get_user_by_username(candidate_u):
+        candidate_u = f"{base_u}{suffix}"
+        suffix += 1
+
+    random_pwd = secrets.token_urlsafe(24)
+    user = db_create_user(username=candidate_u, password=random_pwd, email=clean_e)
+    if user:
+        return user
+    found = db_get_user_by_username(clean_e)
+    if found:
+        return {"id": found["id"], "username": found["username"], "email": found.get("email") or clean_e}
+    return {"id": f"usr-{uuid.uuid4().hex[:8]}", "username": candidate_u, "email": clean_e}
+
+
 def db_get_user_by_username(username: str) -> Optional[Dict[str, Any]]:
     """Lookup user by username or email."""
     clean = username.strip().lower()

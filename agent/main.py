@@ -1152,9 +1152,33 @@ def auth_login(req: LoginRequest):
 def auth_me(authorization: Optional[str] = Header(None)):
     """Get currently authenticated user info."""
     user = get_current_user_optional(authorization)
+    from db.models import db_get_user_oauth, db_get_or_create_google_user, db_create_session_token
+
     if not user:
-        return {"authenticated": False, "user": None}
-    return {"authenticated": True, "user": user}
+        # Auto-resolve if Google account is connected
+        oauth = db_get_user_oauth(user_id="guest", provider="google")
+        if oauth and oauth.get("email"):
+            g_user = db_get_or_create_google_user(email=oauth["email"])
+            token = db_create_session_token(g_user["id"])
+            return {
+                "authenticated": True,
+                "user": g_user,
+                "token": token,
+                "google_connected": True,
+                "google_email": oauth["email"],
+            }
+        return {"authenticated": False, "user": None, "google_connected": False}
+
+    oauth = db_get_user_oauth(user_id=user["id"], provider="google")
+    if not oauth or not oauth.get("email"):
+        oauth = db_get_user_oauth(user_id="guest", provider="google")
+
+    return {
+        "authenticated": True,
+        "user": user,
+        "google_connected": bool(oauth and oauth.get("email")),
+        "google_email": oauth["email"] if oauth else None,
+    }
 
 
 @app.post("/api/auth/logout")
@@ -1264,42 +1288,57 @@ def google_auth_callback(request: Request, code: Optional[str] = None, state: Op
             timeout=10.0,
         )
         user_email = ""
+        user_name = ""
         if info_resp.status_code == 200:
-            user_email = info_resp.json().get("email", "")
+            info_json = info_resp.json()
+            user_email = info_json.get("email", "")
+            user_name = info_json.get("name", "") or info_json.get("given_name", "")
 
-        from db.models import db_save_user_oauth
+        from db.models import (
+            db_save_user_oauth,
+            db_get_or_create_google_user,
+            db_create_session_token,
+        )
+        logged_in_user = db_get_or_create_google_user(email=user_email, name=user_name)
+        eff_user_id = logged_in_user["id"]
+        auth_token = db_create_session_token(user_id=eff_user_id)
+
         db_save_user_oauth(
-            user_id=user_id,
+            user_id=eff_user_id,
             email=user_email,
             access_token=access_token,
             refresh_token=refresh_token,
         )
-        if user_id != "guest":
-            db_save_user_oauth(
-                user_id="guest",
-                email=user_email,
-                access_token=access_token,
-                refresh_token=refresh_token,
-            )
+        db_save_user_oauth(
+            user_id="guest",
+            email=user_email,
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
         os.environ["SENDER_EMAIL"] = user_email
 
         return HTMLResponse(f"""
         <!DOCTYPE html>
         <html>
-        <head><title>Gmail Connected</title></head>
+        <head><title>Google Account Connected</title></head>
         <body style="font-family:sans-serif; text-align:center; padding: 50px; background:#18181b; color:#ececec;">
           <h2 style="color: #16a34a;">[OK] Logged In With Google Successfully!</h2>
           <p style="font-size: 16px;">Connected account: <strong>{user_email}</strong></p>
-          <p style="color: #9ca3af;">All emails will now send directly from this account without any App Password.</p>
+          <p style="color: #9ca3af;">You are now logged in. All emails will send directly from this account without any App Password.</p>
           <p style="color: #9ca3af; margin-top: 20px;">Redirecting back to AI Assistant...</p>
           <script>
             if (window.opener) {{
               try {{
-                window.opener.postMessage({{ type: 'GMAIL_CONNECTED', email: '{user_email}' }}, '*');
+                window.opener.postMessage({{
+                  type: 'GOOGLE_AUTH_SUCCESS',
+                  token: '{auth_token}',
+                  user: {json.dumps(logged_in_user)},
+                  email: '{user_email}'
+                }}, '*');
               }} catch(e) {{}}
-              setTimeout(() => window.close(), 1200);
+              setTimeout(() => window.close(), 1000);
             }} else {{
-              setTimeout(() => {{ window.location.href = 'http://localhost:8501/?gmail_connected=1'; }}, 1200);
+              setTimeout(() => {{ window.location.href = '/'; }}, 1000);
             }}
           </script>
         </body>
@@ -1316,6 +1355,8 @@ def google_auth_status(authorization: Optional[str] = Header(None)):
     user_id = user["id"] if user else "guest"
     from db.models import db_get_user_oauth
     record = db_get_user_oauth(user_id=user_id, provider="google")
+    if not record and user_id != "guest":
+        record = db_get_user_oauth(user_id="guest", provider="google")
     client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
     return {
         "oauth_configured": bool(client_id),
@@ -1331,6 +1372,9 @@ def google_auth_disconnect(authorization: Optional[str] = Header(None)):
     user_id = user["id"] if user else "guest"
     from db.models import db_delete_user_oauth
     deleted = db_delete_user_oauth(user_id=user_id, provider="google")
+    if user_id != "guest":
+        db_delete_user_oauth(user_id="guest", provider="google")
+    os.environ.pop("SENDER_EMAIL", None)
     return {"success": deleted}
 
 
