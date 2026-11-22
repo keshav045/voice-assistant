@@ -154,6 +154,44 @@ ACTIVE_TOOL_NAMES = {"web_search", "calculator", "medical_search", "run_python_c
 ACTIVE_TOOL_SCHEMAS = [s for s in TOOL_SCHEMAS if s.get("function", {}).get("name") in ACTIVE_TOOL_NAMES]
 
 
+def _is_tool_call_aligned_with_intent(tool_name: str, user_text: str) -> bool:
+    """Verify that a tool call emitted by an LLM is actually requested by the user,
+    preventing small local models (like Ollama rtu-senior) from executing hallucinated write actions."""
+    lower = user_text.lower().strip()
+
+    if tool_name == "send_email":
+        email_keywords = [
+            "email", "mail", "gmail", "send to", "send an email", "send a mail",
+            "write to", "dispatch", "compose", "message to", "invite", "meeting",
+            "send", "recipient", "outlook", "subject"
+        ]
+        return any(k in lower for k in email_keywords) or "@" in user_text
+
+    if tool_name == "send_whatsapp_message":
+        return any(k in lower for k in ["whatsapp", "chat", "message", "text"])
+
+    if tool_name == "open_app":
+        app_keywords = [
+            "open", "launch", "start", "go to", "play on youtube", "on youtube",
+            "youtube", "spotify", "linkedin", "gmail", "github", "calculator", "notepad", "explorer"
+        ]
+        return any(k in lower for k in app_keywords)
+
+    if tool_name == "medical_search":
+        med_keywords = [
+            "medicine", "tablet", "capsule", "drug", "dosage", "side effect", "side effects",
+            "precaution", "precautions", "paracetamol", "dolo", "ibuprofen", "crocin", "metformin",
+            "amoxicillin", "azithromycin", "omeprazole", "pantoprazole", "cetirizine", "aspirin", "atorvastatin"
+        ]
+        return any(k in lower for k in med_keywords)
+
+    if tool_name == "calculator":
+        calc_keywords = ["calculate", "math", "+", "-", "*", "/", "%", "sqrt", "power", "sum", "multiply", "divide"]
+        return any(k in lower for k in calc_keywords) or any(c.isdigit() for c in user_text)
+
+    return True
+
+
 async def process_user_turn(user_text: str, session_id: str, user_id: Optional[str] = "guest") -> Dict[str, Any]:
     """Execute voice turn equipped with active tools:
     - web_search (live cricket scores, latest breaking news, real-time facts)
@@ -192,11 +230,41 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
     curr_base = os.environ.get("OPENAI_BASE_URL", "").strip() or None
     curr_model = os.environ.get("OPENAI_MODEL", OPENAI_MODEL)
 
+    # Fast Conversational Greeting & Pleasantry Check (Sub-millisecond latency & zero LLM hallucination)
+    lower_input = clean_text.lower().strip()
+    greetings = {
+        "hello", "hi", "hey", "hola", "namaste", "sup", "yo",
+        "good morning", "good afternoon", "good evening", "good night",
+        "how are you", "how are you doing", "what's up", "whats up",
+        "who are you", "what can you do", "help",
+    }
+    if lower_input in greetings or any(lower_input.startswith(g + " ") for g in ["hello", "hi", "hey", "namaste", "good morning", "good evening"]):
+        spoken = "Hello Krish! I am Nexus AI, your personal voice and productivity assistant. How can I help you today?"
+        add_turn(session_id, clean_text, spoken)
+        latency = round((time.perf_counter() - start_time) * 1000, 2)
+        return {
+            "spoken_reply": spoken,
+            "tool_calls_executed": [],
+            "requires_confirmation": False,
+            "session_id": session_id,
+            "latency_ms": latency,
+        }
+    elif lower_input in ["thanks", "thank you", "ok", "okay", "cool", "great", "nice", "bye", "goodbye"]:
+        spoken = "You are welcome! Let me know if you need anything else."
+        add_turn(session_id, clean_text, spoken)
+        latency = round((time.perf_counter() - start_time) * 1000, 2)
+        return {
+            "spoken_reply": spoken,
+            "tool_calls_executed": [],
+            "requires_confirmation": False,
+            "session_id": session_id,
+            "latency_ms": latency,
+        }
+
     if (curr_key and not curr_key.startswith("your-")) or curr_base:
         try:
             client = AsyncOpenAI(api_key=curr_key or "local-model", base_url=curr_base)
             history = get_messages_for_prompt(session_id)
-            messages = [{"role": "system", "content": SYSTEM_PROMPT}]
             sys_prompt = COMPACT_SYSTEM_PROMPT if (curr_base and "11434" in curr_base) else SYSTEM_PROMPT
             messages = [{"role": "system", "content": sys_prompt}]
             messages.extend(history)
@@ -244,6 +312,11 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                     except Exception:
                         t_args = {}
 
+                    # Anti-Hallucination Guardrail: Reject tools not matching user intent
+                    if not _is_tool_call_aligned_with_intent(t_name, clean_text):
+                        logger.warning(f"Blocked hallucinated tool call '{t_name}' for query '{clean_text}'")
+                        continue
+
                     if t_name == "send_email":
                         if "user_id" not in t_args:
                             t_args["user_id"] = effective_user_id
@@ -267,6 +340,11 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                             "tool_call_id": tc.id,
                             "content": json.dumps(t_res),
                         })
+
+                if not step_tool_results:
+                    raw = (msg.content or "").strip()
+                    spoken = _clean_spoken_text(raw) or "How can I assist you today?"
+                    break
 
                 messages.extend(step_tool_results)
 
@@ -310,6 +388,11 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                             except Exception:
                                 t_args = {}
 
+                            # Anti-Hallucination Guardrail: Reject tools not matching user intent
+                            if not _is_tool_call_aligned_with_intent(t_name, clean_text):
+                                logger.warning(f"Blocked hallucinated tool call '{t_name}' in retry for query '{clean_text}'")
+                                continue
+
                             if t_name == "send_email" and "user_id" not in t_args:
                                 t_args["user_id"] = effective_user_id
 
@@ -330,6 +413,12 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                                     "tool_call_id": tc.id,
                                     "content": json.dumps(t_res),
                                 })
+
+                        if not step_tool_results:
+                            raw = (msg.content or "").strip()
+                            spoken = _clean_spoken_text(raw) or "How can I assist you today?"
+                            break
+
                         messages.extend(step_tool_results)
                 except Exception as retry_err:
                     logger.error(f"Cloud OpenAI failover error: {retry_err}")

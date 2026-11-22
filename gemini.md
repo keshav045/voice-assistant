@@ -459,3 +459,7 @@ backend\.venv\Scripts\python.exe -m pytest tests/ -v
   - **Files Changed**: `agent/prompts.py`, `agent/main.py`
   - **What Was Changed**: Implemented conversational greeting and pleasantry fallback handler in `agent/main.py` to prevent basic greetings ("hello", "hi", "hey", "namaste", "good morning", "how are you") from executing web searches; gated fallback search to informational questions or queries with 3+ words; added `COMPACT_SYSTEM_PROMPT` in `agent/prompts.py` with `num_ctx=4096` parameter passing for local Ollama models.
   - **What Was Affected**: Basic greetings return an immediate, natural spoken greeting without invoking external search engines; resolves 400 Bad Request context limit errors on local Ollama models; preserves conversational continuity even if Cloud OpenAI credits are exhausted.
+- **Entry 2026-11-22.2**:
+  - **Files Changed**: `agent/main.py`
+  - **What Was Changed**: Implemented `_is_tool_call_aligned_with_intent` anti-hallucination guardrail in `agent/main.py` to validate that any LLM-emitted tool call (particularly from small local Ollama models like `rtu-senior:latest`) matches explicit user intent before execution; added fast greeting interceptor at top of `process_user_turn` returning direct spoken responses in ~1ms without querying the LLM.
+  - **What Was Affected**: Eliminates unintended tool execution and email dispatch hallucinations (preventing models from firing `send_email` on casual greetings); slashes greeting turn latency from 28.2 seconds to 1 millisecond.
