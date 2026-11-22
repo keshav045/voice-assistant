@@ -1,250 +1,342 @@
-# AI Assistant — Personal Voice & Autonomous Web Agent
+# Nexus AI — Personal Voice Assistant & Autonomous Real-Time Agent
 
-> An AI assistant that doesn't just chat — it actually takes action on your computer.
+An intelligent, voice-first AI assistant that does not just talk, but actually takes action on your computer.
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
-[![LiveKit WebRTC](https://img.shields.io/badge/LiveKit-WebRTC_Agent-00D2B4.svg)](https://livekit.io/)
-[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-412991.svg)](https://platform.openai.com/)
-[![Tests](https://img.shields.io/badge/Tests-68%20passed-brightgreen.svg)]()
+[![LiveKit WebRTC](https://img.shields.io/badge/LiveKit-WebRTC_Voice-00D2B4.svg)](https://livekit.io/)
+[![Unit Tests](https://img.shields.io/badge/Pytest-83%20Passed-brightgreen.svg)]()
+[![Evaluations](https://img.shields.io/badge/Evaluations-35%2F35%20Passed-brightgreen.svg)]()
+[![Golden Tests](https://img.shields.io/badge/Golden%20Tests-79%2F79%20Passed-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
 
-## Why I Built This
+## The Motivation: Why I Built Nexus AI
 
-Most AI voice projects today fall into one of two traps:
-1. They're just a basic ChatGPT wrapper that turns text into audio.
-2. They're rigid desktop scripts that break the moment you don't say the exact trigger phrase.
+Most voice assistant projects on the internet fall into one of two categories:
 
-I wanted something closer to a real Jarvis: an assistant you can actually talk to while working. It needs to hold an intelligent conversation (explain an algorithm, summarize the news, or reason through code), but more importantly, it needs to **do real work on your computer** — send emails, message people on WhatsApp, open desktop apps, look up live news, and calculate formulas.
+1. Basic ChatGPT wrappers that turn text into audio, waiting several seconds for a full paragraph to generate before speaking a single word. They cannot open a program, check a live sports score, or send a real email.
+2. Rigid command-parser desktop scripts that only recognize exact syntax like "open calculator" and break the moment you rephrase the sentence or speak naturally.
 
-I built **Nexus AI** to do exactly that, with a focus on speed, reliability, and clean code.
+I wanted something closer to a dependable personal co-pilot: an assistant you can talk to naturally while working at your desk. It needs to hold a conversation, reason through code, summarize live news, and answer complex questions. More importantly, it needs to perform real-world actions on your computer: sending emails via your authenticated Gmail address, searching clinical medicine databases, opening desktop programs and browser tabs, finding free calendar slots, and managing to-do items.
 
----
-
-## What It Can Do
-
-### 1. Hands-Free Conversational Voice
-- Click the mic (or speak) and talk naturally.
-- **Instant Interruptibility**: If the assistant is speaking and you click anywhere, hit `Escape`, or start a new command, it stops instantly.
-- **Clean Speech**: Built-in prompt engineering ensures the spoken output never reads out markdown stars, bullet symbols, or code backticks aloud.
-
-### 2. Autonomous Email Sending (Single, Multi & Bulk CSV)
-- Just say: *"Send an email to john@example.com saying the project review is moved to Friday 3 PM."*
-- Nexus automatically generates a professional subject line and a polite email body, confirms it, and sends it out.
-- **Bulk mailing**: Say *"Send an email to contacts.csv saying tomorrow's workshop starts at 10 AM"* and it reads emails from your CSV and delivers to each recipient.
-- **Two ways to send**:
-  - **Google OAuth 2.0**: Click the "Connect Gmail" button in the sidebar to authenticate securely without sharing any passwords.
-  - **Gmail SMTP**: Or add your 16-character Gmail App Password in `.env` for zero-friction local setup.
-
-### 3. WhatsApp Messaging
-- Say: *"Send a WhatsApp message to Alex saying I will be 15 minutes late."*
-- Nexus looks up the contact, types the message into WhatsApp Web/Desktop without freezing the interface, and delivers it.
-
-### 4. Desktop & Web App Launcher
-- Say: *"Open YouTube and play lo-fi beats"*, *"Open Calculator"*, *"Open LinkedIn"*, or *"Open Notepad"*.
-- It automatically checks if the native desktop application exists. If not, it launches the web version in your default browser.
-
-### 5. Real-Time News & Live Search
-- Ask: *"What is the latest news?"*
-- Nexus fetches live breaking news across politics, world affairs, business, and tech.
-- It naturally asks: *"Would you like me to dive deeper into any of these stories, or would you like more news on a specific topic?"*
-
-### 6. Calculations & Python Code Runner
-- Ask it to calculate compound interest, solve equations, or run a Python script to check balanced parentheses.
-- Math is evaluated with an AST-safe parser (no insecure `eval()`), and complex computational logic runs in an isolated Python runner.
-
-### 7. Chat History & User Accounts
-- Includes user registration and login with salted SHA-256 password hashing.
-- Conversations are saved in a clean sidebar grouped by session, so you can resume or delete past chats anytime.
-
-### 8. LiveKit WebRTC Real-Time Audio Engine (Sub-500ms Streaming)
-- **LiveKit WebRTC Voice Engine**: Dedicated full-duplex real-time WebRTC audio streaming directly between the browser and LiveKit Cloud.
-- **Sub-500ms Voice Pipeline**: Silero VAD &rarr; OpenAI Whisper STT &rarr; GPT-4o Agent with tools &rarr; OpenAI TTS.
-- **True WebRTC Barge-in**: Instant audio cancellation at the packet level the millisecond you begin speaking.
-- **Dedicated Worker**: Run `python run_livekit.py dev` to connect your voice agent to LiveKit Cloud.
+Nexus AI was built to solve this problem with low latency, robust error handling, and clean software architecture.
 
 ---
 
-## Architecture & Engineering Decisions
+## Architectural Overview
+
+Nexus AI operates on a hybrid architecture that supports both cloud-based inference (OpenAI GPT-4o, Whisper, and TTS-1) and 100% offline local inference (Ollama with Qwen 2.5, local faster-whisper, and Microsoft Edge-TTS).
 
 ```mermaid
 flowchart TD
-    User([User Voice]) <-->|Full-Duplex WebRTC| WebUI[Web Dashboard]
+    User([User Voice / Text]) <-->|Full-Duplex WebRTC / REST| WebUI[Executive Web Dashboard]
     
-    subgraph LiveKit WebRTC Voice Pipeline
-        WebUI -->|1. Get Room Token| TokenRoute[GET /api/livekit/token]
-        WebUI <-->|2. WebRTC Audio Stream| LiveKitSFU[LiveKit Cloud / Local SFU]
-        LiveKitSFU <-->|Full-Duplex Stream| LiveKitWorker[LiveKit Voice Pipeline Agent]
-        LiveKitWorker --> Agent[GPT-4o Tool Dispatcher]
+    subgraph VoiceEngine["Real-Time LiveKit WebRTC Voice Pipeline"]
+        WebUI -->|1. Room Token Request| TokenEndpoint[GET /api/livekit/token]
+        WebUI <-->|2. Bidirectional Audio| LiveKitCloud[LiveKit Cloud SFU]
+        LiveKitCloud <-->|3. Low-Latency Stream| LiveKitWorker[agent/livekit_worker.py]
+        LiveKitWorker --> VAD[Silero Neural VAD - 400ms Cutoff]
+        VAD --> STT[Whisper STT: Cloud or Local tiny.en]
+        STT --> Dispatcher[Autonomous Tool Dispatcher]
+        Dispatcher --> TTS[TTS: OpenAI Alloy or Edge-TTS Christopher]
     end
 
-    subgraph Text & History API
-        WebUI -->|HTTP /api/chat| FastAPI[FastAPI Backend]
-        FastAPI --> Agent
+    subgraph CoreBackend["FastAPI Gateway & Session Manager"]
+        WebUI -->|HTTP /api/chat| FastAPIServer[agent/main.py]
+        FastAPIServer --> Dispatcher
+        FastAPIServer --> OAuth[Google OAuth 2.0 Handler]
     end
 
-    Agent --> Tools[Real-World Autonomous Tools]
-    Tools --> Tool1[Email: Gmail OAuth + SMTP + Bulk CSV]
-    Tools --> Tool2[WhatsApp Messaging Automation]
-    Tools --> Tool3[Desktop & Browser App Launcher]
-    Tools --> Tool4[DuckDuckGo & Live News RSS]
-    Tools --> Tool5[AST Calculator & Python REPL]
-    
-    FastAPI --> DB[(SQLite in WAL Mode)]
+    subgraph ToolSuite["Integrated Autonomous Tool Matrix"]
+        Dispatcher --> T1[Clinical Medicine Search: Curated + OpenFDA]
+        Dispatcher --> T2[Email Engine: Google OAuth REST + SMTP + Bulk CSV]
+        Dispatcher --> T3[App Launcher: Windows OS startfile + Browser]
+        Dispatcher --> T4[Web Search: Live News RSS + DuckDuckGo]
+        Dispatcher --> T5[Math & Code: AST Calculator + Isolated Python REPL]
+        Dispatcher --> T6[Calendar & Tasks: Slot Detection + Daily To-Dos]
+        Dispatcher --> T7[Memory & RAG: Semantic Fact Store + Document Search]
+    end
+
+    FastAPIServer --> SQLite[(SQLite in WAL Mode)]
+    LiveKitWorker --> SQLite
 ```
-
-### Why these choices?
-- **FastAPI over Django/Flask**: Asynchronous by design, minimal memory footprint, and native OpenAPI documentation.
-- **Vanilla HTML5 + ES6 JavaScript**: Instead of a bloated Node.js/React frontend with hundreds of megabytes of `node_modules`, the frontend is clean vanilla web code. It loads in under 50ms and runs right out of FastAPI's static file handler.
-- **SQLite in WAL Mode**: Write-Ahead Logging gives high concurrency, immediate read/write access, and zero external database setup required.
-- **LiveKit WebRTC**: Dedicated real-time voice streaming with sub-500ms latency, neural VAD, and true barge-in interruption.
 
 ---
 
-## Project Structure
+## Key Capabilities & Features
+
+### 1. Hands-Free Conversational Voice with LiveKit WebRTC
+- Built on LiveKit Agents with local Silero Voice Activity Detection (VAD).
+- Speech detection triggers within 50 milliseconds of speaking, with an automatic silence cutoff of 400 milliseconds.
+- True WebRTC packet-level barge-in: the instant you start speaking, the assistant cuts off its audio playback immediately without waiting for a buffer to clear.
+- Bidirectional data channel synchronization: as you speak, your spoken transcript and the assistant's voice answers appear as styled chat bubbles in the web interface in real time.
+
+### 2. Unified User Accounts & 1-Click Google Sign-In
+- Combines user profile management and Google OAuth into a single system.
+- Users can sign up with a traditional username and password or click "Continue with Google".
+- When Google is connected, the user is automatically logged into the application, their profile name and email are displayed in the sidebar, and all email features are unlocked.
+- Session tokens are stored securely in SQLite with salted password hashing.
+
+### 3. Autonomous Email Delivery (OAuth REST API + SMTP Fallback)
+- Natural language email dispatch: "Send an email to john@example.com about tomorrow's 3 PM project review".
+- Nexus composes a professional subject line and body, validates recipient formatting, and sends the message.
+- Direct Google OAuth delivery: Sends via official Gmail API endpoints (`https://gmail.googleapis.com/gmail/v1/users/me/messages/send`) without requiring manual SMTP credentials.
+- SMTP fallback: Supports standard Gmail SMTP (ports 587/465) with 16-character Google App Passwords.
+- Bulk mailing: Send updates to multiple comma-separated addresses or a `contacts.csv` file automatically.
+- Phonetic address normalization: Automatically cleans spoken emails like "keshav zero four five at the rate gmail dot com" into "keshav045@gmail.com".
+
+### 4. Clinical Medicine & Pharmacology Search Engine
+- Multi-tier clinical pharmacology lookups across voice and text.
+- Curated offline pharmacology database for common medicines: Paracetamol, Dolo 650, Ibuprofen, Combiflam, Metformin, Amoxicillin, Azithromycin, Omeprazole, Pantoprazole, Cetirizine, Aspirin, Atorvastatin, Losartan, and Montelukast.
+- OpenFDA Drug Label API fallback for comprehensive FDA indications, dosage guidelines, adverse reactions, and contraindications.
+- DuckDuckGo medical search fallback for newly approved pharmaceuticals.
+- Responsible medical disclaimers attached to all clinical responses.
+
+### 5. Windows Desktop & Web Application Launcher
+- Opens desktop programs and web applications hands-free: YouTube, WhatsApp Web, Spotify, LinkedIn, GitHub, Gmail, Calculator, Notepad, and File Explorer.
+- On Windows, uses operating system level shell execution (`os.startfile`) so that browser pop-up blockers cannot block the newly opened tabs.
+- Extracts queries automatically: saying "Open YouTube and play lo-fi hip hop" opens YouTube directly to the search results.
+
+### 6. WhatsApp Messaging Automation
+- Say "Message Alex on WhatsApp saying I will be 15 minutes late".
+- Formats pre-filled WhatsApp URLs and triggers chat windows without freezing the main application interface.
+
+### 7. AST-Safe Calculator & Isolated Python Code Sandbox
+- Math calculations are evaluated using Abstract Syntax Tree (AST) parsing with no insecure `eval()` calls.
+- Supports arithmetic, percentages, square roots, powers, and multi-step financial expressions.
+- Includes an isolated Python REPL for running algorithmic code snippets, testing logic, and verifying scripts.
+
+### 8. Calendar Scheduling & Task Management
+- Find free slots: "Find a 30-minute free slot tomorrow afternoon".
+- Calendar events and task lists are stored and queried directly in SQLite.
+- Irreversible write operations (like creating calendar meetings or deleting tasks) include verification safety checks.
+
+### 9. Semantic Long-Term Memory & Local Document RAG
+- Remembers user facts across sessions: "Remember that my preferred meeting time is 10 AM".
+- Recalls stored preferences on demand: "What is my preferred meeting time?".
+- Ingests and vectorizes local document notes with top-k cosine similarity search.
+
+---
+
+## Dual Inference Engines: Cloud vs 100% Offline Local
+
+Nexus AI adapts to your environment based on your `.env` configuration:
+
+| Component | Cloud Production Mode | 100% Offline Local Mode |
+|---|---|---|
+| Large Language Model | OpenAI GPT-4o | Local Ollama (`qwen2.5:1.5b` or `llama3`) |
+| Speech-to-Text (STT) | OpenAI Whisper API | Local faster-whisper (`tiny.en`) |
+| Text-to-Speech (TTS) | OpenAI TTS-1 (`alloy` / `echo`) | Microsoft Edge-TTS (`en-US-ChristopherNeural`) |
+| Turn Detection | Silero Neural VAD | Silero Neural VAD |
+| Latency | Sub-500ms | Sub-400ms (zero cloud egress) |
+
+---
+
+## Directory Structure
 
 ```
 voice-assistant/
 ├── agent/
-│   ├── main.py            # FastAPI routes, tool routing, and turn execution
-│   ├── cli.py             # Terminal voice mode (press spacebar to speak)
-│   ├── voice.py           # Audio capture and text-to-speech engine
-│   ├── session.py         # Multi-turn conversation buffer
-│   ├── safety.py          # Input validation and prompt-injection guardrails
-│   ├── prompts.py         # AI personality, news follow-up rules, and tone guidelines
+│   ├── main.py                 # FastAPI REST and WebSocket API gateway
+│   ├── livekit_worker.py       # LiveKit WebRTC voice agent worker
+│   ├── prompts.py              # System prompts, persona, and voice rules
+│   ├── safety.py               # Action safety policies and confirmation gating
+│   ├── confirm.py              # Natural language confirmation parser
+│   ├── session.py              # Multi-turn in-memory session buffer
+│   ├── memory.py               # Semantic user fact storage and recall
+│   ├── local_voice.py          # Local faster-whisper and Edge-TTS adapters
+│   ├── voice.py                # Standalone microphone loop runner
+│   ├── cli.py                  # Terminal interactive test interface
 │   └── tools/
-│       ├── email.py       # Gmail OAuth + SMTP sender + CSV bulk parser
-│       ├── search.py      # Live news and DuckDuckGo search
-│       ├── launcher.py    # Desktop app & browser website launcher
-│       ├── whatsapp.py    # WhatsApp contact search and messaging
-│       ├── calc.py        # AST-safe mathematical calculator
-│       └── python_repl.py # Sandboxed Python execution
+│       ├── medical.py          # Clinical pharmacology search engine
+│       ├── email.py            # Gmail OAuth + SMTP + bulk CSV sender
+│       ├── launcher.py         # OS application & website launcher
+│       ├── search.py           # Google News RSS and DuckDuckGo search
+│       ├── whatsapp.py         # WhatsApp messaging automation
+│       ├── calc.py             # AST-safe mathematical evaluation
+│       ├── coding.py           # Sandboxed Python execution REPL
+│       ├── calendar.py         # Calendar slots and event scheduling
+│       ├── tasks.py            # SQLite daily task management
+│       ├── docs.py             # Document search and note retrieval
+│       └── memory_tools.py     # Remember and forget tool bindings
 ├── db/
-│   ├── schema.sql         # Database schema (users, chat turns, OAuth tokens)
-│   └── models.py          # Database queries & WAL mode connection manager
+│   ├── schema.sql              # Database DDL schema (users, tokens, history, OAuth)
+│   └── models.py               # SQLite WAL-mode abstraction layer
+├── evals/
+│   ├── run_suite.py            # Master evaluation suite runner (35 benchmarks)
+│   ├── harness.py              # Benchmark execution and scoring engine
+│   ├── metric_registry.py      # Thresholds and production promotion rules
+│   └── eval_*.py               # Modular test scripts (retriever, latency, cost, safety)
+├── rag/
+│   ├── ingest.py               # Document chunking and embedding pipeline
+│   └── store.py                # Cosine similarity vector store
+├── tests/
+│   ├── test_agent.py           # Agent workflow and safety gating tests
+│   ├── test_auth_and_history.py# Authentication, tokens, and history tests
+│   ├── test_calc_and_session.py# Math engine and session isolation tests
+│   ├── test_email.py           # OAuth, SMTP, and bulk email tests
+│   ├── test_launcher.py        # App targets and query extraction tests
+│   ├── test_livekit.py         # WebRTC tokens and agent tool tests
+│   ├── test_medical.py         # Pharmacology database and topic filter tests
+│   ├── test_voice.py           # Audio transcription and text sanitization tests
+│   └── test_whatsapp.py        # WhatsApp link generation and contact tests
 ├── web/
-│   ├── index.html         # Dashboard UI with sidebar and mic button
-│   ├── app.js             # LiveKit WebRTC client, audio stream, and chat handling
-│   └── style.css          # Dark-mode theme
-├── tests/                 # Automated test suite (68 tests)
-├── run_server.py          # Production server entrypoint
-├── Dockerfile             # Production container definition
-├── docker-compose.yml     # Docker Compose orchestration
-└── .env.example           # Example configuration file
+│   ├── index.html              # ChatGPT-style executive web interface
+│   ├── app.js                  # LiveKit WebRTC client, state, and audio visualizer
+│   └── style.css               # Styling and layout definitions
+├── run_server.py               # FastAPI backend entrypoint (port 8000)
+├── run_livekit.py              # LiveKit agent worker entrypoint
+├── run_voice.py                # Standalone local desktop microphone runner
+├── run_golden_tests.py         # Golden Dataset 79-scenario validation runner
+├── requirements.txt            # Python dependencies
+└── .env.example                # Sample environment configuration template
 ```
 
 ---
 
-## Quickstart (Get It Running in 3 Minutes)
+## Quickstart Guide
 
-### 1. Clone & Set Up Environment
+### 1. Prerequisites
+- Python 3.11 or higher installed on your machine.
+- Git installed.
+- (Optional) [Ollama](https://ollama.ai/) installed if running in 100% local offline mode.
+
+### 2. Clone and Setup Environment
 
 ```bash
 # Clone the repository
-git clone https://github.com/<your-username>/voice-assistant.git
+git clone https://github.com/keshav045/voice-assistant.git
 cd voice-assistant
 
-# Create and activate virtual environment
-python -m venv .venv
+# Create virtual environment
+python -m venv backend\.venv
 
-# On Windows:
-.venv\Scripts\activate
-# On macOS / Linux:
-source .venv/bin/activate
+# Activate virtual environment
+# Windows PowerShell:
+backend\.venv\Scripts\Activate.ps1
+# Windows Command Prompt:
+backend\.venv\Scripts\activate.bat
+# Linux / macOS:
+source backend/.venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### 2. Configure Your `.env`
+### 3. Configure Environment Variables
 
-Copy the sample environment file:
+Copy the example environment template:
 
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` in any text editor and fill in your keys:
+Open `.env` in your code editor and populate your keys:
 
 ```ini
-# Required:
-OPENAI_API_KEY=sk-your-openai-api-key-here
+# Core LLM API Key (leave empty or use 'ollama' if using local Ollama)
+OPENAI_API_KEY=your-openai-api-key-here
 
-# Optional (for sending emails):
-SENDER_EMAIL=your-gmail@gmail.com
-SENDER_APP_PASSWORD=xxxx xxxx xxxx xxxx
+# Optional: Local Ollama Configuration (defaults to 127.0.0.1:11434)
+OPENAI_BASE_URL=http://localhost:11434/v1
+OPENAI_MODEL=qwen2.5:1.5b
+
+# LiveKit WebRTC Cloud Credentials (get free keys at cloud.livekit.io)
+LIVEKIT_URL=wss://your-project.livekit.cloud
+LIVEKIT_API_KEY=your-livekit-api-key
+LIVEKIT_API_SECRET=your-livekit-api-secret
+
+# Optional: Google OAuth 2.0 Credentials (for 1-click Gmail sending)
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# Optional: Direct Gmail SMTP Fallback
+SENDER_EMAIL=your-email@gmail.com
+SENDER_APP_PASSWORD=your-16-char-app-password
 ```
 
-> **Note on Gmail App Password**: You can generate a free 16-character App Password at [Google Account Security](https://myaccount.google.com/security) under *2-Step Verification > App Passwords*.
+### 4. Start the Application
 
-### 3. Run the Assistant
+You need two processes running: the FastAPI backend and the LiveKit WebRTC worker.
 
+**Terminal 1 (Backend & Web Interface):**
 ```bash
-python run_server.py
+backend\.venv\Scripts\python.exe run_server.py
 ```
+The web dashboard is now running at `http://localhost:8000`.
 
-Now open **`http://localhost:8000`** in your browser.
-Click the microphone button and start talking!
+**Terminal 2 (LiveKit Voice Worker):**
+```bash
+backend\.venv\Scripts\python.exe run_livekit.py dev
+```
+The voice worker will connect to LiveKit Cloud and wait for audio room joins.
 
 ---
 
-## Example Voice Commands to Try
+## Example Voice Commands
 
-| What to say | What Nexus AI does |
-|---|---|
-| *"What is the latest news?"* | Fetches top headlines across politics, world, and tech, then asks what topic you want more of. |
-| *"Send an email to user@example.com saying the meeting is moved to Friday 3 PM"* | Composes a clean professional subject and body, and delivers the email. |
-| *"Send an email to contacts.csv saying tomorrow's call starts at 10 AM"* | Reads your CSV list and sends individual emails to each contact. |
-| *"Open YouTube and play lo-fi hip hop"* | Opens your browser directly to the YouTube search and plays it. |
-| *"Message Alex on WhatsApp saying I'm on my way"* | Opens WhatsApp, finds Alex's chat, and types the message. |
-| *"Calculate (450 * 12) + 18 percent of 5000"* | Evaluates the math safely and tells you the answer. |
-| *"Explain how Transformer attention works in simple terms"* | Gives a deep, intuitive breakdown without reading out weird formatting symbols. |
+| Category | Voice Command | System Action |
+|---|---|---|
+| Live News | "What is the latest world news?" | Queries Google News RSS and DuckDuckGo, summarizes top stories, and asks an engaging follow-up. |
+| Live Sports | "What is the current India vs New Zealand cricket score?" | Fetches real-time scorecards and reports match status directly. |
+| Medicine Search | "What is Dolo 650 used for and what is the dosage?" | Retrieves pharmacology data from curated database and OpenFDA, delivering clinical details and disclaimers. |
+| Autonomous Email | "Send an email to alex@example.com about tomorrow's 4 PM sync" | Composes a professional subject and body, and delivers directly via authenticated Gmail. |
+| App Launcher | "Open YouTube and search for crazy physics experiments" | Launches browser to YouTube search results natively on your Windows desktop. |
+| App Launcher | "Open Calculator" | Opens native Windows Calculator program. |
+| WhatsApp Message | "Message Rahul on WhatsApp saying meeting starts in 10 minutes" | Generates WhatsApp Web conversation URL and opens chat with message drafted. |
+| Safe Calculator | "Calculate 18 percent GST on 4500 and divide by 3" | Evaluates math safely via AST parser and speaks the result. |
+| Python Runner | "Run python: print([x**2 for x in range(1, 6)])" | Executes script in isolated Python sandbox and returns standard output. |
+| Task Manager | "Add a high priority task to review pull request" | Saves task to SQLite database with priority and timestamp. |
+| Memory Storage | "Remember that my employee ID is 4082" | Saves semantic fact into persistent memory. |
+| Memory Recall | "What is my employee ID?" | Recalls stored fact from long-term database. |
 
 ---
 
-## Automated Tests
+## Test Suites & Evaluation Verification
 
-Every component is tested with `pytest`. Run the test suite:
+The codebase includes testing at three distinct levels:
 
+### 1. Pytest Unit Test Suite (83 Tests)
+Covers all modules, tools, database CRUD operations, and security policies:
 ```bash
-pytest tests/ -v
+backend\.venv\Scripts\python.exe -m pytest tests/ -v
 ```
+**Status: 83 passed in 65s (100% pass rate).**
 
-**Status**: 68 passed (100% pass rate).
+### 2. Master Evaluation Suite (35 Benchmarks)
+Evaluates retrieval accuracy, latency, cost profiling, safety gating, and prompt leakage defense:
+```bash
+backend\.venv\Scripts\python.exe -m evals.run_suite
+```
+**Status: 35/35 passed (100% pass rate, Production Promotion Approved).**
 
-Tested areas include:
-- LiveKit WebRTC status, token generation, and agent tool instantiation (`test_livekit.py`)
-- Email tool with single, comma-separated, and CSV bulk recipients
-- Google OAuth token refresh logic
-- WhatsApp automation and desktop fallback
-- AST calculator safety and edge cases
-- Web search and news RSS parsing
-- Authentication and session-grouped history
+### 3. Golden Test Dataset (79 Scenarios)
+Comprehensive end-to-end multi-turn conversation and tool calling verification:
+```bash
+backend\.venv\Scripts\python.exe run_golden_tests.py
+```
+**Status: 79/79 passed (100% pass rate).**
 
 ---
 
 ## Deployment Options
 
-### 1. Deploy on Vercel (Recommended for Cloud)
-This project is configured out of the box for Vercel with `api/index.py` and `vercel.json`:
-1. Push your code to GitHub.
-2. Go to [Vercel Dashboard](https://vercel.com/dashboard) and click **"Add New Project"**.
-3. Select your `voice-assistant` repository.
-4. Add your `OPENAI_API_KEY` under Environment Variables.
-5. Click **"Deploy"** — you get a fast, global HTTPS URL in seconds.
-
-### 2. Deploy with Docker
+### Docker Compose
+Deploy as a containerized stack with SQLite volume persistence:
 ```bash
 docker-compose up -d --build
 ```
+Health checks are automatically monitored on `http://localhost:8000/health`.
 
-The container includes automated health checks on `/health` and stores the database on a persistent volume. See [DEPLOYMENT.md](DEPLOYMENT.md) for full deployment instructions (Vercel, Railway, Render, Fly.io, or VPS).
+### Cloud Hosting (Render, Railway, Fly.io, or VPS)
+1. Add environment variables from `.env` into your cloud provider's secrets manager.
+2. Set the startup command to `python run_server.py`.
+3. Set the LiveKit worker background process command to `python run_livekit.py dev`.
 
 ---
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
-Feel free to fork it, adapt it, and build on top of it.
+This project is licensed under the [MIT License](LICENSE). Feel free to adapt, extend, and build on top of it.
