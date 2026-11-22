@@ -22,7 +22,7 @@ if ROOT_DIR not in sys.path:
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-from livekit.agents import AutoSubscribe, JobContext, WorkerOptions, llm, stt, tts
+from livekit.agents import AutoSubscribe, JobContext, JobProcess, WorkerOptions, llm, room_io, stt, tts
 from livekit.agents.voice import Agent, AgentSession
 from livekit.plugins import openai, silero
 from agent.local_voice import LocalWhisperSTT, LocalEdgeTTS
@@ -305,8 +305,25 @@ async def entrypoint(ctx: JobContext):
     )
 
     # Start audio pipeline on room (must be awaited so listening loop starts!)
-    await session.start(agent, room=ctx.room)
+    await session.start(
+        agent,
+        room=ctx.room,
+        room_input_options=room_io.RoomInputOptions(close_on_disconnect=False),
+    )
     logger.info("AgentSession started and immediately listening for voice input (zero-latency startup)")
 
 
-server_options = WorkerOptions(entrypoint_fnc=entrypoint)
+def prewarm(proc: JobProcess):
+    """Prewarm local neural models to prevent event loop stalls during real-time speech."""
+    try:
+        proc.userdata["vad"] = silero.VAD.load()
+        import edge_tts
+        import edge_tts.communicate
+        from agent.local_voice import _get_whisper_model
+        _get_whisper_model("tiny.en")
+        logger.info("Prewarmed Silero VAD, Edge-TTS, and faster-whisper successfully.")
+    except Exception as e:
+        logger.warning(f"LiveKit prewarm notice: {e}")
+
+
+server_options = WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm)
