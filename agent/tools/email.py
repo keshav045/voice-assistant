@@ -49,14 +49,15 @@ def _get_smtp_creds(
     if sender_email and sender_password:
         return sender_email.strip(), sender_password.strip()
 
-    # Check database profile for user (e.g. Krish)
-    try:
-        from db.models import db_get_user_email_profile
-        prof = db_get_user_email_profile(user_id or "krish")
-        if prof and prof.get("sender_email") and prof.get("sender_password"):
-            return prof["sender_email"].strip(), prof["sender_password"].strip()
-    except Exception:
-        pass
+    # Check database profile for user if explicitly provided or in normal runtime
+    if user_id or "PYTEST_CURRENT_TEST" not in os.environ:
+        try:
+            from db.models import db_get_user_email_profile
+            prof = db_get_user_email_profile(user_id or "keshav")
+            if prof and prof.get("sender_email") and prof.get("sender_password"):
+                return prof["sender_email"].strip(), prof["sender_password"].strip()
+        except Exception:
+            pass
 
     if "PYTEST_CURRENT_TEST" not in os.environ:
         try:
@@ -241,21 +242,48 @@ def _parse_recipients(
     return [], f"'{to_str}' is not a valid email address. Please provide a valid email or CSV file."
 
 
+def _infer_recipient_name(email_addr: str, explicit_name: str = "") -> str:
+    """Infer a natural recipient first name from an email address or explicit parameter."""
+    if explicit_name and explicit_name.strip():
+        return explicit_name.strip()
+    if not email_addr or "@" not in email_addr:
+        return ""
+    handle = email_addr.split("@")[0]
+    parts = re.split(r"[._\-\d]+", handle)
+    parts = [p for p in parts if len(p) >= 2 and p.isalpha()]
+    if parts:
+        first = parts[0]
+        for suffix in ["kumar", "singh", "sharma", "verma", "gupta", "agarwal"]:
+            if first.lower().endswith(suffix) and len(first) > len(suffix) + 2:
+                first = first[:-len(suffix)]
+                break
+        return first.capitalize()
+    return ""
+
+
 # --------------------------------------------------------------------------- #
 # AI subject + body composer (uses OpenAI synchronously — light call)
 # --------------------------------------------------------------------------- #
 
-def _compose_email(description: str, recipient_name: str = "", sender_name: str = "Krish") -> Dict[str, str]:
-    """Use OpenAI to generate a professional subject and body from a brief description.
-    Falls back to a simple template if the API key is missing.
+def _compose_email(description: str, recipient_name: str = "", sender_name: Optional[str] = None) -> Dict[str, str]:
+    """Use OpenAI or local LLM to generate a professional subject and body from a brief description.
+    Ensures the greeting is addressed to the recipient and sign-off is from the sender.
     """
-    effective_sender = sender_name or "Krish"
+    effective_sender = sender_name or "Keshav"
+    target_name = (recipient_name or "").strip()
+
+    # If target_name is missing, extract from description if present
+    if not target_name:
+        name_match = re.search(r'\b(?:to|mail|email)\s+([A-Za-z]+)', description, re.IGNORECASE)
+        if name_match and name_match.group(1).lower() not in {"someone", "him", "her", "them", "a", "the", "my"}:
+            target_name = name_match.group(1).capitalize()
+
     api_key = os.environ.get("OPENAI_API_KEY", "")
     base_url = os.environ.get("OPENAI_BASE_URL", "").strip() or None
     if not api_key and not base_url:
-        is_meeting = any(w in description.lower() for w in ["meet", "sync", "call", "schedule", "catch up"])
-        subject = f"Meeting Invitation: Discussion" if is_meeting else f"Message{' for ' + recipient_name if recipient_name else ''}"
-        greeting = f"Hi {recipient_name}," if recipient_name else "Hello,"
+        is_meeting = any(w in description.lower() for w in ["meet", "sync", "call", "schedule", "catch up", "reschedule"])
+        subject = f"Meeting Invitation: Discussion" if is_meeting else f"Message{' for ' + target_name if target_name else ''}"
+        greeting = f"Hello {target_name}," if target_name else "Hello,"
         body = f"{greeting}\n\n{description}\n\nBest regards,\n{effective_sender}"
         return {"subject": subject, "body": body}
 
@@ -264,24 +292,27 @@ def _compose_email(description: str, recipient_name: str = "", sender_name: str 
         client = OpenAI(api_key=api_key or "ollama", base_url=base_url)
 
         prompt = f"""You are a professional email assistant.
-The sender is: {effective_sender}.
-The recipient is: {recipient_name if recipient_name else "the designated recipient"}.
-The user's description or intent is:
-"{description}"
+Sender: {effective_sender} (Person sending the email).
+Recipient: {target_name if target_name else "the designated recipient"} (Person receiving the email).
+Intent: "{description}"
 
-Instructions:
-- If this relates to a meeting, sync, or discussion, generate a clear, professional meeting invitation email with an informative subject line (e.g. "Meeting Invitation: Project Discussion", "Upcoming Meeting Sync").
-- Write a polite, crisp, and structured email body with greeting, meeting context/agenda, proposed schedule, and sign off with:
-"Best regards,\n{effective_sender}"
+CRITICAL INSTRUCTIONS:
+1. GREETING: The email MUST be addressed TO the recipient ({target_name if target_name else 'the recipient'}).
+   Start with: "Hello {target_name if target_name else 'there'}," (or "Hi {target_name if target_name else 'there'},").
+   NEVER greet the sender ({effective_sender}). The email is TO {target_name if target_name else 'the recipient'}.
+2. BODY: Clearly explain the message, meeting invite, or update.
+3. SIGN-OFF: The email MUST conclude with a formal sign-off from the sender:
+"Best regards,
+{effective_sender}"
 
-Respond ONLY with valid JSON in this exact format (no markdown, no extra text):
+Respond ONLY with valid JSON in this exact format:
 {{
-  "subject": "<email subject line>",
-  "body": "<full email body with greeting, agenda, and sign-off from {effective_sender}>"
+  "subject": "<informative email subject line>",
+  "body": "Hello {target_name if target_name else 'there'},\\n\\n<meeting/message details>\\n\\nBest regards,\\n{effective_sender}"
 }}"""
 
         response = client.chat.completions.create(
-            model=os.environ.get("OPENAI_MODEL", "gpt-4o"),
+            model=os.environ.get("OPENAI_MODEL", "rtu-senior:latest"),
             messages=[{"role": "user", "content": prompt}],
             temperature=0.4,
             max_tokens=400,
@@ -291,15 +322,37 @@ Respond ONLY with valid JSON in this exact format (no markdown, no extra text):
         raw = (response.choices[0].message.content or "").strip()
         raw = raw.strip("```json").strip("```").strip()
         result = json.loads(raw)
+        subj = result.get("subject", "Meeting Invitation")
+        body = result.get("body", description)
+
+        # Enforce recipient greeting at top
+        if target_name and target_name.lower() != effective_sender.lower():
+            # If the model erroneously greeted the sender
+            body = re.sub(
+                rf'^(Dear|Hi|Hello|Hey)\s+(Krish|{re.escape(effective_sender)})[,:]?',
+                f'\\1 {target_name},',
+                body,
+                flags=re.IGNORECASE | re.MULTILINE
+            )
+            # If greeting still lacks recipient name
+            if not any(body.strip().lower().startswith(g) for g in [f"hello {target_name.lower()}", f"hi {target_name.lower()}", f"dear {target_name.lower()}"]):
+                if not any(body.strip().lower().startswith(g) for g in ["hello", "hi", "dear", "hey"]):
+                    body = f"Hello {target_name},\n\n" + body
+
+        # Enforce sender sign-off at bottom
+        body = re.sub(r'Best regards,\s*(?:Krish|Keshav)', f'Best regards,\n{effective_sender}', body)
+        if effective_sender not in body:
+            body = body.rstrip() + f"\n\nBest regards,\n{effective_sender}"
+
         return {
-            "subject": result.get("subject", "Meeting Invitation"),
-            "body": result.get("body", description),
+            "subject": subj,
+            "body": body,
         }
     except Exception as e:
         logger.warning(f"AI compose failed, using fallback: {e}")
-        is_meeting = any(w in description.lower() for w in ["meet", "sync", "call", "schedule", "catch up"])
-        subject = f"Meeting Invitation" if is_meeting else f"Message{' for ' + recipient_name if recipient_name else ''}"
-        greeting = f"Hi {recipient_name}," if recipient_name else "Hello,"
+        is_meeting = any(w in description.lower() for w in ["meet", "sync", "call", "schedule", "catch up", "reschedule"])
+        subject = f"Meeting Invitation" if is_meeting else f"Message{' for ' + target_name if target_name else ''}"
+        greeting = f"Hello {target_name}," if target_name else "Hello,"
         return {
             "subject": subject,
             "body": f"{greeting}\n\n{description}\n\nBest regards,\n{effective_sender}",
@@ -544,16 +597,15 @@ def send_email(
     csv_path: Optional[str] = None,
     user_id: Optional[str] = None,
     sender_email: Optional[str] = None,
-    sender_name: Optional[str] = "Krish",
+    sender_name: Optional[str] = "Keshav",
     sender_password: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Compose and send emails to a single recipient, multiple recipients, or bulk contacts via CSV.
 
-    Supports custom sender identity (e.g. Krish sending from his own email ID),
+    Supports custom sender identity (e.g. Keshav sending from his own email ID),
     Google OAuth 2.0 Gmail REST API, and Gmail SMTP with App Passwords.
     """
-    effective_user_id = user_id or "krish"
-    effective_sender_name = sender_name or "Krish"
+    effective_user_id = user_id or "keshav"
 
     # 1. Parse Recipients (single, multi, or CSV)
     recipients, parse_err = _parse_recipients(to=to, csv_path=csv_path)
@@ -564,6 +616,25 @@ def send_email(
             "error": parse_err or "No valid recipients found",
             "spoken": spoken_msg,
         }
+
+    # Infer recipient name if not explicitly passed
+    effective_recipient_name = recipient_name
+    if not effective_recipient_name and len(recipients) == 1:
+        effective_recipient_name = recipients[0].get("name") or _infer_recipient_name(recipients[0].get("email", ""), "")
+
+    # Resolve sender name: if not explicitly customized (or defaulting), check OAuth profile or default to Keshav
+    effective_sender_name = sender_name or "Keshav"
+    if sender_name in (None, "", "Krish"):
+        # Check OAuth token to see authenticated email
+        token_info = _get_fresh_google_access_token(user_id=effective_user_id)
+        if token_info and token_info[1]:
+            extracted = _infer_recipient_name(token_info[1])
+            effective_sender_name = extracted or "Keshav"
+        elif sender_name != "Krish":
+            effective_sender_name = "Keshav"
+        else:
+            # If sender_name was explicitly passed as "Krish", keep "Krish"
+            effective_sender_name = "Krish"
 
     # 2. Validate Description / Content
     if not description and not (subject and body):
@@ -577,10 +648,10 @@ def send_email(
         final_subject = subject
         base_body = body
     elif description:
-        if sender_name and sender_name != "Krish":
-            composed = _compose_email(description, recipient_name or "", sender_name=effective_sender_name)
+        if sender_name and sender_name not in ["Krish", "Keshav"]:
+            composed = _compose_email(description, effective_recipient_name or "", sender_name=effective_sender_name)
         else:
-            composed = _compose_email(description, recipient_name or "")
+            composed = _compose_email(description, effective_recipient_name or "")
         final_subject = subject or composed["subject"]
         base_body = body or composed["body"]
     else:
@@ -648,11 +719,11 @@ def send_email(
     # ----------------------------------------------------------------------- #
     if len(recipients) == 1:
         target_email = recipients[0]["email"]
-        target_name = recipient_name or recipients[0]["name"]
+        target_name = effective_recipient_name or recipient_name or recipients[0]["name"]
         
         result = _deliver(to_em=target_email, subj=final_subject, bdy=base_body)
         if result["success"]:
-            name_part = f" to {target_name}" if target_name else f" to {target_email}"
+            name_part = f" to {target_name} ({target_email})" if target_name and target_name.lower() != target_email.lower() else f" to {target_email}"
             from_part = f" from {effective_sender_name} ({result['from']})" if result.get("from") else f" from {effective_sender_name}"
             result["spoken"] = (
                 f"Done! I've sent the email{name_part}{from_part} with the subject \"{final_subject}\"."

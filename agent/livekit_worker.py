@@ -161,21 +161,21 @@ async def send_whatsapp_message(contact_name: str, message: str = "") -> str:
 
 
 @llm.function_tool
-async def send_email(to: str, description: str, recipient_name: str = "", sender_email: str = "", sender_name: str = "Krish") -> str:
+async def send_email(to: str, description: str, recipient_name: str = "", sender_email: str = "", sender_name: str = "Keshav") -> str:
     """Compose and send emails to a single recipient, multiple recipients, or bulk contacts from contacts.csv.
 
     Args:
         to: Recipient email address, comma-separated list, or 'contacts.csv'.
         description: Brief description of the email content to be professionally composed.
         recipient_name: Optional recipient name for greeting.
-        sender_email: Optional personal sender email address (e.g. Krish's mail ID).
-        sender_name: Optional sender display name (defaults to 'Krish').
+        sender_email: Optional personal sender email address (e.g. Keshav's mail ID).
+        sender_name: Optional sender display name (defaults to 'Keshav').
     """
     global _active_user_id
     if not to or "@" not in to:
         return "To send an email, please specify a valid recipient email address."
     try:
-        eff_sender = sender_name or "Krish"
+        eff_sender = sender_name or "Keshav"
         res = await asyncio.to_thread(
             email.send_email,
             to=to,

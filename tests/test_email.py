@@ -303,3 +303,21 @@ class TestSendEmailOffline:
         assert r["success"] is True
         assert r["draft_id"].startswith("draft-")
 
+    def test_recipient_inference_and_greeting_keshav_signoff(self):
+        from agent.tools.email import _infer_recipient_name, _compose_email
+        assert _infer_recipient_name("rohitkumar700as@gmail.com") == "Rohit"
+        assert _infer_recipient_name("alex.smith@example.com") == "Alex"
+        assert _infer_recipient_name("priya_singh@gmail.com") == "Priya"
+        assert _infer_recipient_name("keshavagarwal7793@gmail.com") == "Keshav"
+
+        comp = _compose_email(
+            description="Our project review meeting is tomorrow at 3 PM",
+            recipient_name="Rohit",
+            sender_name="Keshav"
+        )
+        assert "Hello Rohit," in comp["body"] or "Hi Rohit," in comp["body"]
+        assert "Best regards,\nKeshav" in comp["body"]
+        assert "Hello Krish" not in comp["body"]
+        assert "Hello Keshav" not in comp["body"]
+
+

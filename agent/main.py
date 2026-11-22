@@ -267,7 +267,7 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
         "who are you", "what can you do", "help",
     }
     if lower_input in greetings or any(lower_input.startswith(g + " ") for g in ["hello", "hi", "hey", "namaste", "good morning", "good evening"]):
-        spoken = "Hello Krish! I am Nexus AI, your personal voice and productivity assistant. How can I help you today?"
+        spoken = "Hello Keshav! I am Nexus AI, your personal voice and productivity assistant. How can I help you today?"
         add_turn(session_id, clean_text, spoken)
         latency = round((time.perf_counter() - start_time) * 1000, 2)
         return {
@@ -363,7 +363,11 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                         if "user_id" not in t_args:
                             t_args["user_id"] = effective_user_id
                         if "sender_name" not in t_args:
-                            t_args["sender_name"] = "Krish"
+                            t_args["sender_name"] = "Keshav"
+                        if not t_args.get("recipient_name"):
+                            m_recip = re.search(r'\b(?:to|mail|email)\s+([A-Za-z]+)', clean_text, re.I)
+                            if m_recip and m_recip.group(1).lower() not in {"someone", "him", "her", "them", "a", "the", "my"}:
+                                t_args["recipient_name"] = m_recip.group(1).capitalize()
 
                     handler = TOOLS_REGISTRY.get(t_name)
                     if handler:
@@ -606,9 +610,9 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                         to=to_cand,
                         description=desc,
                         user_id=effective_user_id,
-                        sender_name="Krish",
+                        sender_name="Keshav",
                     )
-                    executed_tools.append({"tool": "send_email", "args": {"to": to_cand, "description": desc, "sender_name": "Krish"}, "result": res})
+                    executed_tools.append({"tool": "send_email", "args": {"to": to_cand, "description": desc, "sender_name": "Keshav"}, "result": res})
                     spoken = res.get("spoken") or "Processed your email request."
 
             # 8. Universal Web Search Fallback (Cricket scores, news, multilingual facts, queries)
@@ -845,13 +849,14 @@ def google_auth_callback(request: Request, code: Optional[str] = None, state: Op
             access_token=access_token,
             refresh_token=refresh_token,
         )
-        if user_id != "krish":
-            db_save_user_oauth(
-                user_id="krish",
-                email=user_email,
-                access_token=access_token,
-                refresh_token=refresh_token,
-            )
+        for uid in ["keshav", "krish"]:
+            if user_id != uid:
+                db_save_user_oauth(
+                    user_id=uid,
+                    email=user_email,
+                    access_token=access_token,
+                    refresh_token=refresh_token,
+                )
         os.environ["SENDER_EMAIL"] = user_email
 
         return HTMLResponse(f"""

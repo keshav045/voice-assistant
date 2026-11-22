@@ -415,7 +415,7 @@ def execute_turn(user_prompt: str, input_mode: str = "voice"):
             result = asyncio.run(process_user_turn(
                 user_text=clean_prompt,
                 session_id=st.session_state.session_id,
-                user_id="krish",
+                user_id="keshav",
             ))
         except Exception as err:
             result = {
@@ -453,7 +453,7 @@ def execute_turn(user_prompt: str, input_mode: str = "voice"):
 
     try:
         db_save_chat_turn(
-            user_id="krish",
+            user_id="keshav",
             session_id=st.session_state.session_id,
             user_message=clean_prompt,
             spoken_reply=spoken_reply,
@@ -522,7 +522,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("#### Google Account (1-Click Login)")
 
-    oauth_rec = db_get_user_oauth("krish") or db_get_user_oauth("guest")
+    oauth_rec = db_get_user_oauth("keshav") or db_get_user_oauth("krish") or db_get_user_oauth("guest")
     google_connected_email = oauth_rec.get("email") if oauth_rec and (oauth_rec.get("access_token") or oauth_rec.get("refresh_token")) else None
 
     def get_google_login_url():
@@ -536,7 +536,7 @@ with st.sidebar:
             "https://www.googleapis.com/auth/gmail.send",
             "https://www.googleapis.com/auth/userinfo.email",
         ]
-        state_payload = json.dumps({"user_id": "krish", "source": "streamlit"})
+        state_payload = json.dumps({"user_id": "keshav", "source": "streamlit"})
         state_b64 = base64.urlsafe_b64encode(state_payload.encode("utf-8")).decode("utf-8")
         params = {
             "client_id": client_id,
@@ -564,6 +564,7 @@ with st.sidebar:
             unsafe_allow_html=True,
         )
         if st.button("Logout from Google", use_container_width=True):
+            db_delete_user_oauth("keshav")
             db_delete_user_oauth("krish")
             db_delete_user_oauth("guest")
             st.success("Logged out successfully!")
@@ -585,13 +586,13 @@ with st.sidebar:
             st.warning("Google OAuth credentials missing in .env")
 
     with st.expander("Alternative: Manual App Password (Optional)"):
-        existing_profile = db_get_user_email_profile("krish") or {}
-        default_name = existing_profile.get("sender_name") or "Krish"
+        existing_profile = db_get_user_email_profile("keshav") or db_get_user_email_profile("krish") or {}
+        default_name = existing_profile.get("sender_name") or "Keshav"
         default_email = existing_profile.get("sender_email") or os.environ.get("SENDER_EMAIL", "")
         default_has_pw = bool(existing_profile.get("sender_password") or os.environ.get("SENDER_APP_PASSWORD"))
 
         prof_name = st.text_input("Name:", value=default_name, key="profile_name_input")
-        prof_email = st.text_input("Sender Email ID:", value=default_email, key="profile_email_input", placeholder="krish@gmail.com")
+        prof_email = st.text_input("Sender Email ID:", value=default_email, key="profile_email_input", placeholder="keshav@gmail.com")
         prof_password = st.text_input(
             "Gmail App Password (16-char):",
             type="password",
@@ -601,8 +602,8 @@ with st.sidebar:
         if st.button("Save App Password", use_container_width=True):
             pw_to_save = prof_password.strip() if prof_password.strip() else (existing_profile.get("sender_password") or os.environ.get("SENDER_APP_PASSWORD"))
             db_save_user_email_profile(
-                user_id="krish",
-                sender_name=prof_name.strip() or "Krish",
+                user_id="keshav",
+                sender_name=prof_name.strip() or "Keshav",
                 sender_email=prof_email.strip(),
                 sender_password=pw_to_save,
             )
@@ -790,9 +791,9 @@ def get_livekit_connection():
         return None
     try:
         from livekit import api
-        user_name = "Krish"
-        user_id = "krish"
-        participant_id = f"user-krish-{uuid.uuid4().hex[:6]}"
+        user_name = "Keshav"
+        user_id = "keshav"
+        participant_id = f"user-keshav-{uuid.uuid4().hex[:6]}"
         room_name = "nexus-room"
         meta = json.dumps({"user_id": user_id, "name": user_name})
         token = (
@@ -1034,7 +1035,7 @@ if livekit_data:
                       title.innerText = "AI Assistant is speaking...";
                       sub.innerText = "You can speak to interrupt anytime";
                     }} else {{
-                      title.innerText = "Listening to Krish...";
+                      title.innerText = "Listening to Keshav...";
                       sub.innerText = "Silero VAD active (auto-stops when you pause)";
                     }}
                   }} else {{
