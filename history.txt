@@ -598,6 +598,30 @@ Entry 2026-11-22.7 [2026-11-22 12:05:00 +0530]
     with production promotion status APPROVED.
 
 
+Entry 2026-11-22.8 [2026-11-22 12:15:00 +0530]
+- Files Changed:
+  * DEPLOY_STREAMLIT.md (Removed)
+  * web/index.html
+  * web/app.js
+  * agent/main.py
+- Change Details:
+  * Removed DEPLOY_STREAMLIT.md and Streamlit Cloud deployment configurations per user instruction.
+  * Configured the native local Web UI (web/index.html served at http://localhost:8000) as the primary
+    local dashboard in the exact layout requested by the user.
+  * Updated model latency label in web/index.html and web/app.js to display the active local model
+    (qwen2.5:1.5b Local Ollama) instead of legacy GPT-4o.
+  * Wired local Speech-to-Text (faster-whisper) and local Text-to-Speech (Edge-TTS) directly into
+    agent/main.py endpoints (/api/stt and /api/tts) so that voice input and spoken audio responses
+    function 100% locally in the web browser without external cloud API dependencies.
+  * Added rich visual tool cards for medical searches (drug class, uses, dosage, precautions) and
+    email dispatches into web/app.js.
+  * Preserved all post-deployment enhancements intact: 100% local model execution, offline voice,
+    recipient inference, Keshav sender profile, and removal of RTU Senior Tutor.
+- What was Affected:
+  * Local Application: Native Web UI serves as the definitive local interface with zero deployment overhead.
+  * Verification: 83/83 pytest tests passed (100%) and 35/35 evaluation benchmarks passed (100%) with 0 emojis.
+
+
 ================================================================================
 VERIFICATION SUMMARY
 ================================================================================

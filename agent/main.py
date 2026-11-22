@@ -101,6 +101,7 @@ class ChatResponse(BaseModel):
     confirmation_question: Optional[str] = None
     session_id: str
     latency_ms: float
+    model: Optional[str] = "qwen2.5:1.5b"
 
 
 class TTSRequest(BaseModel):
@@ -252,6 +253,7 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
             "session_id": session_id,
             "latency_ms": latency,
             "is_toxic": True,
+            "model": "qwen2.5:1.5b",
         }
 
     curr_key = os.environ.get("OPENAI_API_KEY", OPENAI_API_KEY)
@@ -276,6 +278,7 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
             "requires_confirmation": False,
             "session_id": session_id,
             "latency_ms": latency,
+            "model": curr_model,
         }
     elif lower_input in ["thanks", "thank you", "ok", "okay", "cool", "great", "nice", "bye", "goodbye"]:
         spoken = "You are welcome! Let me know if you need anything else."
@@ -287,6 +290,7 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
             "requires_confirmation": False,
             "session_id": session_id,
             "latency_ms": latency,
+            "model": curr_model,
         }
 
     if (curr_key and not curr_key.startswith("your-")) or curr_base:
@@ -638,6 +642,7 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
         "requires_confirmation": False,
         "session_id": session_id,
         "latency_ms": latency,
+        "model": curr_model,
     }
 
 
@@ -1069,7 +1074,7 @@ async def chat_endpoint(req: ChatRequest, authorization: Optional[str] = Header(
 
 @app.post("/api/stt")
 async def stt_endpoint(file: UploadFile = File(...)):
-    """Transcribe speech audio file using Whisper."""
+    """Transcribe speech audio file using Whisper or local faster-whisper."""
     content = await file.read()
     if OPENAI_API_KEY and not OPENAI_API_KEY.startswith("your-"):
         try:
@@ -1082,12 +1087,21 @@ async def stt_endpoint(file: UploadFile = File(...)):
         except Exception as e:
             logger.error(f"Whisper error: {e}")
 
+    # Local Whisper fallback
+    try:
+        from agent.local_voice import transcribe_audio_local
+        text = await asyncio.to_thread(transcribe_audio_local, content)
+        if text:
+            return {"success": True, "text": text}
+    except Exception as e:
+        logger.error(f"Local Whisper error: {e}")
+
     return {"success": True, "text": "Speech received and processed."}
 
 
 @app.post("/api/tts")
 async def tts_endpoint(req: TTSRequest):
-    """Synthesize text to speech MP3 audio."""
+    """Synthesize text to speech MP3 audio using cloud TTS or local Edge-TTS."""
     if OPENAI_API_KEY and not OPENAI_API_KEY.startswith("your-"):
         try:
             client = AsyncOpenAI(api_key=OPENAI_API_KEY, base_url="https://api.openai.com/v1")
@@ -1104,7 +1118,16 @@ async def tts_endpoint(req: TTSRequest):
         except Exception as e:
             logger.error(f"TTS error: {e}")
 
-    # Fallback minimalist valid audio header
+    # Local Edge-TTS neural speech fallback
+    try:
+        from agent.local_voice import synthesize_speech_local
+        audio_bytes = await asyncio.to_thread(synthesize_speech_local, req.text)
+        if audio_bytes:
+            b64 = base64.b64encode(audio_bytes).decode("utf-8")
+            return {"success": True, "audio_base64": b64, "format": "mp3"}
+    except Exception as e:
+        logger.error(f"Local Edge-TTS error: {e}")
+
     return {"success": True, "audio_base64": "", "format": "mp3"}
 
 

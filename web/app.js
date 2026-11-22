@@ -614,7 +614,8 @@ async function submitChatTurn(textOverride) {
 
     const latLabel = document.getElementById("turn-latency-label");
     if (latLabel && data.latency_ms) {
-      latLabel.innerText = `Turn: ${data.latency_ms}ms • Model: GPT-4o`;
+      const modelName = data.model || "qwen2.5:1.5b (Local Ollama)";
+      latLabel.innerText = `Turn: ${data.latency_ms}ms • Model: ${modelName}`;
     }
 
     if (audioOutputEnabled && data.spoken_reply) {
@@ -751,6 +752,8 @@ function appendAssistantBubble(text, toolCalls) {
       }
       if (tc.tool === "web_search") return "Live Cricket & Web Search";
       if (tc.tool === "calculator") return "Math Calculator";
+      if (tc.tool === "medical_search") return `Medical: ${tc.result?.medicine_name || tc.args?.medicine_name || "Clinical Info"}`;
+      if (tc.tool === "send_email") return `Email Sent: ${tc.result?.to || tc.args?.to || "Recipient"}`;
       if (tc.tool === "run_python_code") return "Python Code Runner";
       if (tc.tool === "get_current_time") return "Current Time";
       return tc.tool;
@@ -761,6 +764,45 @@ function appendAssistantBubble(text, toolCalls) {
         <span>Called: ${escapeHtml(names)}</span>
       </div>
     `;
+  }
+
+  let richCardHtml = "";
+  if (toolCalls && toolCalls.length > 0) {
+    for (const tc of toolCalls) {
+      if (tc.tool === "medical_search" && tc.result && tc.result.medicine_name) {
+        const m = tc.result;
+        richCardHtml += `
+          <div class="mt-2 p-3.5 rounded-xl bg-surface-container-lowest border border-surface-container-high shadow-xs flex flex-col gap-2 max-w-md">
+            <div class="flex items-center justify-between border-b border-surface-container pb-2">
+              <span class="font-bold text-sm text-primary">${escapeHtml(m.medicine_name)}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">${escapeHtml(m.drug_class || "Medication")}</span>
+            </div>
+            ${m.uses ? `<div class="text-xs text-on-surface"><strong class="text-on-surface-variant">Uses:</strong> ${escapeHtml(m.uses)}</div>` : ''}
+            ${m.dosage ? `<div class="text-xs text-on-surface"><strong class="text-on-surface-variant">Dosage:</strong> ${escapeHtml(m.dosage)}</div>` : ''}
+            ${m.side_effects ? `<div class="text-xs text-on-surface"><strong class="text-on-surface-variant">Side Effects:</strong> ${escapeHtml(m.side_effects)}</div>` : ''}
+            ${m.precautions ? `<div class="text-xs text-on-surface"><strong class="text-on-surface-variant">Precautions:</strong> ${escapeHtml(m.precautions)}</div>` : ''}
+            <div class="text-[10px] text-on-surface-variant/70 italic mt-1">${escapeHtml(m.disclaimer || "Consult a healthcare provider.")}</div>
+          </div>
+        `;
+      }
+      if (tc.tool === "send_email" && tc.result && tc.result.success) {
+        const em = tc.result;
+        richCardHtml += `
+          <div class="mt-2 p-3.5 rounded-xl bg-surface-container-lowest border border-surface-container-high shadow-xs flex flex-col gap-1.5 max-w-md">
+            <div class="flex items-center justify-between border-b border-surface-container pb-2">
+              <span class="font-bold text-xs text-emerald-700 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                Email Dispatched
+              </span>
+              <span class="text-[10px] text-on-surface-variant font-mono">${escapeHtml(em.provider || "Gmail API")}</span>
+            </div>
+            <div class="text-xs text-on-surface"><strong>To:</strong> ${escapeHtml(em.to || "")}</div>
+            <div class="text-xs text-on-surface"><strong>Subject:</strong> ${escapeHtml(em.subject || "")}</div>
+            ${em.body ? `<div class="mt-1 p-2 rounded bg-surface-container-low text-[11px] font-mono text-on-surface whitespace-pre-wrap max-h-32 overflow-y-auto">${escapeHtml(em.body)}</div>` : ''}
+          </div>
+        `;
+      }
+    }
   }
 
   let actionLinkHtml = "";
@@ -789,6 +831,7 @@ function appendAssistantBubble(text, toolCalls) {
         ${escapeHtml(text)}
       </div>
       ${toolBadgeHtml}
+      ${richCardHtml}
       ${actionLinkHtml}
     </div>
   `;
