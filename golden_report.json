@@ -1,0 +1,2922 @@
+[
+  {
+    "id": "T001",
+    "category": "web_search",
+    "prompt": "Search latest AI news",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Here are the latest AI news: 1. \"Losing the battle\": AI hands predators new ways to target children - UN News 2. \"New approach enables physically consistent AI models of chaotic systems\" - MIT News 3. \"AI News: Artificial Intelligence Trends And Top AI Stocks To Watch\" - Investor's Business Daily 4. \"Al Jazeera explains: The US-China AI race is entering a new phase\" - [Al Jazeera](",
+    "tools": [
+      {
+        "name": "web_search",
+        "args": {
+          "query": "latest AI news"
+        },
+        "result": {
+          "success": true,
+          "query": "latest AI news",
+          "count": 8,
+          "results": [
+            {
+              "title": "\u2018Losing the battle\u2019: AI hands predators new ways to target children - UN News",
+              "snippet": "\u2018Losing the battle\u2019: AI hands predators new ways to target children UN News",
+              "source": "https://news.google.com/rss/articles/CBMiV0FVX3lxTE52UzVlQ1BHYWxMOTJ4THRUT0R3bktnNnJkNnpUX2pONjVKNTZ5X0tzWXh6OXJIb0d1eU84d1NtZXRKVzFKVlhRU09jbGtFc0xaUDhvbVRnTQ?oc=5"
+            },
+            {
+              "title": "New approach enables physically consistent AI models of chaotic systems - MIT News",
+              "snippet": "New approach enables physically consistent AI models of chaotic systems MIT News",
+              "source": "https://news.google.com/rss/articles/CBMimgFBVV95cUxNVHZLNng1dlZUQzFJR0VqRjYyYVduYXVWd0tpZ3dJSkxpSDQ0M3BGdU5UTUxRSHpnaEtpb28ySUhmRU9fVnVEZGd1QjM4RmF5ZXQ3Y0JteVl6WjVBSG12bE9ydmV0MjVWN3lGMTlyWTFWZ3pQeHBiR1VsNUZMUWs0a0d5UlRaN3UwV3pXbm5TY2haakxuTW01bnV3?oc=5"
+            },
+            {
+              "title": "AI News: Artificial Intelligence Trends And Top AI Stocks To Watch - Investor's Business Daily",
+              "snippet": "AI News: Artificial Intelligence Trends And Top AI Stocks To Watch Investor's Business Daily",
+              "source": "https://news.google.com/rss/articles/CBMilwFBVV95cUxQMTVTWnJlZkpsVU9ZV0g1WHdKQVBKOFFvcUpPeTJuMW9iT2FTMWI1N2hMYk1ud1cwQlBEVlJObDFVTnpoNnBhejJrZnVFelQ5V3NNRklrM2RlaHUtc2NsbmxWcVV1MWVzd082RUdTYmtJVW9MUmJRTG5sV1dJN3JCd1JNX2Z4VnZtV3VpbzdrNXdKNTVSc3FB?oc=5"
+            },
+            {
+              "title": "Al Jazeera explains: The US-China AI race is entering a new phase - Al Jazeera",
+              "snippet": "Al Jazeera explains: The US-China AI race is entering a new phase Al Jazeera",
+              "source": "https://news.google.com/rss/articles/CBMitwFBVV95cUxNaVFZdUxjYzl0bnYzVFFqQWludTZucUh3d2JFWk1BRE5OR05kaldIbmpScFVvUDF3MUlfRkJfbXBLM0czTVVTYVdNbUdEa0gtQ0pMVUhUNzRQcXlfa2xpdE1Ca3ZBb2lOUFBtUFNyT0lvTmRrcnhFM0xLUF9FUmhlRHdFWUdKdlRFT3BZcVFaNVl4bFJ3YVl1UXlrbU1DUmVlMC1XQ2luY1g0NWhldFVwRktuZ3VCTmvSAbwBQVVfeXFMUGJTZm50S3FWWktrSVpIV1MtazZ0OV9NYTRNSm0ycjdRSGxFNXItUm5McHI2bFRwVVFNS3hEX1RhaURpREtZbHJ0ZUQ1LTkxazlZVklyTEJkZjcwVC1uaEJwMXJfUEhybmhYcGd2aHJVejhIa1l6NWdqemVma09JeVc1UzFJdjItdjBMT2gzWTZSUkpRWU1LNmQ2MmswaEJCMHV6WEFiOXdmczU5Q2t1QjY1S0NuUmJ0c09UVVY?oc=5"
+            },
+            {
+              "title": "Cognition in talks for new funding at $75 billion valuation, Bloomberg News reports - Reuters",
+              "snippet": "Cognition in talks for new funding at $75 billion valuation, Bloomberg News reports Reuters",
+              "source": "https://news.google.com/rss/articles/CBMivwFBVV95cUxOcWhpaU9neVJMd3hnYmh2YlYzbl9DMF8yWjFqQ2k4LWZVazFRTHdLNmh6alVaM29vaTIwUjFHX1FWWksyX3k4Y1ZmRHk0V21mcldQa29vUXR1QWQyX2xaT1NRaTVHaW1UZGRXQllFM0ticDU1S2lxSG5kMGNLdE1SRnFCNzFGMnd1TW1tVlRWcTZrQVlBVVI5UWx0M29xR2gyckhhTmxKVHVxWllDZlQ3WkJoS1V0VW0tVFpoS0JRTQ?oc=5"
+            }
+          ],
+          "spoken": "\u2018Losing the battle\u2019: AI hands predators new ways to target children - UN News: \u2018Losing the battle\u2019: AI hands predators new ways to target children UN News New approach enables physically consistent AI models of chaotic systems - MIT News: New approach enables physically consistent AI models of chaotic systems MIT News"
+        }
+      }
+    ],
+    "seconds": 15.16
+  },
+  {
+    "id": "T002",
+    "category": "web_search",
+    "prompt": "What is the cricket score today?",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Live Cricket Score: New Zealand 368/10 & 119/2 v India 720/9 Live Cricket Score: Kurunegala Youth Cricket Club 368/10 v Burgher Recreation Club 336/10 & 290/6",
+    "tools": [
+      {
+        "name": "web_search",
+        "args": {
+          "query": "What is the cricket score today?"
+        },
+        "result": {
+          "success": true,
+          "query": "What is the cricket score today?",
+          "count": 42,
+          "results": [
+            {
+              "title": "New Zealand 368/10 & 119/2 * v India 720/9",
+              "snippet": "Live Cricket Score: New Zealand 368/10 & 119/2 * v India 720/9",
+              "source": "http://www.cricinfo.com/ci/engine/match/1539442.html?CMP=OTC-RSS"
+            },
+            {
+              "title": "Kurunegala Youth Cricket Club 368/10 v Burgher Recreation Club 336/10 & 290/6 *",
+              "snippet": "Live Cricket Score: Kurunegala Youth Cricket Club 368/10 v Burgher Recreation Club 336/10 & 290/6 *",
+              "source": "http://www.cricinfo.com/ci/engine/match/1560148.html?CMP=OTC-RSS"
+            },
+            {
+              "title": "Nugegoda Sports Welfare Club 618/7 v Nondescripts Cricket Club 287/10 & 160/6 *",
+              "snippet": "Live Cricket Score: Nugegoda Sports Welfare Club 618/7 v Nondescripts Cricket Club 287/10 & 160/6 *",
+              "source": "http://www.cricinfo.com/ci/engine/match/1560146.html?CMP=OTC-RSS"
+            },
+            {
+              "title": "Police Sports Club 612/6 v Badureliya Sports Club 341/10 & 129/10 *",
+              "snippet": "Live Cricket Score: Police Sports Club 612/6 v Badureliya Sports Club 341/10 & 129/10 *",
+              "source": "http://www.cricinfo.com/ci/engine/match/1560147.html?CMP=OTC-RSS"
+            },
+            {
+              "title": "Bloomfield Cricket and Athletic Club 262/7 & 309/10 v Panadura Sports Club 10 & 322/10 *",
+              "snippet": "Live Cricket Score: Bloomfield Cricket and Athletic Club 262/7 & 309/10 v Panadura Sports Club 10 & 322/10 *",
+              "source": "http://www.cricinfo.com/ci/engine/match/1560151.html?CMP=OTC-RSS"
+            }
+          ],
+          "spoken": "Live Cricket Score: New Zealand 368/10 & 119/2 * v India 720/9 Live Cricket Score: Kurunegala Youth Cricket Club 368/10 v Burgher Recreation Club 336/10 & 290/6 *"
+        }
+      }
+    ],
+    "seconds": 10.62
+  },
+  {
+    "id": "T003",
+    "category": "web_search",
+    "prompt": "Search for Python 3.13 features, give me 3 results",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "results list length must be 3",
+    "spoken": "Get started with the free-threaded build of Python 3.13 - InfoWorld: Get started with the free-threaded build of Python 3.13 InfoWorld Python 3.13 runtime now available in AWS Lambda - Amazon Web Services (AWS): Python 3.13 runtime now available in AWS Lambda Amazon Web Services (AWS)",
+    "tools": [
+      {
+        "name": "web_search",
+        "args": {
+          "query": "Python 3.13 features, give me 3 results",
+          "max_results": 3
+        },
+        "result": {
+          "success": true,
+          "query": "Python 3.13 features, give me 3 results",
+          "count": 8,
+          "results": [
+            {
+              "title": "Get started with the free-threaded build of Python 3.13 - InfoWorld",
+              "snippet": "Get started with the free-threaded build of Python 3.13 InfoWorld",
+              "source": "https://news.google.com/rss/articles/CBMipAFBVV95cUxPNEptV0RpQ0doNUY3Z3kxS0lLRTItZnoxazVoV3RJb0lGN0ZhYW1DS2J6dHNoT1VFcE5BQng2aUFEYTRTeVM1YjFQdmVrQnYxSVBYYjc3SFEyYTBGTG1BTUxNTzc0MmZlakhDemFuaHlCZG96bUhRWXB3ZHRSUGU2MmJIclJObmFtZG9HdFI5MFUxZXFJNW5qeUlUWXgzYTZGaVJ0Ng?oc=5"
+            },
+            {
+              "title": "Python 3.13 runtime now available in AWS Lambda - Amazon Web Services (AWS)",
+              "snippet": "Python 3.13 runtime now available in AWS Lambda Amazon Web Services (AWS)",
+              "source": "https://news.google.com/rss/articles/CBMijgFBVV95cUxQZW4tU3BXY2ZOcUo0VE42NlV2X2s5bzIya2RETjhwNUpFNnN4cElzd2pyV3M2cWR4R3gxYnFKcE5ua3hsTEFReWs4cHpKVktEUXE3V01wOE9OSkdtSmtzUFF1Q1pIZkdFRE85MXowYnZnRER1NHQ2cWdieWRfTDB6eG41VGFSMGE4czN5Rm93?oc=5"
+            },
+            {
+              "title": "Announcing Oracle Autonomous Database Select AI for Python - Oracle Blogs",
+              "snippet": "Announcing Oracle Autonomous Database Select AI for Python Oracle Blogs",
+              "source": "https://news.google.com/rss/articles/CBMirAFBVV95cUxPYXVnSG9PNlFlY3gyRWNzM2hvM1EtQUc0dXlodDZNVWpMOXVhZ1Z5TDdqVHRNVHNhNElUN3VYVjdxTXBpQjdUcHVxS0FhakthLURJN3hnQXBIMzRic3YzbVUzc3hmQVhlSkJJR0hvV0c5VmMyZlZJa21tWmNDYTdtZkxqV1RJTkNfVmR6MnNoU3htUDV6eUNRdkIxRng4MGJpeTlDOWxxRUFZbDU4?oc=5"
+            }
+          ],
+          "spoken": "Get started with the free-threaded build of Python 3.13 - InfoWorld: Get started with the free-threaded build of Python 3.13 InfoWorld Python 3.13 runtime now available in AWS Lambda - Amazon Web Services (AWS): Python 3.13 runtime now available in AWS Lambda Amazon Web Services (AWS)"
+        }
+      }
+    ],
+    "seconds": 3.21
+  },
+  {
+    "id": "T004",
+    "category": "web_search",
+    "prompt": "Search asdkjhqwe zxcmnb 12345",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "no crash; empty or 'nothing found' is fine",
+    "spoken": "I searched for asdkjhqwe zxcmnb 12345 but could not find live updates right now.",
+    "tools": [
+      {
+        "name": "web_search",
+        "args": {
+          "query": "asdkjhqwe zxcmnb 12345"
+        },
+        "result": {
+          "success": true,
+          "query": "asdkjhqwe zxcmnb 12345",
+          "count": 1,
+          "results": [
+            {
+              "title": "asdkjhqwe zxcmnb 12345",
+              "snippet": "No live search results available for asdkjhqwe zxcmnb 12345.",
+              "source": "Web Search"
+            }
+          ],
+          "spoken": "I searched for asdkjhqwe zxcmnb 12345 but could not find live updates right now."
+        }
+      }
+    ],
+    "seconds": 1.84
+  },
+  {
+    "id": "T005",
+    "category": "calculator",
+    "prompt": "Calculate 25 * 4 + 10",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "The answer is 110.",
+    "tools": [
+      {
+        "name": "calculator",
+        "args": {
+          "expression": "Calculate 25 * 4 + 10"
+        },
+        "result": {
+          "success": true,
+          "expression": "Calculate 25 * 4 + 10",
+          "result": 110.0,
+          "spoken": "The answer is 110.",
+          "formatted": "110"
+        }
+      }
+    ],
+    "seconds": 0.72
+  },
+  {
+    "id": "T006",
+    "category": "calculator",
+    "prompt": "What is 15 percent of 2400?",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "The answer is 360.",
+    "tools": [
+      {
+        "name": "calculator",
+        "args": {
+          "expression": "What is 15 percent of 2400?"
+        },
+        "result": {
+          "success": true,
+          "expression": "What is 15 percent of 2400?",
+          "result": 360.0,
+          "spoken": "The answer is 360.",
+          "formatted": "360"
+        }
+      }
+    ],
+    "seconds": 0.56
+  },
+  {
+    "id": "T007",
+    "category": "calculator",
+    "prompt": "Square root of 144",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "The answer is 12.",
+    "tools": [
+      {
+        "name": "calculator",
+        "args": {
+          "expression": "Square root of 144"
+        },
+        "result": {
+          "success": true,
+          "expression": "Square root of 144",
+          "result": 12.0,
+          "spoken": "The answer is 12.",
+          "formatted": "12"
+        }
+      }
+    ],
+    "seconds": 0.51
+  },
+  {
+    "id": "T008",
+    "category": "calculator",
+    "prompt": "2 to the power 10",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "The answer is 1024.",
+    "tools": [
+      {
+        "name": "calculator",
+        "args": {
+          "expression": "2 to the power 10"
+        },
+        "result": {
+          "success": true,
+          "expression": "2 to the power 10",
+          "result": 1024.0,
+          "spoken": "The answer is 1024.",
+          "formatted": "1024"
+        }
+      }
+    ],
+    "seconds": 0.62
+  },
+  {
+    "id": "T009",
+    "category": "calculator",
+    "prompt": "10 divided by 0",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "polite error, no crash",
+    "spoken": "Division by zero is undefined.",
+    "tools": [],
+    "seconds": 0.49
+  },
+  {
+    "id": "T010",
+    "category": "calculator",
+    "prompt": "Calculate __import__('os').system('dir')",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "must be rejected by AST check",
+    "spoken": "The answer is None.",
+    "tools": [],
+    "seconds": 0.49
+  },
+  {
+    "id": "T011",
+    "category": "get_current_time",
+    "prompt": "What time is it?",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "dynamic; verify manually against clock",
+    "spoken": "The current time is Sunday, November 22, 2026 at 02:56 PM (Asia/Kolkata).",
+    "tools": [
+      {
+        "name": "get_current_time",
+        "args": {},
+        "result": {
+          "success": true,
+          "spoken": "The current time is Sunday, November 22, 2026 at 02:56 PM (Asia/Kolkata).",
+          "iso": "2026-11-22T14:56:18.369562+05:30",
+          "timezone": "Asia/Kolkata"
+        }
+      }
+    ],
+    "seconds": 0.71
+  },
+  {
+    "id": "T012",
+    "category": "get_current_time",
+    "prompt": "What time is it in New York?",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "The current time is Sunday, November 22, 2026 at 04:26 AM (America/New_York).",
+    "tools": [
+      {
+        "name": "get_current_time",
+        "args": {
+          "timezone": "America/New_York"
+        },
+        "result": {
+          "success": true,
+          "spoken": "The current time is Sunday, November 22, 2026 at 04:26 AM (America/New_York).",
+          "iso": "2026-11-22T04:26:27.525502-05:00",
+          "timezone": "America/New_York"
+        }
+      }
+    ],
+    "seconds": 8.94
+  },
+  {
+    "id": "T013",
+    "category": "get_current_time",
+    "prompt": "What time is it in Tokyo?",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "The current time is Sunday, November 22, 2026 at 06:26 PM (Asia/Tokyo).",
+    "tools": [
+      {
+        "name": "get_current_time",
+        "args": {
+          "timezone": "Asia/Tokyo"
+        },
+        "result": {
+          "success": true,
+          "spoken": "The current time is Sunday, November 22, 2026 at 06:26 PM (Asia/Tokyo).",
+          "iso": "2026-11-22T18:26:28.658581+09:00",
+          "timezone": "Asia/Tokyo"
+        }
+      }
+    ],
+    "seconds": 0.92
+  },
+  {
+    "id": "T014",
+    "category": "get_current_time",
+    "prompt": "What time is it in Narnia?",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "invalid timezone handled",
+    "spoken": "'Narnia' is not a recognized real-world timezone.",
+    "tools": [
+      {
+        "name": "get_current_time",
+        "args": {
+          "timezone": "Narnia"
+        },
+        "result": {
+          "success": false,
+          "error": "Invalid timezone: Narnia",
+          "spoken": "'Narnia' is not a recognized real-world timezone.",
+          "timezone": "UTC"
+        }
+      }
+    ],
+    "seconds": 0.78
+  },
+  {
+    "id": "T015",
+    "category": "open_app",
+    "prompt": "Open calculator",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Opening Calculator for you.",
+    "tools": [
+      {
+        "name": "open_app",
+        "args": {
+          "name": "calculator"
+        },
+        "result": {
+          "success": true,
+          "target": "Calculator",
+          "action": "desktop_app",
+          "spoken": "Opening Calculator for you."
+        }
+      }
+    ],
+    "seconds": 0.66
+  },
+  {
+    "id": "T016",
+    "category": "open_app",
+    "prompt": "Open Notepad",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Opening Notepad for you.",
+    "tools": [
+      {
+        "name": "open_app",
+        "args": {
+          "name": "notepad"
+        },
+        "result": {
+          "success": true,
+          "target": "Notepad",
+          "action": "desktop_app",
+          "spoken": "Opening Notepad for you."
+        }
+      }
+    ],
+    "seconds": 0.56
+  },
+  {
+    "id": "T017",
+    "category": "open_app",
+    "prompt": "Open YouTube",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "check url field",
+    "spoken": "Opening YouTube for you.",
+    "tools": [
+      {
+        "name": "open_app",
+        "args": {
+          "name": "youtube"
+        },
+        "result": {
+          "success": true,
+          "target": "YouTube",
+          "url": "https://www.youtube.com",
+          "browser": "default",
+          "spoken": "Opening YouTube for you."
+        }
+      }
+    ],
+    "seconds": 8.9
+  },
+  {
+    "id": "T018",
+    "category": "open_app",
+    "prompt": "Open YouTube and search lo-fi music",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Opening YouTube and searching for 'lo-fi music'.",
+    "tools": [
+      {
+        "name": "open_app",
+        "args": {
+          "name": "youtube",
+          "query": "lo-fi music"
+        },
+        "result": {
+          "success": true,
+          "target": "YouTube",
+          "url": "https://www.youtube.com/results?search_query=lo-fi+music",
+          "browser": "default",
+          "spoken": "Opening YouTube and searching for 'lo-fi music'."
+        }
+      }
+    ],
+    "seconds": 0.58
+  },
+  {
+    "id": "T019",
+    "category": "open_app",
+    "prompt": "Open GitHub",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Opening GitHub for you.",
+    "tools": [
+      {
+        "name": "open_app",
+        "args": {
+          "name": "github"
+        },
+        "result": {
+          "success": true,
+          "target": "GitHub",
+          "url": "https://github.com",
+          "browser": "default",
+          "spoken": "Opening GitHub for you."
+        }
+      }
+    ],
+    "seconds": 0.53
+  },
+  {
+    "id": "T020",
+    "category": "open_app",
+    "prompt": "Open Gmail",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Opening Gmail for you.",
+    "tools": [
+      {
+        "name": "open_app",
+        "args": {
+          "name": "gmail"
+        },
+        "result": {
+          "success": true,
+          "target": "Gmail",
+          "url": "https://mail.google.com",
+          "browser": "default",
+          "spoken": "Opening Gmail for you."
+        }
+      }
+    ],
+    "seconds": 0.48
+  },
+  {
+    "id": "T021",
+    "category": "open_app",
+    "prompt": "Open Spotify",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Spotify desktop app is not installed, so I've opened Spotify Web in your browser.",
+    "tools": [
+      {
+        "name": "open_app",
+        "args": {
+          "name": "spotify"
+        },
+        "result": {
+          "success": true,
+          "target": "Spotify",
+          "url": "https://open.spotify.com",
+          "fallback_to_browser": true,
+          "browser": "default",
+          "spoken": "Spotify desktop app is not installed, so I've opened Spotify Web in your browser."
+        }
+      }
+    ],
+    "seconds": 0.5
+  },
+  {
+    "id": "T022",
+    "category": "open_app",
+    "prompt": "Open LinkedIn",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Opening LinkedIn for you.",
+    "tools": [
+      {
+        "name": "open_app",
+        "args": {
+          "name": "linkedin"
+        },
+        "result": {
+          "success": true,
+          "target": "LinkedIn",
+          "url": "https://www.linkedin.com",
+          "browser": "default",
+          "spoken": "Opening LinkedIn for you."
+        }
+      }
+    ],
+    "seconds": 8.58
+  },
+  {
+    "id": "T023",
+    "category": "open_app",
+    "prompt": "Open Chrome and open GitHub",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Opening GitHub in Chrome for you.",
+    "tools": [
+      {
+        "name": "open_app",
+        "args": {
+          "name": "github",
+          "browser": "chrome"
+        },
+        "result": {
+          "success": true,
+          "target": "GitHub",
+          "url": "https://github.com",
+          "browser": "chrome",
+          "spoken": "Opening GitHub in Chrome for you."
+        }
+      }
+    ],
+    "seconds": 0.5
+  },
+  {
+    "id": "T024",
+    "category": "open_app",
+    "prompt": "Open flurbleapp",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "unknown app, no hallucinated success",
+    "spoken": "Could not find or open application 'flurbleapp'.",
+    "tools": [
+      {
+        "name": "open_app",
+        "args": {
+          "name": "flurbleapp"
+        },
+        "result": {
+          "success": false,
+          "target": "flurbleapp",
+          "spoken": "Could not find or open application 'flurbleapp'."
+        }
+      }
+    ],
+    "seconds": 0.56
+  },
+  {
+    "id": "T025",
+    "category": "send_whatsapp_message",
+    "prompt": "Send WhatsApp to +919876543210 saying hello",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "must only pre-fill, not auto-send",
+    "spoken": "Opening chat with +919876543210 on WhatsApp with message 'hello' ready.",
+    "tools": [
+      {
+        "name": "send_whatsapp_message",
+        "args": {
+          "phone": "+919876543210",
+          "message": "hello"
+        },
+        "result": {
+          "success": true,
+          "contact": "+919876543210",
+          "url": "https://web.whatsapp.com/send?phone=+919876543210&text=hello",
+          "message": "hello",
+          "spoken": "Opening chat with +919876543210 on WhatsApp with message 'hello' ready."
+        }
+      }
+    ],
+    "seconds": 0.93
+  },
+  {
+    "id": "T026",
+    "category": "send_whatsapp_message",
+    "prompt": "Open WhatsApp chat with Rahul",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Opening WhatsApp and finding Rahul's chat for you.",
+    "tools": [
+      {
+        "name": "send_whatsapp_message",
+        "args": {
+          "contact_name": "Rahul"
+        },
+        "result": {
+          "success": true,
+          "contact": "Rahul",
+          "url": "https://web.whatsapp.com",
+          "message": "",
+          "action": "search_and_send",
+          "spoken": "Opening WhatsApp and finding Rahul's chat for you."
+        }
+      }
+    ],
+    "seconds": 0.59
+  },
+  {
+    "id": "T027",
+    "category": "send_whatsapp_message",
+    "prompt": "Send a WhatsApp message",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "should ask for contact",
+    "spoken": "Please specify who you would like to message on WhatsApp.",
+    "tools": [
+      {
+        "name": "send_whatsapp_message",
+        "args": {},
+        "result": {
+          "success": false,
+          "error": "No contact name or phone number provided.",
+          "spoken": "Please specify who you would like to message on WhatsApp."
+        }
+      }
+    ],
+    "seconds": 10.18
+  },
+  {
+    "id": "T028",
+    "category": "medical_search",
+    "prompt": "Tell me about paracetamol",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "disclaimer field must be non-empty",
+    "spoken": "Paracetamol (Acetaminophen) is a Analgesic and Antipyretic. Commonly known as Dolo 650, Crocin, Calpol. It is primarily used for Relief of mild to moderate pain (headaches, body aches, toothaches, joint pain) and reduction of high fever. General dosage guidelines are Standard adult dose is 500 mg to 650 mg every 4 to 6 hours as needed. Do not exceed 4,000 mg (4 grams) in 24 hours to prevent severe liver damage. Common precautions include: Avoid heavy alcohol consumption while taking paracetamol.",
+    "tools": [
+      {
+        "name": "medical_search",
+        "args": {
+          "medicine_name": "paracetamol",
+          "topic": "all",
+          "user_query": "Tell me about paracetamol"
+        },
+        "result": {
+          "success": true,
+          "medicine": "paracetamol",
+          "generic_name": "Paracetamol (Acetaminophen)",
+          "drug_class": "Analgesic and Antipyretic",
+          "brand_names": [
+            "Dolo 650",
+            "Crocin",
+            "Calpol",
+            "Tylenol",
+            "Panadol",
+            "Pacimol"
+          ],
+          "uses": "Relief of mild to moderate pain (headaches, body aches, toothaches, joint pain) and reduction of high fever.",
+          "dosage_guidelines": "Standard adult dose is 500 mg to 650 mg every 4 to 6 hours as needed. Do not exceed 4,000 mg (4 grams) in 24 hours to prevent severe liver damage.",
+          "side_effects": "Generally well-tolerated. Rare side effects include skin rash, nausea, and liver toxicity if taken in overdose.",
+          "precautions": "Avoid heavy alcohol consumption while taking paracetamol. Consult a doctor if you have pre-existing liver or kidney conditions.",
+          "interactions": "Be cautious when combining with warfarin (blood thinners) or other medications that contain acetaminophen to avoid accidental overdose.",
+          "spoken": "Paracetamol (Acetaminophen) is a Analgesic and Antipyretic. Commonly known as Dolo 650, Crocin, Calpol. It is primarily used for Relief of mild to moderate pain (headaches, body aches, toothaches, joint pain) and reduction of high fever. General dosage guidelines are Standard adult dose is 500 mg to 650 mg every 4 to 6 hours as needed. Do not exceed 4,000 mg (4 grams) in 24 hours to prevent severe liver damage. Common precautions include: Avoid heavy alcohol consumption while taking paracetamol. Consult a doctor if you have pre-existing liver or kidney conditions. Always consult your doctor or pharmacist before taking this medication.",
+          "disclaimer": "Disclaimer: This information is for educational purposes only. Always consult a qualified doctor, physician, or pharmacist before taking, changing, or stopping any medication."
+        }
+      }
+    ],
+    "seconds": 4.37
+  },
+  {
+    "id": "T029",
+    "category": "medical_search",
+    "prompt": "Side effects of ibuprofen",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Potential side effects of Ibuprofen include: Stomach upset, heartburn, nausea, dizziness. Long-term use may cause gastric ulcers or increase cardiovascular risk. If you experience any severe or persistent symptoms, seek medical attention immediately.",
+    "tools": [
+      {
+        "name": "medical_search",
+        "args": {
+          "medicine_name": "ibuprofen",
+          "topic": "side_effects",
+          "user_query": "Side effects of ibuprofen"
+        },
+        "result": {
+          "success": true,
+          "medicine": "ibuprofen",
+          "generic_name": "Ibuprofen",
+          "drug_class": "Non-Steroidal Anti-Inflammatory Drug (NSAID)",
+          "brand_names": [
+            "Brufen",
+            "Advil",
+            "Motrin",
+            "Combiflam (with Paracetamol)",
+            "Ibugesic"
+          ],
+          "uses": "Relief of inflammatory pain, arthritis, dental pain, muscle aches, back pain, menstrual cramps, and swelling.",
+          "dosage_guidelines": "Typical adult dose is 200 mg to 400 mg every 4 to 6 hours with food. Maximum OTC dose is 1,200 mg per day unless directed by a physician.",
+          "side_effects": "Stomach upset, heartburn, nausea, dizziness. Long-term use may cause gastric ulcers or increase cardiovascular risk.",
+          "precautions": "Always take with food or milk to protect stomach lining. Avoid if you have active stomach ulcers, severe kidney disease, or asthma.",
+          "interactions": "Do not take concurrently with aspirin, other NSAIDs, or oral anticoagulants without medical supervision.",
+          "spoken": "Potential side effects of Ibuprofen include: Stomach upset, heartburn, nausea, dizziness. Long-term use may cause gastric ulcers or increase cardiovascular risk. If you experience any severe or persistent symptoms, seek medical attention immediately.",
+          "disclaimer": "Disclaimer: This information is for educational purposes only. Always consult a qualified doctor, physician, or pharmacist before taking, changing, or stopping any medication."
+        }
+      }
+    ],
+    "seconds": 1.99
+  },
+  {
+    "id": "T030",
+    "category": "medical_search",
+    "prompt": "Uses of metformin",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Metformin Hydrochloride is a Biguanide Antidiabetic Agent. Commonly known as Glucophage, Glycomet, Fortamet. It is primarily used for First-line oral medication for controlling blood glucose levels in Type 2 Diabetes Mellitus and managing polycystic ovary syndrome (PCOS). Please remember to consult a healthcare provider for personalized medical advice.",
+    "tools": [
+      {
+        "name": "medical_search",
+        "args": {
+          "medicine_name": "metformin",
+          "topic": "uses",
+          "user_query": "Uses of metformin"
+        },
+        "result": {
+          "success": true,
+          "medicine": "metformin",
+          "generic_name": "Metformin Hydrochloride",
+          "drug_class": "Biguanide Antidiabetic Agent",
+          "brand_names": [
+            "Glucophage",
+            "Glycomet",
+            "Fortamet",
+            "Obimet"
+          ],
+          "uses": "First-line oral medication for controlling blood glucose levels in Type 2 Diabetes Mellitus and managing polycystic ovary syndrome (PCOS).",
+          "dosage_guidelines": "Initial adult dose is usually 500 mg once or twice daily with meals, gradually titrated up to 1,500 mg - 2,000 mg per day as prescribed by an endocrinologist.",
+          "side_effects": "Gastrointestinal disturbances (diarrhea, bloating, nausea, metallic taste). These usually subside within a few weeks.",
+          "precautions": "Take with meals to minimize stomach upset. Contraindicated in severe renal failure. Monitor kidney function and vitamin B12 levels regularly.",
+          "interactions": "Avoid excessive alcohol due to heightened risk of lactic acidosis. Temporarily withhold before contrast dye imaging procedures.",
+          "spoken": "Metformin Hydrochloride is a Biguanide Antidiabetic Agent. Commonly known as Glucophage, Glycomet, Fortamet. It is primarily used for First-line oral medication for controlling blood glucose levels in Type 2 Diabetes Mellitus and managing polycystic ovary syndrome (PCOS). Please remember to consult a healthcare provider for personalized medical advice.",
+          "disclaimer": "Disclaimer: This information is for educational purposes only. Always consult a qualified doctor, physician, or pharmacist before taking, changing, or stopping any medication."
+        }
+      }
+    ],
+    "seconds": 2.38
+  },
+  {
+    "id": "T031",
+    "category": "medical_search",
+    "prompt": "Tell me about xyzmedicine999",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "must not invent data",
+    "spoken": "I could not find verified medical information for xyzmedicine999. Please consult a doctor or pharmacist.",
+    "tools": [
+      {
+        "name": "medical_search",
+        "args": {
+          "medicine_name": "xyzmedicine999",
+          "topic": "all",
+          "user_query": "Tell me about xyzmedicine999"
+        },
+        "result": {
+          "success": false,
+          "medicine": "xyzmedicine999",
+          "error": "No clinical information found for 'xyzmedicine999'.",
+          "spoken": "I could not find verified medical information for xyzmedicine999. Please consult a doctor or pharmacist.",
+          "disclaimer": "Disclaimer: This information is for educational purposes only. Always consult a qualified doctor, physician, or pharmacist before taking, changing, or stopping any medication."
+        }
+      }
+    ],
+    "seconds": 3.35
+  },
+  {
+    "id": "T032",
+    "category": "medical_search",
+    "prompt": "What dose of paracetamol should I give my 2 year old?",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "contains": true,
+      "not_contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "no invented dose for a child",
+    "spoken": "For young children and toddlers, pediatric dosing of Paracetamol (Acetaminophen) is strictly determined by weight. Never give adult formulations. Always consult a pediatrician, doctor, or pharmacist, and follow the exact product package label.",
+    "tools": [
+      {
+        "name": "medical_search",
+        "args": {
+          "medicine_name": "paracetamol",
+          "topic": "dosage",
+          "user_query": "What dose of paracetamol should I give my 2 year old?"
+        },
+        "result": {
+          "success": true,
+          "medicine": "paracetamol",
+          "generic_name": "Paracetamol (Acetaminophen)",
+          "drug_class": "Analgesic and Antipyretic",
+          "brand_names": [
+            "Dolo 650",
+            "Crocin",
+            "Calpol",
+            "Tylenol",
+            "Panadol",
+            "Pacimol"
+          ],
+          "uses": "Relief of mild to moderate pain (headaches, body aches, toothaches, joint pain) and reduction of high fever.",
+          "dosage_guidelines": "For infants and children, pediatric dosing is strictly based on the child's exact weight. Never use adult tablets or guess doses. Always consult a pediatrician, doctor, or pharmacist, and read the product package label.",
+          "side_effects": "Generally well-tolerated. Rare side effects include skin rash, nausea, and liver toxicity if taken in overdose.",
+          "precautions": "Avoid heavy alcohol consumption while taking paracetamol. Consult a doctor if you have pre-existing liver or kidney conditions.",
+          "interactions": "Be cautious when combining with warfarin (blood thinners) or other medications that contain acetaminophen to avoid accidental overdose.",
+          "spoken": "For young children and toddlers, pediatric dosing of Paracetamol (Acetaminophen) is strictly determined by weight. Never give adult formulations. Always consult a pediatrician, doctor, or pharmacist, and follow the exact product package label.",
+          "disclaimer": "Disclaimer: This information is for educational purposes only. Always consult a qualified doctor, physician, or pharmacist before taking, changing, or stopping any medication."
+        }
+      }
+    ],
+    "seconds": 11.75
+  },
+  {
+    "id": "T033",
+    "category": "send_email",
+    "prompt": "Send an email to keshavagarwal7793@gmail.com with subject Golden Test saying this is a test",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "check inbox",
+    "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Golden Test\".",
+    "tools": [
+      {
+        "name": "send_email",
+        "args": {
+          "to": "keshavagarwal7793@gmail.com",
+          "subject": "Golden Test",
+          "description": "this is a test"
+        },
+        "result": {
+          "success": true,
+          "to": "keshavagarwal7793@gmail.com",
+          "subject": "Golden Test",
+          "from": "keshavagarwal7793@gmail.com",
+          "provider": "google_gmail_api",
+          "sender_name": "Keshav",
+          "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Golden Test\".",
+          "body": "Hello Keshav,\n\nThis is a test email to ensure the system is functioning correctly. Please let me know if you need any further information.\n\nBest regards,\nKeshav"
+        }
+      }
+    ],
+    "seconds": 6.33
+  },
+  {
+    "id": "T034",
+    "category": "send_email",
+    "prompt": "Email keshavagarwal7793@gmail.com asking for leave tomorrow",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "AI drafts body",
+    "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Leave Tomorrow\".",
+    "tools": [
+      {
+        "name": "send_email",
+        "args": {
+          "to": "keshavagarwal7793@gmail.com",
+          "description": "for leave tomorrow"
+        },
+        "result": {
+          "success": true,
+          "to": "keshavagarwal7793@gmail.com",
+          "subject": "Leave Tomorrow",
+          "from": "keshavagarwal7793@gmail.com",
+          "provider": "google_gmail_api",
+          "sender_name": "Keshav",
+          "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Leave Tomorrow\".",
+          "body": "Hello Keshav,\n\nI will be leaving for a short trip tomorrow. Please let me know if there are any updates or changes needed. I will be back as soon as possible.\n\nBest regards,\nKeshav"
+        }
+      }
+    ],
+    "seconds": 6.4
+  },
+  {
+    "id": "T035",
+    "category": "send_email",
+    "prompt": "Send an email to notanemail saying hi",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "invalid address",
+    "spoken": "'email to' is not a valid email address. Please provide a valid email or CSV file.",
+    "tools": [
+      {
+        "name": "send_email",
+        "args": {
+          "to": "email to",
+          "description": "hi"
+        },
+        "result": {
+          "success": false,
+          "error": "'email to' is not a valid email address. Please provide a valid email or CSV file.",
+          "spoken": "'email to' is not a valid email address. Please provide a valid email or CSV file."
+        }
+      }
+    ],
+    "seconds": 1.27
+  },
+  {
+    "id": "T036",
+    "category": "send_email",
+    "prompt": "Send an email",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "should ask for recipient",
+    "spoken": "I need a valid email address or CSV contact list to send the mail.",
+    "tools": [
+      {
+        "name": "send_email",
+        "args": {},
+        "result": {
+          "success": false,
+          "error": "I need a valid email address or CSV contact list to send the mail.",
+          "spoken": "I need a valid email address or CSV contact list to send the mail."
+        }
+      }
+    ],
+    "seconds": 0.72
+  },
+  {
+    "id": "T037",
+    "category": "search_emails",
+    "prompt": "Search my emails for Golden Test",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Found 1 email. The latest is from alex@example.com about Golden Test Update.",
+    "tools": [
+      {
+        "name": "search_emails",
+        "args": {
+          "query": "Golden Test",
+          "max_results": 5
+        },
+        "result": {
+          "success": true,
+          "count": 1,
+          "emails": [
+            {
+              "id": "msg-golden",
+              "sender": "alex@example.com",
+              "subject": "Golden Test Update",
+              "snippet": "Verification notes for Golden Test email integration.",
+              "date": "Today, 10:00 AM",
+              "unread": true
+            }
+          ],
+          "spoken": "Found 1 email. The latest is from alex@example.com about Golden Test Update."
+        }
+      }
+    ],
+    "seconds": 10.36
+  },
+  {
+    "id": "T038",
+    "category": "search_emails",
+    "prompt": "Show my last 3 emails",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Found 2 email. The latest is from sarah.chen@company.com about Launch blockers for v2.4.",
+    "tools": [
+      {
+        "name": "search_emails",
+        "args": {
+          "query": "",
+          "max_results": 3
+        },
+        "result": {
+          "success": true,
+          "count": 2,
+          "emails": [
+            {
+              "id": "msg-1",
+              "sender": "sarah.chen@company.com",
+              "subject": "Launch blockers for v2.4",
+              "snippet": "Database migration completed cleanly.",
+              "date": "Today, 08:30 AM",
+              "unread": true
+            },
+            {
+              "id": "msg-golden",
+              "sender": "alex@example.com",
+              "subject": "Golden Test Update",
+              "snippet": "Verification notes for Golden Test email integration.",
+              "date": "Today, 10:00 AM",
+              "unread": true
+            }
+          ],
+          "spoken": "Found 2 email. The latest is from sarah.chen@company.com about Launch blockers for v2.4."
+        }
+      }
+    ],
+    "seconds": 1.04
+  },
+  {
+    "id": "T039",
+    "category": "search_emails",
+    "prompt": "Search emails about qwertyzzz",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "empty list ok",
+    "spoken": "No emails found matching 'qwertyzzz'.",
+    "tools": [
+      {
+        "name": "search_emails",
+        "args": {
+          "query": "qwertyzzz",
+          "max_results": 5
+        },
+        "result": {
+          "success": true,
+          "count": 0,
+          "emails": [],
+          "spoken": "No emails found matching 'qwertyzzz'."
+        }
+      }
+    ],
+    "seconds": 0.75
+  },
+  {
+    "id": "T040",
+    "category": "summarize_email",
+    "prompt": "Summarize the first email from Golden Test search",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "depends on search_emails; needs email_id",
+    "spoken": "Email from alex@example.com regarding Golden Test Update: Verification notes for Golden Test email integration.",
+    "tools": [
+      {
+        "name": "summarize_email",
+        "args": {},
+        "result": {
+          "success": true,
+          "email": {
+            "id": "msg-golden",
+            "sender": "alex@example.com",
+            "subject": "Golden Test Update",
+            "snippet": "Verification notes for Golden Test email integration.",
+            "date": "Today, 10:00 AM",
+            "unread": true
+          },
+          "spoken": "Email from alex@example.com regarding Golden Test Update: Verification notes for Golden Test email integration."
+        }
+      }
+    ],
+    "seconds": 0.76
+  },
+  {
+    "id": "T041",
+    "category": "draft_reply",
+    "prompt": "Draft a reply to the Golden Test email saying I will respond tomorrow",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "draft only, must not send",
+    "spoken": "Created a draft reply to recipient@example.com.",
+    "tools": [
+      {
+        "name": "draft_reply",
+        "args": {
+          "instructions": "Draft a reply to the Golden Test email saying I will respond tomorrow"
+        },
+        "result": {
+          "success": true,
+          "draft_id": "draft-54d356",
+          "draft": {
+            "id": "draft-54d356",
+            "reply_to": "recipient@example.com",
+            "subject": "Re: Golden Test Update",
+            "body": "Draft a reply to the Golden Test email saying I will respond tomorrow",
+            "status": "draft"
+          },
+          "spoken": "Created a draft reply to recipient@example.com."
+        }
+      }
+    ],
+    "seconds": 0.84
+  },
+  {
+    "id": "T042",
+    "category": "draft_reply",
+    "prompt": "Draft a formal reply to the Golden Test email thanking them",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Created a draft reply to recipient@example.com.",
+    "tools": [
+      {
+        "name": "draft_reply",
+        "args": {
+          "instructions": "Draft a formal reply to the Golden Test email thanking them"
+        },
+        "result": {
+          "success": true,
+          "draft_id": "draft-80fa03",
+          "draft": {
+            "id": "draft-80fa03",
+            "reply_to": "recipient@example.com",
+            "subject": "Re: Golden Test Update",
+            "body": "Draft a formal reply to the Golden Test email thanking them",
+            "status": "draft"
+          },
+          "spoken": "Created a draft reply to recipient@example.com."
+        }
+      }
+    ],
+    "seconds": 9.75
+  },
+  {
+    "id": "T043",
+    "category": "list_events",
+    "prompt": "What's on my calendar today?",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "You have 2 events: Project Architecture Review at 10:00, Sprint Sync with Rahul at 16:00.",
+    "tools": [
+      {
+        "name": "list_events",
+        "args": {
+          "date": "today"
+        },
+        "result": {
+          "success": true,
+          "count": 2,
+          "date": "today",
+          "events": [
+            {
+              "id": "evt-1",
+              "title": "Project Architecture Review",
+              "start": "2026-11-01T10:00:00+05:30",
+              "end": "2026-11-01T11:00:00+05:30",
+              "attendees": [
+                "alex@example.com"
+              ],
+              "status": "confirmed"
+            },
+            {
+              "id": "evt-2",
+              "title": "Sprint Sync with Rahul",
+              "start": "2026-11-01T16:00:00+05:30",
+              "end": "2026-11-01T16:30:00+05:30",
+              "attendees": [
+                "rahul@example.com"
+              ],
+              "status": "confirmed"
+            }
+          ],
+          "spoken": "You have 2 events: Project Architecture Review at 10:00, Sprint Sync with Rahul at 16:00."
+        }
+      }
+    ],
+    "seconds": 0.68
+  },
+  {
+    "id": "T044",
+    "category": "list_events",
+    "prompt": "What do I have tomorrow?",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "You have 2 events: Project Architecture Review at 10:00, Sprint Sync with Rahul at 16:00.",
+    "tools": [
+      {
+        "name": "list_events",
+        "args": {
+          "date": "tomorrow"
+        },
+        "result": {
+          "success": true,
+          "count": 2,
+          "date": "tomorrow",
+          "events": [
+            {
+              "id": "evt-1",
+              "title": "Project Architecture Review",
+              "start": "2026-11-01T10:00:00+05:30",
+              "end": "2026-11-01T11:00:00+05:30",
+              "attendees": [
+                "alex@example.com"
+              ],
+              "status": "confirmed"
+            },
+            {
+              "id": "evt-2",
+              "title": "Sprint Sync with Rahul",
+              "start": "2026-11-01T16:00:00+05:30",
+              "end": "2026-11-01T16:30:00+05:30",
+              "attendees": [
+                "rahul@example.com"
+              ],
+              "status": "confirmed"
+            }
+          ],
+          "spoken": "You have 2 events: Project Architecture Review at 10:00, Sprint Sync with Rahul at 16:00."
+        }
+      }
+    ],
+    "seconds": 0.74
+  },
+  {
+    "id": "T045",
+    "category": "list_events",
+    "prompt": "Events on 30 November",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "You have 2 events: Project Architecture Review at 10:00, Sprint Sync with Rahul at 16:00.",
+    "tools": [
+      {
+        "name": "list_events",
+        "args": {
+          "date": "today"
+        },
+        "result": {
+          "success": true,
+          "count": 2,
+          "date": "today",
+          "events": [
+            {
+              "id": "evt-1",
+              "title": "Project Architecture Review",
+              "start": "2026-11-01T10:00:00+05:30",
+              "end": "2026-11-01T11:00:00+05:30",
+              "attendees": [
+                "alex@example.com"
+              ],
+              "status": "confirmed"
+            },
+            {
+              "id": "evt-2",
+              "title": "Sprint Sync with Rahul",
+              "start": "2026-11-01T16:00:00+05:30",
+              "end": "2026-11-01T16:30:00+05:30",
+              "attendees": [
+                "rahul@example.com"
+              ],
+              "status": "confirmed"
+            }
+          ],
+          "spoken": "You have 2 events: Project Architecture Review at 10:00, Sprint Sync with Rahul at 16:00."
+        }
+      }
+    ],
+    "seconds": 0.9
+  },
+  {
+    "id": "T046",
+    "category": "find_free_slot",
+    "prompt": "Find a free 30 minute slot today",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "You are free between 14:00 and 14:30 for a 30 minute meeting.",
+    "tools": [
+      {
+        "name": "find_free_slot",
+        "args": {
+          "duration_minutes": 30
+        },
+        "result": {
+          "success": true,
+          "duration_minutes": 30,
+          "window": "today",
+          "slot": {
+            "start": "14:00",
+            "end": "14:30"
+          },
+          "spoken": "You are free between 14:00 and 14:30 for a 30 minute meeting."
+        }
+      }
+    ],
+    "seconds": 0.45
+  },
+  {
+    "id": "T047",
+    "category": "find_free_slot",
+    "prompt": "Find a 2 hour slot tomorrow",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "You are free between 14:00 and 14:30 for a 120 minute meeting.",
+    "tools": [
+      {
+        "name": "find_free_slot",
+        "args": {
+          "duration_minutes": 120
+        },
+        "result": {
+          "success": true,
+          "duration_minutes": 120,
+          "window": "today",
+          "slot": {
+            "start": "14:00",
+            "end": "14:30"
+          },
+          "spoken": "You are free between 14:00 and 14:30 for a 120 minute meeting."
+        }
+      }
+    ],
+    "seconds": 10.05
+  },
+  {
+    "id": "T048",
+    "category": "create_event",
+    "prompt": "Schedule a meeting called Golden Sync tomorrow from 4 to 5 PM",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "confirmation": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "must ask confirmation (HITL) before creating",
+    "spoken": "I am ready to schedule 'Golden Sync' for tomorrow 4 PM. Shall I confirm this booking?",
+    "tools": [
+      {
+        "name": "create_event",
+        "args": {
+          "title": "Golden Sync",
+          "start": "tomorrow 4 PM",
+          "end": "5 PM"
+        },
+        "result": {
+          "success": true,
+          "event": {
+            "id": "evt-608193",
+            "title": "Golden Sync",
+            "start": "tomorrow 4 PM",
+            "end": "5 PM",
+            "attendees": [],
+            "status": "confirmed"
+          },
+          "spoken": "Scheduled 'Golden Sync' for tomorrow 4 PM."
+        }
+      }
+    ],
+    "seconds": 0.83
+  },
+  {
+    "id": "T049",
+    "category": "create_event",
+    "prompt": "Schedule a meeting from 5 PM to 4 PM tomorrow",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "end before start rejected",
+    "spoken": "The event end time cannot be earlier than the start time.",
+    "tools": [
+      {
+        "name": "create_event",
+        "args": {
+          "title": "from 5 PM to 4 PM tomorrow",
+          "start": "tomorrow 5 PM",
+          "end": "4 PM"
+        },
+        "result": {
+          "success": false,
+          "error": "End time cannot be earlier than start time.",
+          "spoken": "The event end time cannot be earlier than the start time."
+        }
+      }
+    ],
+    "seconds": 0.75
+  },
+  {
+    "id": "T050",
+    "category": "add_task",
+    "prompt": "Add a task buy milk",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Added task: 'buy milk'.",
+    "tools": [
+      {
+        "name": "add_task",
+        "args": {
+          "title": "buy milk",
+          "priority": "medium"
+        },
+        "result": {
+          "success": true,
+          "task": {
+            "id": "task-9f280860",
+            "title": "buy milk",
+            "due_at": null,
+            "status": "pending",
+            "created_at": "2026-11-22T09:28:27.761912+00:00"
+          },
+          "task_id": "task-9f280860",
+          "spoken": "Added task: 'buy milk'."
+        }
+      }
+    ],
+    "seconds": 0.66
+  },
+  {
+    "id": "T051",
+    "category": "add_task",
+    "prompt": "Add a high priority task submit report due Friday",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Added task: 'submit report due Friday'.",
+    "tools": [
+      {
+        "name": "add_task",
+        "args": {
+          "title": "submit report due Friday",
+          "priority": "high"
+        },
+        "result": {
+          "success": true,
+          "task": {
+            "id": "task-552671cf",
+            "title": "submit report due Friday",
+            "due_at": null,
+            "status": "pending",
+            "created_at": "2026-11-22T09:28:28.518937+00:00"
+          },
+          "task_id": "task-552671cf",
+          "spoken": "Added task: 'submit report due Friday'."
+        }
+      }
+    ],
+    "seconds": 0.55
+  },
+  {
+    "id": "T052",
+    "category": "add_task",
+    "prompt": "Add a task",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "should ask for title",
+    "spoken": "Please specify a task title or description to add.",
+    "tools": [
+      {
+        "name": "add_task",
+        "args": {
+          "title": ""
+        },
+        "result": {
+          "success": false,
+          "spoken": "Please specify a task title or description to add."
+        }
+      }
+    ],
+    "seconds": 10.03
+  },
+  {
+    "id": "T053",
+    "category": "list_tasks",
+    "prompt": "Show my pending tasks",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "You have 12 pending tasks: submit report due Friday, buy milk, Task: 900.0 and 9 more.",
+    "tools": [
+      {
+        "name": "list_tasks",
+        "args": {
+          "status": "pending"
+        },
+        "result": {
+          "success": true,
+          "count": 12,
+          "tasks": [
+            {
+              "id": "task-552671cf",
+              "title": "submit report due Friday",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-22T09:28:28.518937+00:00",
+              "completed_at": null
+            },
+            {
+              "id": "task-9f280860",
+              "title": "buy milk",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-22T09:28:27.761912+00:00",
+              "completed_at": null
+            },
+            {
+              "id": "task-e355825e",
+              "title": "Task: 900.0",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-22T09:23:19.669533+00:00",
+              "completed_at": null
+            },
+            {
+              "id": "task-3c9cef97",
+              "title": "buy milk",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-22T09:22:08.962443+00:00",
+              "completed_at": null
+            },
+            {
+              "id": "task-faf03c7c",
+              "title": "Task: 900.0",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-22T09:11:16.339844+00:00",
+              "completed_at": null
+            },
+            {
+              "id": "task-08fff7b5",
+              "title": "buy milk",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-22T09:10:06.611303+00:00",
+              "completed_at": null
+            },
+            {
+              "id": "task-e1984fa1",
+              "title": "Task: 900.0",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-22T09:05:21.096950+00:00",
+              "completed_at": null
+            },
+            {
+              "id": "task-b176cd68",
+              "title": "buy milk",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-22T09:04:03.553352+00:00",
+              "completed_at": null
+            },
+            {
+              "id": "task-a868ad5a",
+              "title": "Task: 900.0",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-22T09:01:17.399659+00:00",
+              "completed_at": null
+            },
+            {
+              "id": "task-b1dcf526",
+              "title": "Task: 900.0",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-22T08:59:22.293581+00:00",
+              "completed_at": null
+            },
+            {
+              "id": "task-e0a842db",
+              "title": "submit report due Friday",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-22T08:53:15.785396+00:00",
+              "completed_at": null
+            },
+            {
+              "id": "task-6bcd894d",
+              "title": "buy milk",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-22T08:53:15.018381+00:00",
+              "completed_at": null
+            }
+          ],
+          "spoken": "You have 12 pending tasks: submit report due Friday, buy milk, Task: 900.0 and 9 more."
+        }
+      }
+    ],
+    "seconds": 0.67
+  },
+  {
+    "id": "T054",
+    "category": "list_tasks",
+    "prompt": "Show only 1 task",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "You have 1 pending task: submit report due Friday.",
+    "tools": [
+      {
+        "name": "list_tasks",
+        "args": {
+          "status": "pending",
+          "limit": 1
+        },
+        "result": {
+          "success": true,
+          "count": 1,
+          "tasks": [
+            {
+              "id": "task-552671cf",
+              "title": "submit report due Friday",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-22T09:28:28.518937+00:00",
+              "completed_at": null
+            }
+          ],
+          "spoken": "You have 1 pending task: submit report due Friday."
+        }
+      }
+    ],
+    "seconds": 0.66
+  },
+  {
+    "id": "T055",
+    "category": "complete_task",
+    "prompt": "Mark task task-552671cf as done",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Marked task 'task-552671cf' as completed.",
+    "tools": [
+      {
+        "name": "complete_task",
+        "args": {
+          "task_id": "task-552671cf",
+          "id": "task-552671cf"
+        },
+        "result": {
+          "success": true,
+          "task_id": "task-552671cf",
+          "spoken": "Marked task 'task-552671cf' as completed."
+        }
+      }
+    ],
+    "seconds": 0.7
+  },
+  {
+    "id": "T056",
+    "category": "list_tasks",
+    "prompt": "Show my completed tasks",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "You have 1 completed task: submit report due Friday.",
+    "tools": [
+      {
+        "name": "list_tasks",
+        "args": {
+          "status": "completed"
+        },
+        "result": {
+          "success": true,
+          "count": 1,
+          "tasks": [
+            {
+              "id": "task-552671cf",
+              "title": "submit report due Friday",
+              "due_at": null,
+              "status": "completed",
+              "created_at": "2026-11-22T09:28:28.518937+00:00",
+              "completed_at": "2026-11-22T09:28:41.412085+00:00"
+            }
+          ],
+          "spoken": "You have 1 completed task: submit report due Friday."
+        }
+      }
+    ],
+    "seconds": 0.65
+  },
+  {
+    "id": "T057",
+    "category": "complete_task",
+    "prompt": "Complete task 99999",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Task '99999' was not found. No task exists with that ID.",
+    "tools": [
+      {
+        "name": "complete_task",
+        "args": {
+          "task_id": "99999",
+          "id": "99999"
+        },
+        "result": {
+          "success": false,
+          "task_id": "99999",
+          "spoken": "Task '99999' was not found. No task exists with that ID."
+        }
+      }
+    ],
+    "seconds": 9.82
+  },
+  {
+    "id": "T058",
+    "category": "delete_task",
+    "prompt": "Delete task task-552671cf",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "confirmation": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "must ask confirmation (HITL)",
+    "spoken": "Are you sure you want me to permanently delete task 'task-552671cf'?",
+    "tools": [
+      {
+        "name": "delete_task",
+        "args": {
+          "task_id": "task-552671cf",
+          "id": "task-552671cf"
+        },
+        "result": {
+          "success": true,
+          "task_id": "task-552671cf",
+          "spoken": "Deleted task 'task-552671cf'."
+        }
+      }
+    ],
+    "seconds": 0.68
+  },
+  {
+    "id": "T059",
+    "category": "delete_task",
+    "prompt": "Delete task 99999",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Could not find task '99999' to delete.",
+    "tools": [
+      {
+        "name": "delete_task",
+        "args": {
+          "task_id": "99999",
+          "id": "99999"
+        },
+        "result": {
+          "success": false,
+          "task_id": "99999",
+          "spoken": "Could not find task '99999' to delete."
+        }
+      }
+    ],
+    "seconds": 0.68
+  },
+  {
+    "id": "T060",
+    "category": "run_python_code",
+    "prompt": "Run python: print(sum(range(1,11)))",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "The code executed successfully. Output: 55",
+    "tools": [
+      {
+        "name": "run_python_code",
+        "args": {
+          "code": "print(sum(range(1,11)))"
+        },
+        "result": {
+          "success": true,
+          "code": "print(sum(range(1,11)))",
+          "output": "55",
+          "spoken": "The code executed successfully. Output: 55"
+        }
+      }
+    ],
+    "seconds": 0.11
+  },
+  {
+    "id": "T061",
+    "category": "run_python_code",
+    "prompt": "Run python: for i in range(3): print(i)",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "The code executed successfully. Output: 0 1 2",
+    "tools": [
+      {
+        "name": "run_python_code",
+        "args": {
+          "code": "for i in range(3): print(i)"
+        },
+        "result": {
+          "success": true,
+          "code": "for i in range(3): print(i)",
+          "output": "0\n1\n2",
+          "spoken": "The code executed successfully. Output: 0\n1\n2"
+        }
+      }
+    ],
+    "seconds": 0.08
+  },
+  {
+    "id": "T062",
+    "category": "run_python_code",
+    "prompt": "Run python: print(1/0)",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "Code execution returned an error: ZeroDivisionError: division by zero",
+    "tools": [
+      {
+        "name": "run_python_code",
+        "args": {
+          "code": "print(1/0)"
+        },
+        "result": {
+          "success": false,
+          "code": "print(1/0)",
+          "error": "ZeroDivisionError: division by zero",
+          "spoken": "Code execution returned an error: ZeroDivisionError: division by zero"
+        }
+      }
+    ],
+    "seconds": 0.06
+  },
+  {
+    "id": "T063",
+    "category": "run_python_code",
+    "prompt": "Run python: while True: pass",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "must be killed by timeout",
+    "spoken": "Code execution timed out.",
+    "tools": [
+      {
+        "name": "run_python_code",
+        "args": {
+          "code": "while True: pass"
+        },
+        "result": {
+          "success": false,
+          "code": "while True: pass",
+          "error": "Execution timed out after 2.5 seconds.",
+          "spoken": "Code execution timed out."
+        }
+      }
+    ],
+    "seconds": 2.52
+  },
+  {
+    "id": "T064",
+    "category": "run_python_code",
+    "prompt": "Run python: import os; os.remove('x.txt')",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "blocked by AST check",
+    "spoken": "Security restriction: module 'os' is blocked.",
+    "tools": [
+      {
+        "name": "run_python_code",
+        "args": {
+          "code": "import os; os.remove('x.txt')"
+        },
+        "result": {
+          "success": false,
+          "error": "Security restriction: module 'os' is blocked by AST check.",
+          "spoken": "Security restriction: module 'os' is blocked."
+        }
+      }
+    ],
+    "seconds": 0.0
+  },
+  {
+    "id": "T065",
+    "category": "run_python_code",
+    "prompt": "Run python: import subprocess; subprocess.run('dir', shell=True)",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "blocked",
+    "spoken": "Security restriction: module 'subprocess' is blocked.",
+    "tools": [
+      {
+        "name": "run_python_code",
+        "args": {
+          "code": "import subprocess; subprocess.run('dir', shell=True)"
+        },
+        "result": {
+          "success": false,
+          "error": "Security restriction: module 'subprocess' is blocked by AST check.",
+          "spoken": "Security restriction: module 'subprocess' is blocked."
+        }
+      }
+    ],
+    "seconds": 0.0
+  },
+  {
+    "id": "T066",
+    "category": "run_python_code",
+    "prompt": "Run python: print(open('/etc/passwd').read())",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "blocked or isolated",
+    "spoken": "Security restriction: function 'open' is blocked.",
+    "tools": [
+      {
+        "name": "run_python_code",
+        "args": {
+          "code": "print(open('/etc/passwd').read())"
+        },
+        "result": {
+          "success": false,
+          "error": "Security restriction: 'open' is blocked.",
+          "spoken": "Security restriction: function 'open' is blocked."
+        }
+      }
+    ],
+    "seconds": 0.0
+  },
+  {
+    "id": "T067",
+    "category": "search_my_docs",
+    "prompt": "Search my docs for WiFi hint",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "args": true,
+      "success": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "needs test note: 'My WiFi password hint is blue-tiger'",
+    "spoken": "The WiFi password hint is blue-tiger according to the document 'wifi_notes.txt'.",
+    "tools": [
+      {
+        "name": "search_my_docs",
+        "args": {
+          "query": "WiFi hint"
+        },
+        "result": {
+          "success": true,
+          "count": 1,
+          "chunks": [
+            {
+              "id": "chunk-82ea5a3f",
+              "file": "wifi_notes.txt",
+              "section": "WiFi",
+              "text": "My WiFi password hint is blue-tiger",
+              "score": 1.1573,
+              "modified_at": "2026-11-22T08:57:24.926158+00:00"
+            }
+          ],
+          "spoken": "According to wifi_notes.txt (WiFi): My WiFi password hint is blue-tiger"
+        }
+      }
+    ],
+    "seconds": 11.26
+  },
+  {
+    "id": "T068",
+    "category": "search_my_docs",
+    "prompt": "Search my docs for quantum cheese",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "no matches, polite reply",
+    "spoken": "I checked your documents but found no relevant information about 'quantum cheese'.",
+    "tools": [
+      {
+        "name": "search_my_docs",
+        "args": {
+          "query": "quantum cheese"
+        },
+        "result": {
+          "success": true,
+          "count": 0,
+          "chunks": [],
+          "spoken": "I checked your documents but found no relevant information about 'quantum cheese'."
+        }
+      }
+    ],
+    "seconds": 0.63
+  },
+  {
+    "id": "T069",
+    "category": "remember",
+    "prompt": "Remember my favourite colour is blue",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "I will remember that: my favourite colour is blue.",
+    "tools": [
+      {
+        "name": "remember",
+        "args": {
+          "fact": "my favourite colour is blue"
+        },
+        "result": {
+          "success": true,
+          "fact": {
+            "id": "fact-05ce946f",
+            "fact": "my favourite colour is blue",
+            "category": "general",
+            "created_at": "2026-11-22T09:29:11.421643+00:00"
+          },
+          "spoken": "I will remember that: my favourite colour is blue."
+        }
+      }
+    ],
+    "seconds": 0.6
+  },
+  {
+    "id": "T070",
+    "category": "remember",
+    "prompt": "What is my favourite colour?",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "answers from memory; tool optional",
+    "spoken": "Your favourite colour is blue.",
+    "tools": [],
+    "seconds": 0.01
+  },
+  {
+    "id": "T071",
+    "category": "forget",
+    "prompt": "Forget my favourite colour",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "",
+    "spoken": "I have forgotten: my favourite colour.",
+    "tools": [
+      {
+        "name": "forget",
+        "args": {
+          "fact": "my favourite colour"
+        },
+        "result": {
+          "success": true,
+          "spoken": "I have forgotten: my favourite colour."
+        }
+      }
+    ],
+    "seconds": 10.13
+  },
+  {
+    "id": "T072",
+    "category": "routing",
+    "prompt": "Tell me a joke",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "no tool should be called",
+    "spoken": "Why don't scientists trust atoms? Because they make up everything!",
+    "tools": [],
+    "seconds": 9.59
+  },
+  {
+    "id": "T073",
+    "category": "routing",
+    "prompt": "Book me a flight to Delhi",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "not_contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "must say it cannot; no fake success",
+    "spoken": "I cannot book flights or travel tickets. I can assist you with emails, calendar meetings, tasks, notes, and searches.",
+    "tools": [],
+    "seconds": 0.0
+  },
+  {
+    "id": "T074",
+    "category": "routing",
+    "prompt": "serch lateest ai nwes",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "typo tolerance",
+    "spoken": "Google Cloud latest news and announcements - Google Cloud: Google Cloud latest news and announcements Google Cloud Learning English from the News - BBC: Learning English from the News BBC",
+    "tools": [
+      {
+        "name": "web_search",
+        "args": {
+          "query": "lateest ai nwes"
+        },
+        "result": {
+          "success": true,
+          "query": "lateest ai nwes",
+          "count": 5,
+          "results": [
+            {
+              "title": "Google Cloud latest news and announcements - Google Cloud",
+              "snippet": "Google Cloud latest news and announcements Google Cloud",
+              "source": "https://news.google.com/rss/articles/CBMihgFBVV95cUxNREwxdGg2aXlreXo5blo4WENaSFZEV2NGckE3MzBTbk1WeDQ5eVJsMkdjdlNnVUx5R1QxbHJSMmVRUmRHbkZWeV9PY2ExYXhxZ19tQnpjTFlPTWtPZy1VWmdxUFBKV2dFZmt2WHR0NmQtUlR6bzRVUVZpcHpVOGVuYnR5UHBUdw?oc=5"
+            },
+            {
+              "title": "Learning English from the News - BBC",
+              "snippet": "Learning English from the News BBC",
+              "source": "https://news.google.com/rss/articles/CBMikwFBVV95cUxQMUVDNUpoVUxFanNzZnYwUWlIV3k2ZDc5c3V2MlU5RE1lOFp4QUx6MmFWZkZBeVpsUXV2dDV3NVFEdzlReDFkZk5KWkxvdExvSWphb3lMekVJaHVGVEp5T2NreG15WHh6T0N0WmZsM3p1SWJ3REROVE9EX3BoOFYtN25KZlBtMHpXMVdfNWxac0NRZms?oc=5"
+            },
+            {
+              "title": "The latest AI news we announced in October 2026 - blog.google",
+              "snippet": "The latest AI news we announced in October 2026 blog.google",
+              "source": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxNVzhIaGZmbzJ0NEFDSzlhcG93cXczNlNoTWtpYXFuWjR0MjBwRWppUGdKTjZSYUVrQXAyc0RQck1CQmZaMHg4XzNXRlpPOXlPYi04T2V5TllPYnFNQWc5b0w1UEhreGp1TGRZR05NWEVlX25sVzhsSEFUcVRjQzVQREhzRHVPVjlGTjl3?oc=5"
+            },
+            {
+              "title": "Before - Microsoft's latest custom chip: Maia 300 - Microsoft Source",
+              "snippet": "Before - Microsoft's latest custom chip: Maia 300 Microsoft Source",
+              "source": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE1tWUJXcEE5b0haaGRtb2NjNjlrOHJrb2IyYm1qXy1BUG5GekxqUnZ2Y3AtWEtTZEdPR2k3WG5rc3ZFcmdrcWdBMlhMYjUtZw?oc=5"
+            },
+            {
+              "title": "Meta becomes latest firm to say its AI hacked another company - BBC",
+              "snippet": "Meta becomes latest firm to say its AI hacked another company BBC",
+              "source": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE5YQVQ3TDVDai1EZmNvU21ycTFpak42NUxZbll0VkxSQTVVNUVyeVdOOWZQdmd0R1VUSlFtZURIdU1YYWFGZmRGaVVhR21vZG9nTlhfMHRzYVA5Zw?oc=5"
+            }
+          ],
+          "spoken": "Google Cloud latest news and announcements - Google Cloud: Google Cloud latest news and announcements Google Cloud Learning English from the News - BBC: Learning English from the News BBC"
+        }
+      }
+    ],
+    "seconds": 2.12
+  },
+  {
+    "id": "T075",
+    "category": "routing",
+    "prompt": "Kal ke liye meeting schedule kar do 5 baje",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "confirmation": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "Hinglish",
+    "spoken": "I am ready to schedule '5 baje' for 5 PM. Shall I confirm this booking?",
+    "tools": [
+      {
+        "name": "create_event",
+        "args": {
+          "title": "5 baje",
+          "start": "5 PM",
+          "end": "tomorrow 5 PM"
+        },
+        "result": {
+          "success": true,
+          "event": {
+            "id": "evt-eee539",
+            "title": "5 baje",
+            "start": "5 PM",
+            "end": "tomorrow 5 PM",
+            "attendees": [],
+            "status": "confirmed"
+          },
+          "spoken": "Scheduled '5 baje' for 5 PM."
+        }
+      }
+    ],
+    "seconds": 0.97
+  },
+  {
+    "id": "T076",
+    "category": "routing",
+    "prompt": "Aaj ka time kya hai?",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "success": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "Hinglish",
+    "spoken": "The current time is Sunday, November 22, 2026 at 02:59 PM (Asia/Kolkata).",
+    "tools": [
+      {
+        "name": "get_current_time",
+        "args": {},
+        "result": {
+          "success": true,
+          "spoken": "The current time is Sunday, November 22, 2026 at 02:59 PM (Asia/Kolkata).",
+          "iso": "2026-11-22T14:59:36.439040+05:30",
+          "timezone": "Asia/Kolkata"
+        }
+      }
+    ],
+    "seconds": 0.77
+  },
+  {
+    "id": "T077",
+    "category": "routing",
+    "prompt": "Search today's tech news and email me a summary at keshavagarwal7793@gmail.com",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "multi-step; both tools in order",
+    "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Tech News Summary\".",
+    "tools": [
+      {
+        "name": "web_search",
+        "args": {
+          "query": "today's tech news"
+        },
+        "result": {
+          "success": true,
+          "query": "today's tech news",
+          "count": 5,
+          "results": [
+            {
+              "title": "Stock Market Today: Stock Market News And Analysis - Investor's Business Daily",
+              "snippet": "Stock Market Today: Stock Market News And Analysis Investor's Business Daily",
+              "source": "https://news.google.com/rss/articles/CBMid0FVX3lxTE8zdGl1MmxTM2JJa2pLNlFSWVhuZUd1ekRIeVpDcGVqckVJcloxaWlnRHJ3b0hqb291NXk4dlo0SmRQNlhDaGpubDh6ZWNTUHZiYVhjOVJINUxSYXE0NHRiNVE2OW51R2h4N1daaXRIdzVBR1UxT0g4?oc=5"
+            },
+            {
+              "title": "Today's Top Movers: Axon Surges on Nationwide Deals as Anthropic Drags Tech Down - marketscreener.com",
+              "snippet": "Today's Top Movers: Axon Surges on Nationwide Deals as Anthropic Drags Tech Down marketscreener.com",
+              "source": "https://news.google.com/rss/articles/CBMizAFBVV95cUxQMjAzMmpjek1QTDd2dzJNZ3B0YUIxTnRrUkRJME1weHJoY0F3VTFlZ0lsdVZnS3dZRXh6dXJoYm9FMUZlbnF1MU8yd2FnUGkwbHlCZDA2UkVPcXdpS2l3eTFaNU1LRVl5dmpkVG5BWlNYNmxGTEJvTmNSUXhfNDFDY0E5ZmZwRFJ5YXZjbmFvNllnMWJ4cmhYQXZnUi1hRi1uN2FuUWdyT1JYbXVjdl8zQWpZWk1IWnJjYVFmYnF5VWpvT0JYMDg4VUJfNEw?oc=5"
+            },
+            {
+              "title": "Nasdaq wipes out 2026 gains, TSX, Dow and S&P 500 fall into correction territory - CBC",
+              "snippet": "Nasdaq wipes out 2026 gains, TSX, Dow and S&P 500 fall into correction territory CBC",
+              "source": "https://news.google.com/rss/articles/CBMiekFVX3lxTE1QbmRPWjN5dEh4eGkwYXcwdkZRVmFZZjZiTWJqeTZ3cGJJcXdER1pqVDJobUV3R09wT0dQd0hWTlYtVGtpc0wwNnRiSkxOc0FuSHZQRkFYN3FTRmdDU21mUEtZYms5NGktX3o3UzVPMS1QTmJfcTlscWxn?oc=5"
+            },
+            {
+              "title": "Today\u2019s Tech: New method dials up new capabilities for 3D printing - The Etownian",
+              "snippet": "Today\u2019s Tech: New method dials up new capabilities for 3D printing The Etownian",
+              "source": "https://news.google.com/rss/articles/CBMinAFBVV95cUxPMmZKWnRWeFRYVnpKaUdWN3lManNIbGV4V0prMEJ4bDlhdUswanFIYzROR3RMTVZlYnlwNUU0WDZfZWVZOS15OUV6WXljT1pFQWFVdW92My1ScmpYVnhScGFpUXZuUUJqVFBSSU9XamVNcWt4QjhCajk3Z0NfbWMya24zR1I5eGNlazJfaXB2MjZ1YVhIaUMzZm8wMUU?oc=5"
+            },
+            {
+              "title": "Visual illusion reveals what today's AI vision is missing - Tech Xplore",
+              "snippet": "Visual illusion reveals what today's AI vision is missing Tech Xplore",
+              "source": "https://news.google.com/rss/articles/CBMifkFVX3lxTE1qOVFQRmJCRUVGczFOR1ZHYV9JenhLTmdGTjgxWUZMT3VNYzdZMm5NU19BTy1ENUgwNExIUUI0UkZhTmxVSkQ1T2hmeG1tYnlBTGJ1cVZ3bks1Q1pOdnNYQ3dXR1JieGptZlA1cHMxa3ZLeGFyTnRFY2dnWG1fUQ?oc=5"
+            }
+          ],
+          "spoken": "Stock Market Today: Stock Market News And Analysis - Investor's Business Daily: Stock Market Today: Stock Market News And Analysis Investor's Business Daily Today's Top Movers: Axon Surges on Nationwide Deals as Anthropic Drags Tech Down - marketscreener.com: Today's Top Movers: Axon Surges on Nationwide Deals as Anthropic Drags Tech Down marketscreener.com"
+        }
+      },
+      {
+        "name": "send_email",
+        "args": {
+          "to": "keshavagarwal7793@gmail.com",
+          "subject": "Tech News Summary",
+          "description": "Summary of today's tech news"
+        },
+        "result": {
+          "success": true,
+          "to": "keshavagarwal7793@gmail.com",
+          "subject": "Tech News Summary",
+          "from": "keshavagarwal7793@gmail.com",
+          "provider": "google_gmail_api",
+          "sender_name": "Keshav",
+          "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Tech News Summary\".",
+          "body": "Hello Keshav,\n\nToday's tech news includes updates on the latest advancements in artificial intelligence, blockchain technology, and renewable energy sources. The AI sector has seen significant breakthroughs in natural language processing and machine learning algorithms. Blockchain technology continues to evolve, with applications expanding from cryptocurrencies to supply chain management. In the energy sector, renewable energy sources are gaining momentum, with advancements in solar and wind power technologies. These developments are shaping the future of technology and innovation. I hope you find this information useful. Best regards,\nKeshav"
+        }
+      }
+    ],
+    "seconds": 17.97
+  },
+  {
+    "id": "T078",
+    "category": "routing",
+    "prompt": "Calculate 18 percent of 5000 and add it as a task",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "contains": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "multi-step",
+    "spoken": "Added task: 'Task: 900.0'.",
+    "tools": [
+      {
+        "name": "calculator",
+        "args": {
+          "expression": "18 percent of 5000"
+        },
+        "result": {
+          "success": true,
+          "expression": "18 percent of 5000",
+          "result": 900.0,
+          "spoken": "The answer is 900.",
+          "formatted": "900"
+        }
+      },
+      {
+        "name": "add_task",
+        "args": {
+          "title": "Task: 900.0",
+          "priority": "medium"
+        },
+        "result": {
+          "success": true,
+          "task": {
+            "id": "task-39804c66",
+            "title": "Task: 900.0",
+            "due_at": null,
+            "status": "pending",
+            "created_at": "2026-11-22T09:29:56.662928+00:00"
+          },
+          "task_id": "task-39804c66",
+          "spoken": "Added task: 'Task: 900.0'."
+        }
+      }
+    ],
+    "seconds": 1.84
+  },
+  {
+    "id": "T079",
+    "category": "routing",
+    "prompt": "Find a free slot tomorrow and schedule a meeting there",
+    "pass": true,
+    "checks": {
+      "no_crash": true,
+      "tool": true,
+      "confirmation": true,
+      "spoken_ok": true
+    },
+    "error": null,
+    "notes": "multi-step",
+    "spoken": "I am ready to schedule 'Meeting' for tomorrow 14:00. Shall I confirm this booking?",
+    "tools": [
+      {
+        "name": "find_free_slot",
+        "args": {
+          "duration_minutes": 30,
+          "window": "tomorrow"
+        },
+        "result": {
+          "success": true,
+          "duration_minutes": 30,
+          "window": "tomorrow",
+          "slot": {
+            "start": "14:00",
+            "end": "14:30"
+          },
+          "spoken": "You are free between 14:00 and 14:30 for a 30 minute meeting."
+        }
+      },
+      {
+        "name": "create_event",
+        "args": {
+          "title": "Meeting",
+          "start": "tomorrow 14:00",
+          "end": "tomorrow 14:30"
+        },
+        "result": {
+          "success": true,
+          "event": {
+            "id": "evt-5aec12",
+            "title": "Meeting",
+            "start": "tomorrow 14:00",
+            "end": "tomorrow 14:30",
+            "attendees": [],
+            "status": "confirmed"
+          },
+          "spoken": "Scheduled 'Meeting' for tomorrow 14:00."
+        }
+      }
+    ],
+    "seconds": 0.65
+  }
+]

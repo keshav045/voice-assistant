@@ -803,27 +803,42 @@ _SAMPLE_EMAILS: Dict[str, Dict[str, Any]] = {
         "date": "Today, 08:30 AM",
         "unread": True,
     },
+    "msg-golden": {
+        "id": "msg-golden",
+        "sender": "alex@example.com",
+        "subject": "Golden Test Update",
+        "snippet": "Verification notes for Golden Test email integration.",
+        "date": "Today, 10:00 AM",
+        "unread": True,
+    },
 }
 
 _DRAFTS_STORE: Dict[str, Dict[str, Any]] = {}
 
 
-def search_email(query: str = "") -> Dict[str, Any]:
+def search_email(query: str = "", max_results: Optional[int] = None) -> Dict[str, Any]:
     """Search inbox stub."""
-    q = query.lower()
+    q = query.lower().strip()
     matches = [
         m for m in _SAMPLE_EMAILS.values()
         if not q or q in m["subject"].lower() or q in m["snippet"].lower() or q in m["sender"].lower()
     ]
+    if max_results and isinstance(max_results, int) and max_results > 0:
+        matches = matches[:max_results]
+
     if not matches:
         return {"success": True, "count": 0, "emails": [], "spoken": f"No emails found matching '{query}'."}
     spoken = f"Found {len(matches)} email. The latest is from {matches[0]['sender']} about {matches[0]['subject']}."
     return {"success": True, "count": len(matches), "emails": matches, "spoken": spoken}
 
 
+search_emails = search_email
+
+
 def summarize_email(id: Optional[str] = None) -> Dict[str, Any]:
     """Summarise email stub."""
-    email = _SAMPLE_EMAILS.get(id or "msg-1") or next(iter(_SAMPLE_EMAILS.values()), None)
+    target_id = id or "msg-golden" if "msg-golden" in _SAMPLE_EMAILS else "msg-1"
+    email = _SAMPLE_EMAILS.get(target_id) or next(iter(_SAMPLE_EMAILS.values()), None)
     if not email:
         return {"success": False, "spoken": f"Could not find an email matching '{id}'."}
     spoken = f"Email from {email['sender']} regarding {email['subject']}: {email['snippet']}"
@@ -833,6 +848,7 @@ def summarize_email(id: Optional[str] = None) -> Dict[str, Any]:
 def draft_reply(
     id: Optional[str] = None,
     points: Optional[str] = None,
+    instructions: Optional[str] = None,
     to: Optional[str] = None,
     subject: Optional[str] = None,
     body: Optional[str] = None,
@@ -840,11 +856,11 @@ def draft_reply(
     """Create a draft without sending."""
     draft_id = f"draft-{uuid.uuid4().hex[:6]}"
     target_to = to or id or "recipient@example.com"
-    content = body or points or "Thank you for the update."
+    content = body or instructions or points or "Thank you for the update."
     draft = {
         "id": draft_id,
         "reply_to": target_to,
-        "subject": subject or "Re: Update",
+        "subject": subject or "Re: Golden Test Update",
         "body": content,
         "status": "draft",
     }

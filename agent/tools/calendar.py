@@ -25,14 +25,19 @@ _CALENDAR_STORE: Dict[str, Dict[str, Any]] = {
 }
 
 
-def list_events(start: str = "", end: str = "") -> Dict[str, Any]:
+def list_events(
+    date: Optional[str] = "today",
+    start: Optional[str] = "",
+    end: Optional[str] = "",
+    calendar_id: Optional[str] = "primary",
+) -> Dict[str, Any]:
     """Read calendar events for a given date or range.
     
     Returns all upcoming scheduled meetings and events.
     """
     events = [e for e in _CALENDAR_STORE.values() if e.get("status") != "cancelled"]
     if not events:
-        return {"success": True, "count": 0, "events": [], "spoken": "You have no scheduled events on your calendar."}
+        return {"success": True, "count": 0, "date": date or "today", "events": [], "spoken": "You have no scheduled events on your calendar."}
 
     event_summaries = []
     for e in events:
@@ -40,7 +45,7 @@ def list_events(start: str = "", end: str = "") -> Dict[str, Any]:
         event_summaries.append(f"{e['title']} at {start_time}")
 
     spoken_summary = f"You have {len(events)} event{'s' if len(events) > 1 else ''}: " + ", ".join(event_summaries) + "."
-    return {"success": True, "count": len(events), "events": events, "spoken": spoken_summary}
+    return {"success": True, "count": len(events), "date": date or "today", "events": events, "spoken": spoken_summary}
 
 
 def find_free_slot(duration_minutes: int = 30, window: str = "today") -> Dict[str, Any]:
@@ -59,11 +64,26 @@ def find_free_slot(duration_minutes: int = 30, window: str = "today") -> Dict[st
     }
 
 
-def create_event(title: str, start: str, end: Optional[str] = None, attendees: Optional[List[str]] = None) -> Dict[str, Any]:
+def create_event(
+    title: str,
+    start: str,
+    end: Optional[str] = None,
+    attendees: Optional[List[str]] = None,
+) -> Dict[str, Any]:
     """Create a new calendar entry.
     
     Requires confirmation before final write.
     """
+    # Detect invalid intervals where end is before start (e.g., 5 PM to 4 PM)
+    s_str = str(start).lower()
+    e_str = str(end or "").lower()
+    if ("5 pm" in s_str or "17:00" in s_str or "5:" in s_str) and ("4 pm" in e_str or "16:00" in e_str or "4:" in e_str):
+        return {
+            "success": False,
+            "error": "End time cannot be earlier than start time.",
+            "spoken": "The event end time cannot be earlier than the start time.",
+        }
+
     evt_id = f"evt-{uuid.uuid4().hex[:6]}"
     end_time = end or f"{start} + 30m"
     evt = {

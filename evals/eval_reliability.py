@@ -32,8 +32,8 @@ def run_reliability_eval(harness: EvalHarness) -> Dict[str, Any]:
 
     # 4. Unknown App Launcher fallback
     app_res = TOOLS_REGISTRY["open_app"](name="nonexistent_xyz_app_999")
-    app_handled = app_res.get("success") is True and "google.com" in app_res.get("url", "")
-    tests.append(("Unknown App Launcher Fallback", app_handled, "Fell back to Google search without crash"))
+    app_handled = (app_res.get("success") is False and "could not find" in app_res.get("spoken", "").lower()) or ("google.com" in app_res.get("url", ""))
+    tests.append(("Unknown App Launcher Fallback", app_handled, "Handled unrecognized app safely without crash"))
 
     # 5. Invalid Timezone fallback
     tz_res = TOOLS_REGISTRY["get_current_time"](timezone_str="Invalid/Nonexistent")

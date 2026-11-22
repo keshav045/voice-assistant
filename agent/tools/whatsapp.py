@@ -69,7 +69,7 @@ def _automate_whatsapp_search_and_send(contact_name: str, message: Optional[str]
 
 
 def send_whatsapp_message(
-    contact_name: str,
+    contact_name: Optional[str] = None,
     message: Optional[str] = None,
     phone: Optional[str] = None,
     auto_send: bool = True,

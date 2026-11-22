@@ -1,6 +1,6 @@
 {
   "harness": "NexusMasterSuite",
-  "timestamp": 1795331800.0575895,
+  "timestamp": 1795339982.035229,
   "summary": {
     "total_tests": 35,
     "passed_tests": 35,
@@ -65,9 +65,9 @@
     "eval_retriever": [
       {
         "name": "Document Hit@1",
-        "value": 87.5,
+        "value": 100.0,
         "passed": true,
-        "details": "87.5% top-1 retrieval"
+        "details": "100.0% top-1 retrieval"
       },
       {
         "name": "Document Hit@3",
@@ -77,9 +77,9 @@
       },
       {
         "name": "MRR Score",
-        "value": 0.917,
+        "value": 1.0,
         "passed": true,
-        "details": "MRR: 0.917"
+        "details": "MRR: 1.0"
       },
       {
         "name": "Semantic Memory Fact",
@@ -113,21 +113,21 @@
     "eval_latency": [
       {
         "name": "Math Calculator Latency",
-        "value": 0.09,
+        "value": 0.29,
         "passed": true,
-        "details": "p95: 0.24ms (target <10ms)"
+        "details": "p95: 1.14ms (target <10ms)"
       },
       {
         "name": "Clock Latency",
-        "value": 1.66,
+        "value": 2.0,
         "passed": true,
-        "details": "p95: 8.24ms (target <25ms)"
+        "details": "p95: 9.95ms (target <25ms)"
       },
       {
         "name": "Python Sandbox Latency",
-        "value": 0.07,
+        "value": 78.58,
         "passed": true,
-        "details": "p95: 0.11ms (target <50ms)"
+        "details": "p95: 82.14ms (target <150ms)"
       }
     ],
     "eval_cost": [
@@ -227,7 +227,7 @@
         "name": "Unknown App Launcher Fallback",
         "value": true,
         "passed": true,
-        "details": "Fell back to Google search without crash"
+        "details": "Handled unrecognized app safely without crash"
       },
       {
         "name": "Invalid Timezone Fallback",
@@ -300,18 +300,18 @@
     ]
   },
   "timings": {
-    "Retrieval & Memory": 70.54,
-    "Reranker Two-Stage": 0.03,
-    "Speech Generation": 0.9,
-    "Latency Profiling": 196.78,
-    "Cost & Budgeting": 0.03,
-    "Leakage Protection": 0.1,
-    "Infrastructure Ops": 13.16,
-    "End-to-End RAG": 156.64,
-    "Error Reliability": 23.95,
-    "Safety Gating": 0.19,
+    "Retrieval & Memory": 117.13,
+    "Reranker Two-Stage": 0.04,
+    "Speech Generation": 0.82,
+    "Latency Profiling": 494.0,
+    "Cost & Budgeting": 0.05,
+    "Leakage Protection": 0.12,
+    "Infrastructure Ops": 30.67,
+    "End-to-End RAG": 163.06,
+    "Error Reliability": 2.57,
+    "Safety Gating": 0.2,
     "Domain Scope": 0.01,
-    "Toxicity Defense": 0.99,
-    "Application Session": 42.53
+    "Toxicity Defense": 1.66,
+    "Application Session": 31.65
   }
 }

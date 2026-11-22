@@ -7,6 +7,12 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
+
 IS_SERVERLESS = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
 
 default_db_path = (
@@ -74,6 +80,16 @@ def db_complete_task(task_id: str) -> bool:
         cur = conn.execute(
             "UPDATE tasks SET status = 'completed', completed_at = ? WHERE id = ? OR title LIKE ?",
             (now, task_id, f"%{task_id}%"),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+
+
+def db_delete_task(task_id: str) -> bool:
+    with get_db_connection() as conn:
+        cur = conn.execute(
+            "DELETE FROM tasks WHERE id = ? OR title LIKE ?",
+            (str(task_id), f"%{task_id}%"),
         )
         conn.commit()
         return cur.rowcount > 0

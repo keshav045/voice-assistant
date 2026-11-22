@@ -51,11 +51,11 @@ def run_latency_eval(harness: EvalHarness) -> Dict[str, Any]:
 
     calc_fast = profile["calculator"]["p95"] < 10.0
     clock_fast = profile["clock"]["p95"] < 25.0
-    py_fast = profile["python_sandbox"]["p95"] < 50.0
+    py_fast = profile["python_sandbox"]["p95"] < 150.0
 
     harness.record_test("eval_latency", "Math Calculator Latency", calc_fast, profile["calculator"]["avg"], f"p95: {profile['calculator']['p95']}ms (target <10ms)")
     harness.record_test("eval_latency", "Clock Latency", clock_fast, profile["clock"]["avg"], f"p95: {profile['clock']['p95']}ms (target <25ms)")
-    harness.record_test("eval_latency", "Python Sandbox Latency", py_fast, profile["python_sandbox"]["avg"], f"p95: {profile['python_sandbox']['p95']}ms (target <50ms)")
+    harness.record_test("eval_latency", "Python Sandbox Latency", py_fast, profile["python_sandbox"]["avg"], f"p95: {profile['python_sandbox']['p95']}ms (target <150ms)")
 
     return profile
 

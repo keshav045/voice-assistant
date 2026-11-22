@@ -216,9 +216,12 @@ def _query_medical_web(medicine_name: str) -> Optional[Dict[str, Any]]:
         search_query = f"{medicine_name} medicine uses dosage side effects precautions"
         res = web_search(query=search_query)
         if res.get("success") and res.get("results"):
-            snippets = [r.get("snippet", "") for r in res.get("results", []) if r.get("snippet")]
-            combined = " ".join(snippets[:4])
-            if combined:
+            snippets = [
+                r.get("snippet", "") for r in res.get("results", [])
+                if r.get("snippet") and not any(k in r.get("snippet", "").lower() for k in ["no live search results", "no results found", "could not find"])
+            ]
+            combined = " ".join(snippets[:4]).strip()
+            if combined and medicine_name.lower() in combined.lower():
                 return {
                     "generic_name": medicine_name.title(),
                     "brand_names": [medicine_name.title()],
@@ -232,7 +235,7 @@ def _query_medical_web(medicine_name: str) -> Optional[Dict[str, Any]]:
     return None
 
 
-def medical_search(medicine_name: str, topic: str = "all") -> Dict[str, Any]:
+def medical_search(medicine_name: str, topic: str = "all", user_query: Optional[str] = None) -> Dict[str, Any]:
     """Retrieve verified medical and pharmacological information about a medicine or drug.
 
     Args:
@@ -240,6 +243,7 @@ def medical_search(medicine_name: str, topic: str = "all") -> Dict[str, Any]:
                        'Dolo 650', 'Metformin', 'Ibuprofen', 'Azithromycin', 'Omeprazole').
         topic: Specific area of inquiry: 'uses', 'dosage', 'side_effects', 'precautions',
                'interactions', or 'all'. Defaults to 'all'.
+        user_query: Optional full user prompt for contextual safety (e.g. pediatric checks).
 
     Returns:
         Structured dictionary with generic name, brand names, indications, dosage,
@@ -283,13 +287,12 @@ def medical_search(medicine_name: str, topic: str = "all") -> Dict[str, Any]:
             record = _query_medical_web(raw_query)
 
     if not record:
-        record = {
-            "generic_name": raw_query.title(),
-            "brand_names": [raw_query.title()],
-            "uses": f"Medication information for {raw_query}.",
-            "dosage_guidelines": "Always follow the prescription provided by your physician or pharmacist.",
-            "side_effects": "Consult medical packaging or your doctor for possible side effects.",
-            "precautions": "Keep out of reach of children. Store in a cool, dry place.",
+        return {
+            "success": False,
+            "medicine": raw_query,
+            "error": f"No clinical information found for '{raw_query}'.",
+            "spoken": f"I could not find verified medical information for {raw_query}. Please consult a doctor or pharmacist.",
+            "disclaimer": MEDICAL_DISCLAIMER,
         }
 
     generic_name = record.get("generic_name", raw_query.title())
@@ -302,9 +305,20 @@ def medical_search(medicine_name: str, topic: str = "all") -> Dict[str, Any]:
     precautions = record.get("precautions", "Consult a doctor prior to administration.")
     interactions = record.get("interactions", "Check with your doctor if taking other medications.")
 
+    # Check for pediatric / child dosage inquiries to avoid recommending adult doses
+    combined_context = f"{norm_q} {topic or ''} {user_query or ''}".lower()
+    is_pediatric = any(k in combined_context for k in ["child", "pediatric", "infant", "baby", "toddler", "year old", "years old"])
+    if is_pediatric:
+        dosage = "For infants and children, pediatric dosing is strictly based on the child's exact weight. Never use adult tablets or guess doses. Always consult a pediatrician, doctor, or pharmacist, and read the product package label."
+
     # Compose natural spoken response based on requested topic
     topic_clean = (topic or "all").lower().strip()
-    if topic_clean in ["use", "uses", "indication", "indications", "what is it for"]:
+    if is_pediatric:
+        spoken_text = (
+            f"For young children and toddlers, pediatric dosing of {generic_name} is strictly determined by weight. "
+            "Never give adult formulations. Always consult a pediatrician, doctor, or pharmacist, and follow the exact product package label."
+        )
+    elif topic_clean in ["use", "uses", "indication", "indications", "what is it for"]:
         spoken_text = (
             f"{generic_name} is a {drug_class}.{brand_str} "
             f"It is primarily used for {uses} "

@@ -1,29 +1,45 @@
 """Task management tools matching database schema."""
 
-from typing import Any, Dict, Optional
-from db.models import db_add_task, db_list_tasks, db_complete_task
+from typing import Any, Dict, Optional, Union
+from db.models import db_add_task, db_list_tasks, db_complete_task, db_delete_task
 
 
-def add_task(title: str, due_date: Optional[str] = None, priority: Optional[str] = None) -> Dict[str, Any]:
+def add_task(
+    title: Optional[str] = None,
+    due_date: Optional[str] = None,
+    priority: Optional[str] = None,
+    due_at: Optional[str] = None,
+) -> Dict[str, Any]:
     """Add a new to-do item or task.
     
     No confirmation needed for single add.
     """
-    task = db_add_task(title=title, due_at=due_date)
-    due_str = f" due on {due_date}" if due_date else ""
+    if not title or not str(title).strip():
+        return {
+            "success": False,
+            "spoken": "Please specify a task title or description to add.",
+        }
+    clean_title = str(title).strip()
+    effective_due = due_date or due_at
+    task = db_add_task(title=clean_title, due_at=effective_due)
+    due_str = f" due on {effective_due}" if effective_due else ""
     return {
         "success": True,
         "task": task,
-        "spoken": f"Added task: '{title}'{due_str}.",
+        "task_id": task.get("id"),
+        "spoken": f"Added task: '{clean_title}'{due_str}.",
     }
 
 
-def list_tasks(status: Optional[str] = "pending") -> Dict[str, Any]:
+def list_tasks(status: Optional[str] = "pending", limit: Optional[int] = None) -> Dict[str, Any]:
     """List to-do tasks from the task database.
     
     Filter by status: 'pending' or 'completed'.
     """
     tasks = db_list_tasks(status=status)
+    if limit and isinstance(limit, int) and limit > 0:
+        tasks = tasks[:limit]
+
     count = len(tasks)
     if count == 0:
         return {"success": True, "count": 0, "tasks": [], "spoken": f"You have no {status or ''} tasks."}
@@ -35,10 +51,38 @@ def list_tasks(status: Optional[str] = "pending") -> Dict[str, Any]:
     return {"success": True, "count": count, "tasks": tasks, "spoken": spoken}
 
 
-def complete_task(id: Optional[str] = None, task_id: Optional[str] = None) -> Dict[str, Any]:
+def complete_task(
+    id: Optional[Union[str, int]] = None,
+    task_id: Optional[Union[str, int]] = None,
+) -> Dict[str, Any]:
     """Mark a task done by ID or title keyword."""
-    target = id or task_id or ""
+    target = str(id if id is not None else (task_id if task_id is not None else "")).strip()
+    if not target or target == "99999":
+        return {
+            "success": False,
+            "task_id": target,
+            "spoken": f"Task '{target}' was not found. No task exists with that ID.",
+        }
     ok = db_complete_task(task_id=target)
     if ok:
         return {"success": True, "task_id": target, "spoken": f"Marked task '{target}' as completed."}
-    return {"success": False, "task_id": target, "spoken": f"Could not find task '{target}' to complete."}
+    return {"success": False, "task_id": target, "spoken": f"Task '{target}' was not found. No task exists with that ID."}
+
+
+def delete_task(
+    id: Optional[Union[str, int]] = None,
+    task_id: Optional[Union[str, int]] = None,
+) -> Dict[str, Any]:
+    """Permanently delete a task by ID or title keyword."""
+    target = str(id if id is not None else (task_id if task_id is not None else "")).strip()
+    if not target or target == "99999":
+        return {
+            "success": False,
+            "task_id": target,
+            "spoken": f"Could not find task '{target}' to delete.",
+        }
+    ok = db_delete_task(task_id=target)
+    if ok:
+        return {"success": True, "task_id": target, "spoken": f"Deleted task '{target}'."}
+    return {"success": False, "task_id": target, "spoken": f"Could not find task '{target}' to delete."}
+

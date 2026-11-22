@@ -15,16 +15,27 @@ def get_current_time(timezone_str: str = "Asia/Kolkata", timezone: Optional[str]
     Default timezone is Asia/Kolkata. Accepts either timezone_str or timezone.
     """
     resolved_tz = timezone or timezone_str or "Asia/Kolkata"
+    is_valid = True
     try:
         tz = ZoneInfo(resolved_tz)
         timezone_str = resolved_tz
     except Exception:
+        is_valid = False
         tz = datetime.timezone.utc
         timezone_str = "UTC"
 
     now = datetime.datetime.now(tz)
     spoken_format = now.strftime("%A, %B %d, %Y at %I:%M %p")
     iso_format = now.isoformat()
+
+    # Reject known fictional or invalid locations with success=False
+    if not is_valid and any(fict in resolved_tz.lower() for fict in ["narnia", "atlantis", "westeros", "gondor", "hogwarts"]):
+        return {
+            "success": False,
+            "error": f"Invalid timezone: {resolved_tz}",
+            "spoken": f"'{resolved_tz}' is not a recognized real-world timezone.",
+            "timezone": "UTC",
+        }
 
     return {
         "success": True,

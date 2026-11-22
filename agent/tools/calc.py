@@ -92,11 +92,31 @@ def calculator(expression: str) -> Dict[str, Any]:
     """
     raw = expression.strip()
 
-    # Normalize inline or full "X% of Y" -> "((X/100) * Y)"
+    # Normalize natural language math expressions:
     import re
+    raw = re.sub(r"^(what\s+is\s+|calculate\s+)", "", raw, flags=re.IGNORECASE).strip()
+    raw = re.sub(r"[?.]+$", "", raw).strip()
+
+    # "X percent of Y", "X percent Y", or "X% of Y" -> "((X/100) * Y)"
     raw = re.sub(
-        r"(\d+(?:\.\d+)?)\s*%\s*of\s*(\(?\d+(?:\.\d+)?\)?)",
+        r"(\d+(?:\.\d+)?)\s*(?:percent\s*(?:of\s*)?|%\s*of\s*)(\(?\d+(?:\.\d+)?\)?)",
         r"((\1/100) * \2)",
+        raw,
+        flags=re.IGNORECASE,
+    )
+
+    # "square root of X" -> "sqrt(X)"
+    raw = re.sub(
+        r"square\s+root\s+(?:of\s+)?(\d+(?:\.\d+)?)",
+        r"sqrt(\1)",
+        raw,
+        flags=re.IGNORECASE,
+    )
+
+    # "X to the power (of)? Y" -> "X ** Y"
+    raw = re.sub(
+        r"(\d+(?:\.\d+)?)\s+to\s+the\s+power\s+(?:of\s+)?(\d+(?:\.\d+)?)",
+        r"\1 ** \2",
         raw,
         flags=re.IGNORECASE,
     )

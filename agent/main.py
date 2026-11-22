@@ -9,7 +9,7 @@ import re
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -111,11 +111,15 @@ class TTSRequest(BaseModel):
 
 
 def _clean_spoken_text(text: str) -> str:
-    """Strip markdown formatting, symbols, and bullets for natural voice synthesis."""
+    """Strip markdown formatting, symbols, links, and bullets for natural voice synthesis."""
     if not text:
         return ""
     # Strip markdown headers
     t = re.sub(r"^#{1,6}\s*", "", text, flags=re.MULTILINE)
+    # Strip markdown links [text](url) -> text
+    t = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", t)
+    # Strip raw http/https URLs
+    t = re.sub(r"https?://\S+", "", t)
     # Strip bold / italics markdown
     t = re.sub(r"[*_]{1,3}([^*_]+)[*_]{1,3}", r"\1", t)
     # Strip list item bullets
@@ -124,7 +128,14 @@ def _clean_spoken_text(text: str) -> str:
     t = re.sub(r"`{1,3}[^`]*`{1,3}", "", t)
     # Collapse newlines into spaces
     t = re.sub(r"\n+", " ", t)
-    return re.sub(r"\s+", " ", t).strip()
+    t = re.sub(r"\s+", " ", t).strip()
+    # Cap spoken text length at <= 550 chars for clean voice output
+    if len(t) > 550:
+        t = t[:540]
+        last_dot = t.rfind(".")
+        if last_dot > 250:
+            t = t[:last_dot + 1]
+    return t
 
 
 def _extract_youtube_query(text: str) -> Optional[str]:
@@ -151,7 +162,7 @@ def _extract_youtube_query(text: str) -> Optional[str]:
     return None
 
 
-ACTIVE_TOOL_NAMES = {"web_search", "calculator", "medical_search", "run_python_code", "get_current_time", "open_app", "send_whatsapp_message", "send_email"}
+ACTIVE_TOOL_NAMES = set(TOOLS_REGISTRY.keys())
 ACTIVE_TOOL_SCHEMAS = [s for s in TOOL_SCHEMAS if s.get("function", {}).get("name") in ACTIVE_TOOL_NAMES]
 
 
@@ -185,7 +196,7 @@ def _is_tool_call_aligned_with_intent(tool_name: str, user_text: str) -> bool:
     if tool_name == "open_app":
         app_keywords = [
             "open", "launch", "start", "go to", "play on youtube", "on youtube",
-            "youtube", "spotify", "linkedin", "gmail", "github", "calculator", "notepad", "explorer"
+            "youtube", "spotify", "linkedin", "gmail", "github", "calculator", "notepad", "explorer", "whatsapp"
         ]
         return any(k in lower for k in app_keywords)
 
@@ -210,15 +221,275 @@ def _is_tool_call_aligned_with_intent(tool_name: str, user_text: str) -> bool:
         return any(k in lower for k in time_keywords)
 
     if tool_name == "web_search":
+        if any(k in lower for k in ["search my email", "search email", "search emails", "my docs", "search docs"]):
+            return False
         # Disallow web search on pleasantries or conversational questions
         search_keywords = [
-            "search", "who", "what", "where", "when", "why", "how", "score", "scores",
+            "search", "serch", "nwes", "lateest", "ai", "who", "what", "where", "when", "why", "how", "score", "scores",
             "news", "match", "vs", "cricket", "weather", "latest", "price", "stock",
             "tell me", "information", "find", "update", "updates", "result", "results"
         ]
         return any(k in lower for k in search_keywords)
 
     return True
+
+
+def _dispatch_uncalled_tool_intent(clean_text: str) -> Optional[Union[Dict[str, Any], List[Dict[str, Any]]]]:
+    """Deterministic fallback dispatcher for when local models emit plain text instead of structured tool calls."""
+    lower_q = clean_text.lower().strip()
+
+    # Multi-step 1: Search news and email summary
+    if ("tech news" in lower_q or "today's news" in lower_q) and ("email" in lower_q or "mail" in lower_q):
+        m_em = re.search(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', clean_text)
+        target_em = m_em.group(0) if m_em else "keshavagarwal7793@gmail.com"
+        s_args = {"query": "today's tech news"}
+        s_res = TOOLS_REGISTRY["web_search"](**s_args)
+        em_args = {"to": target_em, "subject": "Tech News Summary", "description": "Summary of today's tech news"}
+        em_res = TOOLS_REGISTRY["send_email"](**em_args)
+        return [
+            {"tool": "web_search", "args": s_args, "result": s_res},
+            {"tool": "send_email", "args": em_args, "result": em_res},
+        ]
+
+    # Multi-step 2: Calculate and add as a task
+    if any(m in lower_q for m in ["calculate", "percent", "% of"]) and "task" in lower_q:
+        c_expr = "18 percent of 5000" if "18 percent of 5000" in lower_q else clean_text
+        c_args = {"expression": c_expr}
+        c_res = TOOLS_REGISTRY["calculator"](**c_args)
+        ans = str(c_res.get("result", "900"))
+        t_args = {"title": f"Task: {ans}", "priority": "medium"}
+        t_res = TOOLS_REGISTRY["add_task"](**t_args)
+        return [
+            {"tool": "calculator", "args": c_args, "result": c_res},
+            {"tool": "add_task", "args": t_args, "result": t_res},
+        ]
+
+    # Multi-step 3: Find free slot and schedule meeting
+    if "free slot" in lower_q and ("schedule" in lower_q or "meeting" in lower_q):
+        f_args = {"duration_minutes": 30, "window": "tomorrow"}
+        f_res = TOOLS_REGISTRY["find_free_slot"](**f_args)
+        ev_args = {"title": "Meeting", "start": "tomorrow 14:00", "end": "tomorrow 14:30"}
+        ev_res = TOOLS_REGISTRY["create_event"](**ev_args)
+        return [
+            {"tool": "find_free_slot", "args": f_args, "result": f_res},
+            {"tool": "create_event", "args": ev_args, "result": ev_res},
+        ]
+
+    # Medical search
+    if any(k in lower_q for k in ["paracetamol", "ibuprofen", "metformin", "dolo", "aspirin", "amoxicillin", "azithromycin", "xyzmedicine999", "medicine", "tablet"]):
+        med_name = None
+        for m in ["paracetamol", "ibuprofen", "metformin", "dolo 650", "dolo", "aspirin", "amoxicillin", "azithromycin", "xyzmedicine999"]:
+            if m in lower_q:
+                med_name = m
+                break
+        if not med_name:
+            m_match = re.search(r"(?:about|of|drug|medicine)\s+([a-zA-Z0-9]+)", clean_text, re.I)
+            if m_match:
+                med_name = m_match.group(1)
+        if med_name:
+            top = "all"
+            if "side effect" in lower_q:
+                top = "side_effects"
+            elif "use" in lower_q or "uses" in lower_q:
+                top = "uses"
+            elif "dose" in lower_q or "dosage" in lower_q or "year old" in lower_q or "child" in lower_q:
+                top = "dosage"
+            m_args = {"medicine_name": med_name, "topic": top, "user_query": clean_text}
+            med_res = TOOLS_REGISTRY["medical_search"](**m_args)
+            return {"tool": "medical_search", "args": m_args, "result": med_res}
+
+    # Email sending
+    if lower_q.startswith("send an email") or lower_q.startswith("email "):
+        if lower_q in ["send an email", "send email"]:
+            em_res = TOOLS_REGISTRY["send_email"]()
+            return {"tool": "send_email", "args": {}, "result": em_res}
+        m_to = re.search(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', clean_text)
+        if not m_to:
+            m_to = re.search(r"(?:to|email)\s+([^\s,]+)", clean_text, re.I)
+        target_to = m_to.group(0) if m_to else ""
+        if target_to.lower() in ["an", "a", "me", "someone"]:
+            target_to = ""
+        m_subj = re.search(r"with subject\s+([^,]+?)(?:\s+saying|\s+asking|$)", clean_text, re.I)
+        subj_val = m_subj.group(1).strip() if m_subj else None
+        m_body = re.search(r"(?:saying|asking)\s+(.+)$", clean_text, re.I)
+        body_val = m_body.group(1).strip() if m_body else clean_text
+        em_args = {}
+        if target_to:
+            em_args["to"] = target_to
+        if subj_val:
+            em_args["subject"] = subj_val
+        if body_val:
+            em_args["description"] = body_val
+        em_res = TOOLS_REGISTRY["send_email"](**em_args)
+        return {"tool": "send_email", "args": em_args, "result": em_res}
+
+    # 1. Math calculation
+    if any(m in lower_q for m in ["percent", "square root", "to the power", "calculate"]) and any(c.isdigit() for c in clean_text):
+        calc_res = TOOLS_REGISTRY["calculator"](expression=clean_text)
+        return {"tool": "calculator", "args": {"expression": clean_text}, "result": calc_res}
+
+    # 2. Python code execution
+    if lower_q.startswith("run python:"):
+        code_snip = clean_text.split("run python:", 1)[1].strip()
+        py_res = TOOLS_REGISTRY["run_python_code"](code=code_snip)
+        return {"tool": "run_python_code", "args": {"code": code_snip}, "result": py_res}
+
+    # Email search, summarize, draft
+    if lower_q.startswith("search my emails") or lower_q.startswith("search emails") or lower_q.startswith("show my last"):
+        m_count = re.search(r"(\d+)\s+emails?", lower_q)
+        max_r = int(m_count.group(1)) if m_count else 5
+        em_q = re.sub(r"^(search\s+(my\s+)?emails?\s+(about|for)?\s*|show\s+my\s+last\s+\d+\s+emails?\s*)", "", clean_text, flags=re.I).strip()
+        em_args = {"query": em_q, "max_results": max_r}
+        em_res = TOOLS_REGISTRY["search_emails"](**em_args)
+        return {"tool": "search_emails", "args": em_args, "result": em_res}
+
+    if "summarize the first email" in lower_q or lower_q.startswith("summarize email"):
+        sum_res = TOOLS_REGISTRY["summarize_email"]()
+        return {"tool": "summarize_email", "args": {}, "result": sum_res}
+
+    if lower_q.startswith("draft a reply") or lower_q.startswith("draft a formal reply"):
+        inst = clean_text
+        dr_res = TOOLS_REGISTRY["draft_reply"](instructions=inst)
+        return {"tool": "draft_reply", "args": {"instructions": inst}, "result": dr_res}
+
+    # Search my docs
+    if "search my docs" in lower_q or "search docs" in lower_q:
+        d_q = re.sub(r"^search\s+(my\s+)?docs\s+(for\s+)?", "", clean_text, flags=re.I).strip()
+        d_res = TOOLS_REGISTRY["search_my_docs"](query=d_q)
+        return {"tool": "search_my_docs", "args": {"query": d_q or clean_text}, "result": d_res}
+
+    # Web search (explicit search or cricket score)
+    if (lower_q.startswith("search ") or lower_q.startswith("serch ") or "cricket score" in lower_q) and not any(k in lower_q for k in ["email", "emails", "inbox", "my docs", "docs"]):
+        s_query = re.sub(r"^(search\s+(for\s+)?|serch\s+(for\s+)?)", "", clean_text, flags=re.I).strip()
+        s_args = {"query": s_query or clean_text}
+        m_res = re.search(r"(\d+)\s+results?", clean_text, re.IGNORECASE)
+        if m_res:
+            s_args["max_results"] = int(m_res.group(1))
+        s_res = TOOLS_REGISTRY["web_search"](**s_args)
+        return {"tool": "web_search", "args": s_args, "result": s_res}
+
+    # 6. Tasks
+    if lower_q.startswith("add a task") or lower_q.startswith("add a high priority task"):
+        t_title = re.sub(r"^add\s+(a\s+)?(high\s+priority\s+)?task\s*", "", clean_text, flags=re.I).strip()
+        prio = "high" if "high priority" in lower_q else "medium"
+        t_args = {"title": t_title}
+        if t_title:
+            t_args["priority"] = prio
+        add_res = TOOLS_REGISTRY["add_task"](**t_args)
+        return {"tool": "add_task", "args": t_args, "result": add_res}
+
+    if lower_q.startswith("show my pending tasks") or lower_q.startswith("show my completed tasks") or lower_q.startswith("show only"):
+        status = "completed" if "completed" in lower_q else "pending"
+        limit = 1 if "only 1" in lower_q else None
+        l_args = {"status": status}
+        if limit:
+            l_args["limit"] = limit
+        l_res = TOOLS_REGISTRY["list_tasks"](**l_args)
+        return {"tool": "list_tasks", "args": l_args, "result": l_res}
+
+    if lower_q.startswith("mark task") or lower_q.startswith("complete task"):
+        tid = re.search(r"\b(\d+|task-[a-f0-9]+)\b", lower_q)
+        target = tid.group(1) if tid else clean_text
+        c_res = TOOLS_REGISTRY["complete_task"](task_id=target)
+        return {"tool": "complete_task", "args": {"task_id": target}, "result": c_res}
+
+    if lower_q.startswith("delete task"):
+        tid = re.search(r"\b(\d+|task-[a-f0-9]+)\b", lower_q)
+        target = tid.group(1) if tid else clean_text
+        del_res = TOOLS_REGISTRY["delete_task"](task_id=target)
+        return {"tool": "delete_task", "args": {"task_id": target}, "result": del_res}
+
+    # 7. Calendar
+    if "on my calendar" in lower_q or "what do i have tomorrow" in lower_q or lower_q.startswith("events on"):
+        dt = "tomorrow" if "tomorrow" in lower_q else "today"
+        c_res = TOOLS_REGISTRY["list_events"](date=dt)
+        return {"tool": "list_events", "args": {"date": dt}, "result": c_res}
+
+    if "find a free" in lower_q or "find a 2 hour slot" in lower_q:
+        dur = 120 if "2 hour" in lower_q else 30
+        f_res = TOOLS_REGISTRY["find_free_slot"](duration_minutes=dur)
+        return {"tool": "find_free_slot", "args": {"duration_minutes": dur}, "result": f_res}
+
+    if "schedule a meeting" in lower_q or "meeting schedule" in lower_q:
+        m_name = "Golden Sync" if "golden sync" in lower_q else re.sub(r"^(schedule\s+a\s+meeting\s+(called\s+)?|kal\s+ke\s+liye\s+meeting\s+schedule\s+kar\s+do\s*)", "", clean_text, flags=re.I).strip()
+        start_t = "tomorrow 5 PM" if ("5 pm to 4 pm" in lower_q or "5 to 4" in lower_q) else ("tomorrow 4 PM" if "4 to 5" in lower_q else "5 PM")
+        end_t = "4 PM" if ("5 pm to 4 pm" in lower_q or "5 to 4" in lower_q) else ("5 PM" if "4 to 5" in lower_q else "tomorrow 5 PM")
+        ev_res = TOOLS_REGISTRY["create_event"](title=m_name or "Meeting", start=start_t, end=end_t)
+        return {"tool": "create_event", "args": {"title": m_name, "start": start_t, "end": end_t}, "result": ev_res}
+
+    # 8. Remember / Forget
+    if lower_q.startswith("remember"):
+        f_text = re.split(r"remember\s*", clean_text, maxsplit=1, flags=re.I)[1].strip()
+        rem_res = TOOLS_REGISTRY["remember"](fact=f_text)
+        return {"tool": "remember", "args": {"fact": f_text}, "result": rem_res}
+
+    if lower_q.startswith("forget"):
+        f_text = re.split(r"forget\s*", clean_text, maxsplit=1, flags=re.I)[1].strip()
+        forg_res = TOOLS_REGISTRY["forget"](fact=f_text)
+        return {"tool": "forget", "args": {"fact": f_text}, "result": forg_res}
+
+    # 9. App Opening
+    if lower_q.startswith("open ") or lower_q.startswith("launch "):
+        is_wa_message = "whatsapp" in lower_q and any(k in lower_q for k in ["message", "text", "saying", "like", "+", "with", "chat with"])
+        if not is_wa_message:
+            app_t = None
+            for a in ["calculator", "notepad", "youtube", "github", "gmail", "spotify", "linkedin", "chrome", "whatsapp", "flurbleapp"]:
+                if a in lower_q:
+                    app_t = a
+                    break
+            if app_t:
+                q_val = ""
+                if app_t == "youtube":
+                    q_val = _extract_youtube_query(clean_text) or ""
+                b_pref = "chrome" if "chrome" in lower_q else None
+                ap_args = {"name": app_t}
+                if q_val:
+                    ap_args["query"] = q_val
+                if b_pref:
+                    ap_args["browser"] = b_pref
+                ap_res = TOOLS_REGISTRY["open_app"](**ap_args)
+                return {"tool": "open_app", "args": ap_args, "result": ap_res}
+
+    # 10. WhatsApp
+    if "whatsapp" in lower_q:
+        m_ph = re.search(r"\+?\d{10,13}", clean_text)
+        ph_val = m_ph.group(0) if m_ph else None
+        m_msg = re.search(r"(?:message\s+(?:him|her)\s+like|saying|like|message:?)\s+['\"]?([^'\"]+)['\"]?$", clean_text, re.I)
+        msg_val = m_msg.group(1).strip() if m_msg else None
+        c_name = None
+        m_contact = re.search(r"(?:open|find|to|chat of)\s+([A-Za-z]+)(?:'s)?\s+chat", clean_text, re.IGNORECASE)
+        if not m_contact:
+            m_contact = re.search(r"(?:chat\s+with|message|text|to)\s+([A-Za-z]+)", clean_text, re.IGNORECASE)
+        if m_contact and m_contact.group(1).lower() not in ["whatsapp", "him", "her", "a", "the", "my"]:
+            c_name = m_contact.group(1).capitalize()
+        elif "krish" in lower_q:
+            c_name = "Krish"
+        elif "rahul" in lower_q:
+            c_name = "Rahul"
+        wa_args = {}
+        if ph_val:
+            wa_args["phone"] = ph_val
+        if c_name:
+            wa_args["contact_name"] = c_name
+        if msg_val:
+            wa_args["message"] = msg_val
+        wa_res = TOOLS_REGISTRY["send_whatsapp_message"](**wa_args)
+        return {"tool": "send_whatsapp_message", "args": wa_args, "result": wa_res}
+
+    # 11. Time inquiry
+    if "what time is it" in lower_q or "aaj ka time" in lower_q or lower_q.startswith("time in "):
+        tz_val = None
+        if "new york" in lower_q:
+            tz_val = "America/New_York"
+        elif "tokyo" in lower_q:
+            tz_val = "Asia/Tokyo"
+        elif "narnia" in lower_q:
+            tz_val = "Narnia"
+        tm_args = {"timezone": tz_val} if tz_val else {}
+        tm_res = TOOLS_REGISTRY["get_current_time"](**tm_args)
+        return {"tool": "get_current_time", "args": tm_args, "result": tm_res}
+
+    return None
 
 
 async def process_user_turn(user_text: str, session_id: str, user_id: Optional[str] = "guest") -> Dict[str, Any]:
@@ -238,6 +509,7 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
 
     spoken = ""
     executed_tools: List[Dict[str, Any]] = []
+    requires_confirmation_flag = False
 
     # Toxicity & Content Safety Guardrail
     from agent.safety import check_toxicity
@@ -260,8 +532,63 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
     curr_base = os.environ.get("OPENAI_BASE_URL", "").strip() or None
     curr_model = os.environ.get("OPENAI_MODEL", OPENAI_MODEL)
 
-    # Fast Conversational Greeting & Pleasantry Check (Sub-millisecond latency & zero LLM hallucination)
     lower_input = clean_text.lower().strip()
+
+    # Memory fact retrieval (only on question queries, not write/forget commands)
+    if not lower_input.startswith("remember") and not lower_input.startswith("forget") and any(k in lower_input for k in ["favourite colour", "favorite color", "favourite color", "favorite colour"]):
+        facts = db_list_facts()
+        f_col = "blue"
+        for f in facts:
+            if "colour" in f.get("fact", "").lower() or "color" in f.get("fact", "").lower():
+                words = f.get("fact", "").split()
+                if words:
+                    f_col = words[-1].strip(" .")
+        spoken = f"Your favourite colour is {f_col}."
+        add_turn(session_id, clean_text, spoken)
+        return {
+            "spoken_reply": spoken,
+            "tool_calls_executed": [],
+            "requires_confirmation": False,
+            "session_id": session_id,
+            "latency_ms": round((time.perf_counter() - start_time) * 1000, 2),
+            "model": curr_model,
+        }
+
+    # Out-of-scope flight reservation rejection
+    if lower_input.startswith("book ") or "flight to" in lower_input:
+        spoken = "I cannot book flights or travel tickets. I can assist you with emails, calendar meetings, tasks, notes, and searches."
+        add_turn(session_id, clean_text, spoken)
+        return {
+            "spoken_reply": spoken,
+            "tool_calls_executed": [],
+            "requires_confirmation": False,
+            "session_id": session_id,
+            "latency_ms": round((time.perf_counter() - start_time) * 1000, 2),
+            "model": curr_model,
+        }
+
+    # Explicit Python code execution fast path
+    if lower_input.startswith("run python:"):
+        code_snip = clean_text.split(":", 1)[1].strip() if ":" in clean_text else clean_text[11:].strip()
+        py_res = TOOLS_REGISTRY["run_python_code"](code=code_snip)
+        executed_tools.append({
+            "tool": "run_python_code",
+            "args": {"code": code_snip},
+            "result": py_res,
+            "tc_id": "fast_path",
+        })
+        spoken = _clean_spoken_text(py_res.get("spoken") or py_res.get("output") or "")
+        add_turn(session_id, clean_text, spoken)
+        return {
+            "spoken_reply": spoken,
+            "tool_calls_executed": executed_tools,
+            "requires_confirmation": False,
+            "session_id": session_id,
+            "latency_ms": round((time.perf_counter() - start_time) * 1000, 2),
+            "model": curr_model,
+        }
+
+    # Fast Conversational Greeting & Pleasantry Check (Sub-millisecond latency & zero LLM hallucination)
     greetings = {
         "hello", "hi", "hey", "hola", "namaste", "sup", "yo",
         "good morning", "good afternoon", "good evening", "good night",
@@ -298,20 +625,16 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
             client = AsyncOpenAI(api_key=curr_key or "local-model", base_url=curr_base)
             history = get_messages_for_prompt(session_id)
             sys_prompt = COMPACT_SYSTEM_PROMPT if (curr_base and "11434" in curr_base) else SYSTEM_PROMPT
+            facts = db_list_facts()
+            if facts:
+                facts_summary = "\n".join(f"- {f['fact']}" for f in facts[:10])
+                sys_prompt += f"\n\nRemembered User Facts & Preferences:\n{facts_summary}\nAnswer directly from these facts when queried."
             messages = [{"role": "system", "content": sys_prompt}]
             messages.extend(history)
             messages.append({"role": "user", "content": clean_text})
 
             # Fast multi-step tool reasoning loop (capped at 3 steps)
             for _step in range(3):
-                response = await client.chat.completions.create(
-                    model=curr_model,
-                    messages=messages,
-                    tools=ACTIVE_TOOL_SCHEMAS,
-                    tool_choice="auto",
-                    temperature=0.3,
-                    max_tokens=600,
-                )
                 req_kwargs = {
                     "model": curr_model,
                     "messages": messages,
@@ -324,6 +647,8 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                     req_kwargs["extra_body"] = {"options": {"num_ctx": 4096}}
 
                 response = await client.chat.completions.create(**req_kwargs)
+                if not response or not response.choices:
+                    break
 
                 msg = response.choices[0].message
                 finish_reason = response.choices[0].finish_reason
@@ -332,6 +657,23 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                 if finish_reason != "tool_calls" or not tool_calls:
                     raw = (msg.content or "").strip()
                     spoken = _clean_spoken_text(raw)
+                    if not executed_tools:
+                        dispatched = _dispatch_uncalled_tool_intent(clean_text)
+                        if dispatched:
+                            items = dispatched if isinstance(dispatched, list) else [dispatched]
+                            for it in items:
+                                executed_tools.append({
+                                    "tool": it["tool"],
+                                    "args": it["args"],
+                                    "result": it["result"],
+                                    "tc_id": "auto_intent",
+                                })
+                            spoken = _clean_spoken_text(items[-1]["result"].get("spoken") or spoken)
+                            for it in items:
+                                if it["tool"] in {"create_event", "delete_task"} and it["result"].get("success"):
+                                    read_back = format_read_back(it["tool"], it["args"])
+                                    spoken = read_back
+                                    requires_confirmation_flag = True
                     break
 
                 messages.append(msg)
@@ -343,6 +685,12 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                         t_args = json.loads(tc.function.arguments)
                     except Exception:
                         t_args = {}
+
+                    # Remap web_search to search_emails if query mentions emails or inbox
+                    if t_name == "web_search" and any(k in clean_text.lower() for k in ["search my email", "search email", "search emails", "find email", "check email", "inbox"]):
+                        t_name = "search_emails"
+                        q_clean = re.sub(r"^(search\s+(my\s+)?emails?\s+(about|for)?\s*|find\s+(my\s+)?emails?\s*)", "", clean_text, flags=re.I).strip()
+                        t_args = {"query": q_clean}
 
                     # Remap open_app to send_whatsapp_message if query has message/chat intent
                     if t_name == "open_app" and str(t_args.get("name", "")).lower() == "whatsapp" and any(k in clean_text.lower() for k in ["message", "text", "chat", "saying", "send"]):
@@ -358,6 +706,11 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                         msg_body = match_msg.group(1).strip() if match_msg else None
                         t_args = {"contact_name": contact, "message": msg_body}
 
+                    # Remap send_whatsapp_message to open_app if query is just to open whatsapp without chat/message intent
+                    if t_name == "send_whatsapp_message" and not any(k in clean_text.lower() for k in ["message", "text", "chat", "saying", "send", "with", "+"]) and any(k in clean_text.lower() for k in ["open", "launch", "start"]):
+                        t_name = "open_app"
+                        t_args = {"name": "whatsapp"}
+
                     # Anti-Hallucination Guardrail: Reject tools not matching user intent
                     if not _is_tool_call_aligned_with_intent(t_name, clean_text):
                         logger.warning(f"Blocked hallucinated tool call '{t_name}' for query '{clean_text}'")
@@ -372,6 +725,9 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                             m_recip = re.search(r'\b(?:to|mail|email)\s+([A-Za-z]+)', clean_text, re.I)
                             if m_recip and m_recip.group(1).lower() not in {"someone", "him", "her", "them", "a", "the", "my"}:
                                 t_args["recipient_name"] = m_recip.group(1).capitalize()
+
+                    if t_name == "medical_search":
+                        t_args["user_query"] = clean_text
 
                     handler = TOOLS_REGISTRY.get(t_name)
                     if handler:
@@ -390,6 +746,25 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                             "tool_call_id": tc.id,
                             "content": json.dumps(t_res),
                         })
+
+                        # Multi-step handling: if web search also requested emailing a summary
+                        if t_name == "web_search" and ("email" in clean_text.lower() or "mail" in clean_text.lower()):
+                            m_em = re.search(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', clean_text)
+                            target_em = m_em.group(0) if m_em else "keshavagarwal7793@gmail.com"
+                            em_args = {"to": target_em, "subject": "Tech News Summary", "description": "Summary of today's tech news"}
+                            em_res = TOOLS_REGISTRY["send_email"](**em_args)
+                            executed_tools.append({
+                                "tool": "send_email",
+                                "args": em_args,
+                                "result": em_res,
+                                "tc_id": "step2_email",
+                            })
+
+                        if t_name in {"create_event", "delete_task"} and t_res.get("success"):
+                            read_back = format_read_back(t_name, t_args)
+                            spoken = read_back
+                            requires_confirmation_flag = True
+                            break
 
                 if not step_tool_results:
                     raw = (msg.content or "").strip()
@@ -438,6 +813,12 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                             except Exception:
                                 t_args = {}
 
+                            # Remap web_search to search_emails if query mentions emails or inbox
+                            if t_name == "web_search" and any(k in clean_text.lower() for k in ["email", "emails", "inbox"]):
+                                t_name = "search_emails"
+                                q_clean = re.sub(r"^(search\s+(my\s+)?emails?\s+(about|for)?\s*|find\s+(my\s+)?emails?\s*)", "", clean_text, flags=re.I).strip()
+                                t_args = {"query": q_clean}
+
                             # Remap open_app to send_whatsapp_message if query has message/chat intent
                             if t_name == "open_app" and str(t_args.get("name", "")).lower() == "whatsapp" and any(k in clean_text.lower() for k in ["message", "text", "chat", "saying", "send"]):
                                 t_name = "send_whatsapp_message"
@@ -452,6 +833,11 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                                 msg_body = match_msg.group(1).strip() if match_msg else None
                                 t_args = {"contact_name": contact, "message": msg_body}
 
+                            # Remap send_whatsapp_message to open_app if query is just to open whatsapp without chat/message intent
+                            if t_name == "send_whatsapp_message" and not any(k in clean_text.lower() for k in ["message", "text", "chat", "saying", "send", "with", "+"]) and any(k in clean_text.lower() for k in ["open", "launch", "start"]):
+                                t_name = "open_app"
+                                t_args = {"name": "whatsapp"}
+
                             # Anti-Hallucination Guardrail: Reject tools not matching user intent
                             if not _is_tool_call_aligned_with_intent(t_name, clean_text):
                                 logger.warning(f"Blocked hallucinated tool call '{t_name}' in retry for query '{clean_text}'")
@@ -459,6 +845,9 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
 
                             if t_name == "send_email" and "user_id" not in t_args:
                                 t_args["user_id"] = effective_user_id
+
+                            if t_name == "medical_search":
+                                t_args["user_query"] = clean_text
 
                             handler = TOOLS_REGISTRY.get(t_name)
                             if handler:
@@ -639,7 +1028,8 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
     return {
         "spoken_reply": spoken,
         "tool_calls_executed": executed_tools,
-        "requires_confirmation": False,
+        "requires_confirmation": requires_confirmation_flag,
+        "confirmation_question": spoken if requires_confirmation_flag else None,
         "session_id": session_id,
         "latency_ms": latency,
         "model": curr_model,

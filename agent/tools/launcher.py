@@ -280,20 +280,23 @@ def open_app(
                 break
 
     if not matched_key:
-        # Fallback to web search
+        # Fallback to direct web address if it looks like a domain name
         if "." in clean_name and " " not in clean_name:
             target_url = f"https://{clean_name}"
+            success = launch_in_browser(target_url, browser_pref)
+            return {
+                "success": success,
+                "target": clean_name,
+                "url": target_url,
+                "browser": browser_pref or "default",
+                "spoken": f"Opening {clean_name}.",
+            }
         else:
-            encoded = urllib.parse.quote_plus(clean_query or clean_name)
-            target_url = f"https://www.google.com/search?q={encoded}"
-        success = launch_in_browser(target_url, browser_pref)
-        return {
-            "success": success,
-            "target": clean_name,
-            "url": target_url,
-            "browser": browser_pref or "default",
-            "spoken": f"Opening {clean_name}.",
-        }
+            return {
+                "success": False,
+                "target": clean_name,
+                "spoken": f"Could not find or open application '{clean_name}'.",
+            }
 
     app_info = APP_SITES[matched_key]
     display = app_info["display"]

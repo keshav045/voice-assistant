@@ -3,8 +3,8 @@
 from typing import Any, Callable, Dict, List
 from agent.tools.search import web_search, get_current_time
 from agent.tools.calendar import list_events, find_free_slot, create_event
-from agent.tools.email import search_email, summarize_email, draft_reply, send_email  # send_email does real SMTP
-from agent.tools.tasks import add_task, list_tasks, complete_task
+from agent.tools.email import search_email, search_emails, summarize_email, draft_reply, send_email  # send_email does real SMTP
+from agent.tools.tasks import add_task, list_tasks, complete_task, delete_task
 from agent.tools.docs import search_my_docs
 from agent.tools.memory_tools import remember, forget
 from agent.tools.calc import calculator
@@ -27,7 +27,9 @@ TOOLS_REGISTRY: Dict[str, Callable[..., Any]] = {
     "add_task": add_task,
     "list_tasks": list_tasks,
     "complete_task": complete_task,
+    "delete_task": delete_task,
     "search_email": search_email,
+    "search_emails": search_emails,
     "summarize_email": summarize_email,
     "draft_reply": draft_reply,
     "send_email": send_email,
@@ -36,7 +38,7 @@ TOOLS_REGISTRY: Dict[str, Callable[..., Any]] = {
     "forget": forget,
 }
 
-CONFIRMATION_REQUIRED_TOOLS = {"create_event", "send_email"}
+CONFIRMATION_REQUIRED_TOOLS = {"create_event", "send_email", "delete_task"}
 
 TOOL_SCHEMAS: List[Dict[str, Any]] = [
     {
@@ -179,6 +181,7 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
             "parameters": {
                 "type": "object",
                 "properties": {
+                    "date": {"type": "string", "description": "Date or relative day, e.g. 'today', 'tomorrow', '30 November'"},
                     "start": {"type": "string", "description": "Start date/time"},
                     "end": {"type": "string", "description": "End date/time"},
                 },
@@ -208,8 +211,8 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
                 "type": "object",
                 "properties": {
                     "title": {"type": "string", "description": "Event title"},
-                    "start": {"type": "string", "description": "Start date/time e.g. 2026-11-01T16:00:00"},
-                    "end": {"type": "string", "description": "End date/time"},
+                    "start": {"type": "string", "description": "Start date/time e.g. 2026-11-01T16:00:00 or 'tomorrow 4 PM'"},
+                    "end": {"type": "string", "description": "End date/time e.g. 2026-11-01T17:00:00 or '5 PM'"},
                     "attendees": {"type": "array", "items": {"type": "string"}, "description": "List of attendee emails"},
                 },
                 "required": ["title", "start"],
@@ -226,6 +229,7 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
                 "properties": {
                     "title": {"type": "string", "description": "Actionable task title"},
                     "due_date": {"type": "string", "description": "Optional due date"},
+                    "priority": {"type": "string", "enum": ["low", "medium", "high"], "description": "Priority level"},
                 },
                 "required": ["title"],
             },
@@ -240,6 +244,7 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
                 "type": "object",
                 "properties": {
                     "status": {"type": "string", "enum": ["pending", "completed"], "description": "Status filter"},
+                    "limit": {"type": "integer", "description": "Maximum number of tasks to return"},
                 },
             },
         },
@@ -252,9 +257,37 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
             "parameters": {
                 "type": "object",
                 "properties": {
+                    "task_id": {"type": "string", "description": "Task ID"},
                     "id": {"type": "string", "description": "Task ID or search keyword"},
                 },
-                "required": ["id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "delete_task",
+            "description": "Permanently delete a task from the database. Requires human confirmation.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "task_id": {"type": "string", "description": "Task ID to delete"},
+                    "id": {"type": "string", "description": "Task ID to delete"},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_emails",
+            "description": "Search inbox for emails matching query or sender.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Keywords or sender name"},
+                    "max_results": {"type": "integer", "description": "Maximum number of emails to return"},
+                },
             },
         },
     },
@@ -267,6 +300,7 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
                 "type": "object",
                 "properties": {
                     "query": {"type": "string", "description": "Keywords or sender name"},
+                    "max_results": {"type": "integer", "description": "Maximum number of emails to return"},
                 },
             },
         },
@@ -281,7 +315,6 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
                 "properties": {
                     "id": {"type": "string", "description": "Email ID or sender keyword"},
                 },
-                "required": ["id"],
             },
         },
     },
@@ -294,9 +327,9 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
                 "type": "object",
                 "properties": {
                     "id": {"type": "string", "description": "Email ID being replied to"},
+                    "instructions": {"type": "string", "description": "Instructions for the draft reply"},
                     "points": {"type": "string", "description": "Key points to include in draft"},
                 },
-                "required": ["id", "points"],
             },
         },
     },
