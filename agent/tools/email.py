@@ -490,7 +490,7 @@ def _send_smtp(
     body: str,
     sender_email: Optional[str] = None,
     sender_password: Optional[str] = None,
-    sender_name: Optional[str] = "Krish",
+    sender_name: Optional[str] = "Keshav",
     user_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Send email via Gmail SMTP. Tries port 587 (STARTTLS) then 465 (SSL)."""
@@ -563,7 +563,7 @@ def _send_smtp(
                 "to": to_email,
                 "subject": subject,
                 "from": effective_sender_email,
-                "sender_name": sender_name or "Krish",
+                "sender_name": sender_name or "Keshav",
                 "provider": "smtp",
             }
         except smtplib.SMTPAuthenticationError:

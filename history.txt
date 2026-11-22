@@ -665,6 +665,23 @@ Entry 2026-11-22.10 [2026-11-22 12:32:00 +0530]
   * Verification: 83/83 pytest unit tests pass (100%) with 0 emojis.
 
 
+Entry 2026-11-22.11 [2026-11-22 12:47:00 +0530]
+- Files Changed:
+  * agent/tools/email.py
+  * evals/suite_report.json
+  * gemini.md
+  * history.txt
+- Change Details:
+  * Updated default sender identity parameter in agent/tools/email.py (_send_smtp) from legacy
+    'Krish' to 'Keshav' across both function signature and return dictionary.
+  * Conducted exhaustive end-to-end audit across all pipelines: Web UI, LiveKit WebRTC audio,
+    local Ollama model execution, tool calling format, and Human-in-the-Loop safety gating.
+  * Verified active LiveKit worker continuous speech listening and turn commitment in real time.
+- What was Affected:
+  * Email Consistency: Outbound emails default cleanly to 'Keshav' across all dispatch mechanisms.
+  * Verification: 83/83 pytest unit tests pass (100%) and 35/35 evaluation benchmarks pass (100%) with 0 emojis.
+
+
 ================================================================================
 VERIFICATION SUMMARY
 ================================================================================
