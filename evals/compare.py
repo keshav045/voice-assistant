@@ -1,4 +1,4 @@
-"""Compares benchmark runs (e.g., Cloud OpenAI GPT-4o vs Local Ollama rtu-senior)."""
+"""Compares benchmark runs (e.g., Cloud OpenAI GPT-4o vs Local Ollama qwen2.5:1.5b)."""
 
 import json
 import os

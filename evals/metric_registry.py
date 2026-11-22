@@ -69,7 +69,6 @@ def compute_cost_estimate(
     pricing = {
         "gpt-4o": {"input": 2.50, "output": 10.00},
         "gpt-4o-mini": {"input": 0.15, "output": 0.60},
-        "rtu-senior:latest": {"input": 0.0, "output": 0.0},  # Local Ollama
         "qwen2.5:1.5b": {"input": 0.0, "output": 0.0},        # Local Ollama
     }
     rates = pricing.get(model, pricing["gpt-4o"])

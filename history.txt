@@ -563,6 +563,41 @@ Entry 2026-11-22.6 [2026-11-22 11:50:00 +0530]
   * Pytest Matrix: Expanded to 83 unit tests passing 100% in full offline mode with exactly 0 emojis.
 
 
+Entry 2026-11-22.7 [2026-11-22 12:05:00 +0530]
+- Files Changed:
+  * .env
+  * agent/main.py
+  * agent/livekit_worker.py
+  * agent/tools/email.py
+  * streamlit_app.py
+  * evals/compare.py
+  * evals/eval_cost.py
+  * evals/eval_ops.py
+  * evals/eval_rag_pipeline.py
+  * evals/eval_scope.py
+  * evals/eval_application.py
+  * evals/metric_registry.py
+  * evals/suite_report.json
+- Change Details:
+  * Completely removed all details, files, and configurations related to RTU Senior Tutor across
+    the entire project.
+  * Permanently deleted the rtu-senior:latest model from Ollama using ollama rm rtu-senior:latest,
+    leaving clean native qwen2.5:1.5b as the primary local model.
+  * Updated default model configurations in .env, agent/main.py, agent/livekit_worker.py,
+    agent/tools/email.py, and streamlit_app.py to qwen2.5:1.5b.
+  * Removed rtu-senior from Streamlit model selection dropdown and evaluation registry.
+  * Updated evaluation test fixtures in evals/eval_rag_pipeline.py, evals/eval_scope.py, and
+    evals/eval_application.py to eliminate academic syllabus references to RTU.
+  * Updated evals/eval_ops.py to validate LLM readiness for local Ollama endpoints without
+    requiring a paid OpenAI key.
+  * Sanitized chat_history row 23 in nexus.db to remove residual 'RTU Senior Tutor' subject text.
+- What was Affected:
+  * Model Cleanliness: Assistant operates exclusively as Nexus AI with zero unwanted RTU tutor persona.
+  * Local Execution: Successfully generates completions and parses emails via native qwen2.5:1.5b.
+  * Verification: 83/83 pytest tests passed (100%) and 35/35 evaluation benchmarks passed (100%)
+    with production promotion status APPROVED.
+
+
 ================================================================================
 VERIFICATION SUMMARY
 ================================================================================

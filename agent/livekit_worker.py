@@ -266,7 +266,7 @@ async def entrypoint(ctx: JobContext):
 
     # Initialize Voice Pipeline Session with local VAD & fast endpointing (sub-400ms cutoff)
     local_base = os.environ.get("OPENAI_BASE_URL", "http://localhost:11434/v1")
-    local_model = os.environ.get("OPENAI_MODEL", "rtu-senior:latest")
+    local_model = os.environ.get("OPENAI_MODEL", "qwen2.5:1.5b")
     api_key = os.environ.get("OPENAI_API_KEY", "").strip() or "ollama"
 
     vad_detector = silero.VAD.load(

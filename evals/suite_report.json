@@ -1,6 +1,6 @@
 {
   "harness": "NexusMasterSuite",
-  "timestamp": 1795199908.2787611,
+  "timestamp": 1795329359.542467,
   "summary": {
     "total_tests": 35,
     "passed_tests": 35,
@@ -113,15 +113,15 @@
     "eval_latency": [
       {
         "name": "Math Calculator Latency",
-        "value": 0.07,
+        "value": 0.08,
         "passed": true,
-        "details": "p95: 0.23ms (target <10ms)"
+        "details": "p95: 0.26ms (target <10ms)"
       },
       {
         "name": "Clock Latency",
-        "value": 1.33,
+        "value": 1.42,
         "passed": true,
-        "details": "p95: 6.59ms (target <25ms)"
+        "details": "p95: 7.04ms (target <25ms)"
       },
       {
         "name": "Python Sandbox Latency",
@@ -141,7 +141,7 @@
         "name": "Local Model Free Tier",
         "value": 0.0,
         "passed": true,
-        "details": "$0.00/turn (Local Ollama rtu-senior)"
+        "details": "$0.00/turn (Local Ollama qwen2.5:1.5b)"
       }
     ],
     "eval_leakage": [
@@ -178,10 +178,10 @@
         "details": "7 essential tables verified"
       },
       {
-        "name": "OpenAI LLM Readiness",
+        "name": "LLM Engine Readiness",
         "value": true,
         "passed": true,
-        "details": "API key configured"
+        "details": "Local Ollama or OpenAI configured"
       },
       {
         "name": "LiveKit Cloud WebRTC",
@@ -300,18 +300,18 @@
     ]
   },
   "timings": {
-    "Retrieval & Memory": 59.16,
-    "Reranker Two-Stage": 0.02,
-    "Speech Generation": 0.63,
-    "Latency Profiling": 165.37,
+    "Retrieval & Memory": 67.99,
+    "Reranker Two-Stage": 0.03,
+    "Speech Generation": 0.7,
+    "Latency Profiling": 161.95,
     "Cost & Budgeting": 0.03,
-    "Leakage Protection": 0.13,
-    "Infrastructure Ops": 13.42,
-    "End-to-End RAG": 156.56,
-    "Error Reliability": 23.16,
-    "Safety Gating": 0.21,
+    "Leakage Protection": 0.09,
+    "Infrastructure Ops": 11.88,
+    "End-to-End RAG": 16.57,
+    "Error Reliability": 25.69,
+    "Safety Gating": 0.29,
     "Domain Scope": 0.01,
-    "Toxicity Defense": 1.21,
-    "Application Session": 34.72
+    "Toxicity Defense": 1.63,
+    "Application Session": 44.69
   }
 }

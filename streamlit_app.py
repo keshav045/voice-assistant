@@ -32,7 +32,7 @@ except Exception:
 if "model_engine_choice" not in st.session_state:
     st.session_state.model_engine_choice = "Local Ollama (Offline / Free)"
     os.environ["OPENAI_BASE_URL"] = "http://localhost:11434/v1"
-    os.environ["OPENAI_MODEL"] = "rtu-senior:latest"
+    os.environ["OPENAI_MODEL"] = "qwen2.5:1.5b"
     os.environ.setdefault("OPENAI_API_KEY", "ollama")
 
 from openai import OpenAI
@@ -506,7 +506,7 @@ with st.sidebar:
     if "Local" in model_choice:
         local_model = st.selectbox(
             "Ollama Model:",
-            options=["rtu-senior:latest", "qwen2.5:1.5b"],
+            options=["qwen2.5:1.5b"],
             index=0,
         )
         local_url = st.text_input("Endpoint:", value="http://localhost:11434/v1")

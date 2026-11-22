@@ -27,15 +27,16 @@ def run_ops_eval(harness: EvalHarness) -> Dict[str, Any]:
         existing_tables = [r[0] for r in cur.fetchall()]
     tables_ok = all(t in existing_tables for t in required_tables)
 
-    # 3. Cloud Credentials Readiness
+    # 3. LLM Engine Readiness (Cloud OpenAI Key or Local Ollama Base URL)
     openai_key = os.environ.get("OPENAI_API_KEY", "")
-    openai_ready = bool(openai_key and not openai_key.startswith("your-"))
+    openai_base = os.environ.get("OPENAI_BASE_URL", "")
+    openai_ready = bool((openai_key and not openai_key.startswith("your-")) or (openai_base and "11434" in openai_base))
 
     livekit_ready = bool(os.environ.get("LIVEKIT_URL") and os.environ.get("LIVEKIT_API_KEY"))
 
     harness.record_test("eval_ops", "SQLite WAL Concurrency", wal_mode, wal_mode, "WAL mode active (non-blocking reads)")
     harness.record_test("eval_ops", "Database Tables Integrity", tables_ok, tables_ok, f"{len(required_tables)} essential tables verified")
-    harness.record_test("eval_ops", "OpenAI LLM Readiness", openai_ready, openai_ready, "API key configured")
+    harness.record_test("eval_ops", "LLM Engine Readiness", openai_ready, openai_ready, "Local Ollama or OpenAI configured")
     harness.record_test("eval_ops", "LiveKit Cloud WebRTC", livekit_ready, livekit_ready, "LiveKit credentials active")
 
     return {

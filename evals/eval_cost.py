@@ -15,14 +15,14 @@ from evals.harness import EvalHarness
 def run_cost_eval(harness: EvalHarness) -> Dict[str, Any]:
     # Typical query: ~250 prompt tokens (system + history), ~60 output tokens
     cloud_cost = compute_cost_estimate(prompt_tokens=250, completion_tokens=60, model="gpt-4o")
-    local_cost = compute_cost_estimate(prompt_tokens=250, completion_tokens=60, model="rtu-senior:latest")
+    local_cost = compute_cost_estimate(prompt_tokens=250, completion_tokens=60, model="qwen2.5:1.5b")
 
     daily_turns = 100
     cloud_daily = round(cloud_cost["estimated_cost_usd"] * daily_turns, 4)
     local_daily = round(local_cost["estimated_cost_usd"] * daily_turns, 4)
 
     harness.record_test("eval_cost", "Cloud Model Budget", cloud_cost["estimated_cost_usd"] < 0.01, cloud_cost["estimated_cost_usd"], f"${cloud_cost['estimated_cost_usd']}/turn (GPT-4o)")
-    harness.record_test("eval_cost", "Local Model Free Tier", local_cost["is_local_free"] is True, local_daily, f"$0.00/turn (Local Ollama rtu-senior)")
+    harness.record_test("eval_cost", "Local Model Free Tier", local_cost["is_local_free"] is True, local_daily, f"$0.00/turn (Local Ollama qwen2.5:1.5b)")
 
     return {
         "cloud_per_turn_usd": cloud_cost["estimated_cost_usd"],

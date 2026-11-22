@@ -312,7 +312,7 @@ Respond ONLY with valid JSON in this exact format:
 }}"""
 
         response = client.chat.completions.create(
-            model=os.environ.get("OPENAI_MODEL", "rtu-senior:latest"),
+            model=os.environ.get("OPENAI_MODEL", "qwen2.5:1.5b"),
             messages=[{"role": "user", "content": prompt}],
             temperature=0.4,
             max_tokens=400,

@@ -20,7 +20,7 @@ def run_application_eval(harness: EvalHarness) -> Dict[str, Any]:
         user_id="guest",
         session_id=test_session,
         user_message="Hello, can you help me prepare for my Thermodynamics exam?",
-        spoken_reply="Yes, I am Senior Tutor. I can help you master Thermodynamics step by step.",
+        spoken_reply="Yes, I am Nexus AI assistant. I can help you master Thermodynamics step by step.",
     )
 
     # Turn 2

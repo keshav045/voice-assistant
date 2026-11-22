@@ -69,7 +69,7 @@ app.add_middleware(
 )
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "rtu-senior:latest")
+OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "qwen2.5:1.5b")
 OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "http://localhost:11434/v1").strip() or None
 
 # Pending confirmations cache per session
@@ -156,7 +156,7 @@ ACTIVE_TOOL_SCHEMAS = [s for s in TOOL_SCHEMAS if s.get("function", {}).get("nam
 
 def _is_tool_call_aligned_with_intent(tool_name: str, user_text: str) -> bool:
     """Verify that a tool call emitted by an LLM is actually requested by the user,
-    preventing small local models (like Ollama rtu-senior) from executing hallucinated write actions or searches."""
+    preventing small local models (like Ollama qwen2.5:1.5b) from executing hallucinated write actions or searches."""
     lower = user_text.lower().strip()
 
     # Block all tool calls if input is a basic conversational greeting or pleasantry
