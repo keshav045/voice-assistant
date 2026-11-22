@@ -485,8 +485,17 @@ window.addEventListener("keydown", (e) => {
 });
 
 // --- URL / Application Auto-Launcher (Always Opens in New Tab) ---
+let _lastOpenedUrl = "";
+let _lastOpenedTime = 0;
+
 function triggerOpenUrl(url, targetName) {
   if (!url) return;
+  const now = Date.now();
+  if (url === _lastOpenedUrl && (now - _lastOpenedTime < 2500)) {
+    return;
+  }
+  _lastOpenedUrl = url;
+  _lastOpenedTime = now;
   const label = targetName || "Application";
   let opened = false;
 
@@ -1007,8 +1016,8 @@ async function connectLiveKit() {
       pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-amber-100 text-amber-800 border border-amber-200";
     }
 
-    // 1. Fetch room token from backend
-    const res = await fetch("/api/livekit/token", {
+    // 1. Fetch room token from backend linked to current chat session
+    const res = await fetch(`/api/livekit/token?room=${encodeURIComponent(currentSessionId)}`, {
       headers: authToken ? { "Authorization": `Bearer ${authToken}` } : {},
     });
     const data = await res.json();
@@ -1017,6 +1026,9 @@ async function connectLiveKit() {
       alert("LiveKit WebRTC Configuration Required:\n\n" + (data.message || "Please configure LIVEKIT_URL, LIVEKIT_API_KEY, and LIVEKIT_API_SECRET in your .env file.\n\nThen start the LiveKit Agent worker with:\npython run_livekit.py dev"));
       resetLiveKitUI();
       return;
+    }
+    if (data.room) {
+      currentSessionId = data.room;
     }
 
     // 2. Initialize LiveKit Room
@@ -1043,12 +1055,19 @@ async function connectLiveKit() {
       }
     });
 
-    // Listen for data packets from worker (e.g. auto-launch app or open URL)
+    // Listen for data packets from worker (e.g. real-time chat sync, auto-launch app, or open URL)
     livekitRoom.on(LivekitClient.RoomEvent.DataReceived, (payload, participant) => {
       try {
         const text = new TextDecoder().decode(payload);
         const dataPacket = JSON.parse(text);
-        if (dataPacket.type === "OPEN_URL" && dataPacket.url) {
+        if (dataPacket.type === "CHAT_MESSAGE") {
+          if (dataPacket.role === "user" && dataPacket.text) {
+            appendUserBubble(dataPacket.text);
+          } else if (dataPacket.role === "assistant" && dataPacket.text) {
+            appendAssistantBubble(dataPacket.text, dataPacket.tool_calls || []);
+            loadHistory();
+          }
+        } else if (dataPacket.type === "OPEN_URL" && dataPacket.url) {
           triggerOpenUrl(dataPacket.url, dataPacket.target || "App");
         } else if (dataPacket.type === "EMAIL_SENT") {
           const fromDesc = dataPacket.sender ? ` from ${dataPacket.sender}` : "";

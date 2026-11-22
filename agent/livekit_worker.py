@@ -9,10 +9,13 @@ Provides real-time, sub-500ms voice interactions over WebRTC using:
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
+import re
 import sys
+from typing import Any, Optional
 
 # Ensure root is in path
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -47,19 +50,127 @@ logger = logging.getLogger("nexus.livekit_worker")
 
 _active_room: Optional[Any] = None
 _active_user_id: str = "guest"
+_current_turn_tools: list[dict] = []
+_last_user_transcript = {"text": ""}
+_launched_in_turn = set()
 
 
 async def _broadcast_client_action(action_type: str, data: dict):
-    """Publish an automated action (e.g. open URL) to the web client via LiveKit data channel."""
+    """Publish an automated action (e.g. open URL, chat message) to the web client via LiveKit data channel."""
     global _active_room
     if not _active_room or not getattr(_active_room, "local_participant", None):
         return
-    import json
     try:
         payload = json.dumps({"type": action_type, **data}).encode("utf-8")
         await _active_room.local_participant.publish_data(payload, reliable=True)
     except Exception as e:
         logger.debug(f"Could not publish data action to room: {e}")
+
+
+def _maybe_launch_app_from_speech(text: str) -> bool:
+    """Detect app launching intent directly from user speech transcript and execute immediately."""
+    if not text:
+        return False
+    lower_t = text.lower().strip()
+
+    target_app = None
+    if "youtube" in lower_t or ("video" in lower_t and any(w in lower_t for w in ["open", "web address", "play", "watch", "crazy", "new"])):
+        target_app = "youtube"
+    elif "spotify" in lower_t or ("music" in lower_t and any(w in lower_t for w in ["open", "play", "listen"])):
+        target_app = "spotify"
+    elif "whatsapp" in lower_t:
+        target_app = "whatsapp"
+    elif "linkedin" in lower_t:
+        target_app = "linkedin"
+    elif "github" in lower_t:
+        target_app = "github"
+    elif "gmail" in lower_t or "inbox" in lower_t:
+        target_app = "gmail"
+    elif "calculator" in lower_t or "calc" in lower_t:
+        target_app = "calculator"
+    elif "notepad" in lower_t:
+        target_app = "notepad"
+    elif "explorer" in lower_t or "file explorer" in lower_t:
+        target_app = "explorer"
+
+    if not target_app:
+        return False
+
+    has_launch_verb = any(v in lower_t for v in ["open", "launch", "start", "run", "play", "web address", "go to", "navigate", "see"])
+    if not has_launch_verb and "youtube" not in lower_t and "spotify" not in lower_t:
+        return False
+
+    if target_app in _launched_in_turn:
+        return True
+    _launched_in_turn.add(target_app)
+
+    query = ""
+    if target_app == "youtube":
+        m_q = re.search(r'(?:search\s+for|search|play|watch|video\s+for|videos\s+for|address\s+for)\s+([^.]+)', text, re.IGNORECASE)
+        if m_q:
+            query = m_q.group(1).replace("youtube", "").replace("YouTube", "").strip()
+    elif target_app == "spotify":
+        m_q = re.search(r'(?:play|search\s+for|search|music\s+by)\s+([^.]+)', text, re.IGNORECASE)
+        if m_q:
+            query = m_q.group(1).replace("spotify", "").replace("Spotify", "").strip()
+
+    try:
+        res = launcher.open_app(name=target_app, query=query)
+        _current_turn_tools.append({
+            "tool": "open_app",
+            "args": {"name": target_app, "query": query},
+            "result": res,
+        })
+        if res.get("url"):
+            asyncio.create_task(_broadcast_client_action("OPEN_URL", {
+                "url": res["url"],
+                "target": res.get("target") or target_app.capitalize(),
+            }))
+        logger.info(f"Auto-launched {target_app} from user speech (query: '{query}')")
+        return True
+    except Exception as e:
+        logger.warning(f"Error launching {target_app} from speech: {e}")
+        return False
+
+
+def _maybe_launch_app_from_assistant_reply(text: str) -> bool:
+    """Detect if assistant claimed it opened an app but failed to invoke the function tool."""
+    if not text:
+        return False
+    lower_t = text.lower().strip()
+    if any(t.get("tool") == "open_app" for t in _current_turn_tools):
+        return False
+
+    claim_open = any(p in lower_t for p in [
+        "have opened", "i opened", "i have opened", "opened youtube", "opened spotify",
+        "opening youtube", "opening spotify", "opening ", "launched "
+    ])
+    if not claim_open:
+        return False
+
+    for app in ["youtube", "spotify", "whatsapp", "linkedin", "github", "gmail", "calculator", "notepad"]:
+        if app in lower_t:
+            if app in _launched_in_turn:
+                return True
+            _launched_in_turn.add(app)
+            try:
+                res = launcher.open_app(name=app, query="")
+                _current_turn_tools.append({
+                    "tool": "open_app",
+                    "args": {"name": app, "query": ""},
+                    "result": res,
+                })
+                if res.get("url"):
+                    asyncio.create_task(_broadcast_client_action("OPEN_URL", {
+                        "url": res["url"],
+                        "target": res.get("target") or app.capitalize(),
+                    }))
+                logger.info(f"Auto-launched {app} from assistant response claim")
+                return True
+            except Exception as e:
+                logger.warning(f"Error launching {app} from assistant claim: {e}")
+                return False
+    return False
 
 
 @llm.function_tool
@@ -75,6 +186,7 @@ async def web_search(query: str) -> str:
         return "I am listening. What would you like to search for?"
     try:
         res = await asyncio.to_thread(search.web_search, query=query)
+        _current_turn_tools.append({"tool": "web_search", "args": {"query": query}, "result": res})
         return res.get("spoken") or str(res)
     except Exception as e:
         return f"Error searching the web: {e}"
@@ -89,6 +201,7 @@ async def calculator(expression: str) -> str:
     """
     try:
         res = await asyncio.to_thread(calc.calculate, expression=expression)
+        _current_turn_tools.append({"tool": "calculator", "args": {"expression": expression}, "result": res})
         return res.get("spoken") or str(res.get("result"))
     except Exception as e:
         return f"Error calculating: {e}"
@@ -103,6 +216,7 @@ async def run_python_code(code: str) -> str:
     """
     try:
         res = await asyncio.to_thread(coding.run_python_code, code=code)
+        _current_turn_tools.append({"tool": "run_python_code", "args": {"code": code}, "result": res})
         return res.get("spoken") or (res.get("output") or "Code executed with no output.")
     except Exception as e:
         return f"Error executing Python code: {e}"
@@ -118,6 +232,7 @@ async def get_current_time(timezone: str = "Asia/Kolkata") -> str:
     try:
         from agent.main import get_current_time as gct
         res = gct(timezone=timezone)
+        _current_turn_tools.append({"tool": "get_current_time", "args": {"timezone": timezone}, "result": res})
         return res.get("spoken") or f"Current time is {res.get('time')} on {res.get('date')}."
     except Exception as e:
         return f"Error getting current time: {e}"
@@ -133,6 +248,7 @@ async def open_app(name: str, query: str = "") -> str:
     """
     try:
         res = await asyncio.to_thread(launcher.open_app, name=name, query=query)
+        _current_turn_tools.append({"tool": "open_app", "args": {"name": name, "query": query}, "result": res})
         if res.get("url"):
             await _broadcast_client_action("OPEN_URL", {"url": res["url"], "target": res.get("target")})
         return res.get("spoken") or f"Opening {name}."
@@ -153,6 +269,7 @@ async def send_whatsapp_message(contact_name: str, message: str = "") -> str:
         return "Please specify the contact name you want to message on WhatsApp."
     try:
         res = await asyncio.to_thread(whatsapp.send_whatsapp_message, contact_name=contact_name, message=message)
+        _current_turn_tools.append({"tool": "send_whatsapp_message", "args": {"contact_name": contact_name, "message": message}, "result": res})
         if res.get("url"):
             await _broadcast_client_action("OPEN_URL", {"url": res["url"], "target": "WhatsApp"})
         return res.get("spoken") or f"Sent WhatsApp message to {contact_name}."
@@ -161,21 +278,22 @@ async def send_whatsapp_message(contact_name: str, message: str = "") -> str:
 
 
 @llm.function_tool
-async def send_email(to: str, description: str, recipient_name: str = "", sender_email: str = "", sender_name: str = "Keshav") -> str:
+async def send_email(to: str, description: str, recipient_name: str = "", sender_email: str = "", sender_name: str = "") -> str:
     """Compose and send emails to a single recipient, multiple recipients, or bulk contacts from contacts.csv.
 
     Args:
         to: Recipient email address, comma-separated list, or 'contacts.csv'.
         description: Brief description of the email content to be professionally composed.
         recipient_name: Optional recipient name for greeting.
-        sender_email: Optional personal sender email address (e.g. Keshav's mail ID).
-        sender_name: Optional sender display name (defaults to 'Keshav').
+        sender_email: Optional personal sender email address.
+        sender_name: Optional sender display name.
     """
     global _active_user_id
     if not to or "@" not in to:
         return "To send an email, please specify a valid recipient email address."
     try:
-        eff_sender = sender_name or "Keshav"
+        from agent.main import _get_active_user_name
+        eff_sender = sender_name or _get_active_user_name(_active_user_id)
         res = await asyncio.to_thread(
             email.send_email,
             to=to,
@@ -185,6 +303,11 @@ async def send_email(to: str, description: str, recipient_name: str = "", sender
             sender_email=sender_email or None,
             sender_name=eff_sender,
         )
+        _current_turn_tools.append({
+            "tool": "send_email",
+            "args": {"to": to, "description": description, "recipient_name": recipient_name, "sender_name": eff_sender},
+            "result": res,
+        })
         if res.get("success"):
             await _broadcast_client_action("EMAIL_SENT", {
                 "to": to,
@@ -213,6 +336,7 @@ async def medical_search(medicine_name: str, topic: str = "all") -> str:
         return "Please name the medicine or salt you would like information on."
     try:
         res = await asyncio.to_thread(medical.medical_search, medicine_name=medicine_name, topic=topic)
+        _current_turn_tools.append({"tool": "medical_search", "args": {"medicine_name": medicine_name, "topic": topic}, "result": res})
         return res.get("spoken") or f"Retrieved information for {medicine_name}."
     except Exception as e:
         return f"Error looking up medicine {medicine_name}: {e}"
@@ -303,6 +427,62 @@ async def entrypoint(ctx: JobContext):
         instructions=SYSTEM_PROMPT,
         tools=LIVEKIT_TOOLS,
     )
+
+    # Register real-time conversational event handlers for chat mirroring and deterministic tool execution
+    @session.on("user_input_transcribed")
+    def on_user_transcribed(ev):
+        if not getattr(ev, "is_final", False):
+            return
+        transcript = getattr(ev, "transcript", "") or ""
+        transcript = transcript.strip()
+        if not transcript:
+            return
+        _last_user_transcript["text"] = transcript
+        _maybe_launch_app_from_speech(transcript)
+
+    @session.on("conversation_item_added")
+    def on_conversation_item_added(ev):
+        item = getattr(ev, "item", None)
+        if not item:
+            return
+        role = getattr(item, "role", "")
+        if role not in ("user", "assistant"):
+            return
+        raw_text = getattr(item, "raw_text_content", None) or getattr(item, "text_content", None) or getattr(item, "text", None) or ""
+        if isinstance(raw_text, (list, tuple)):
+            raw_text = " ".join(str(x) for x in raw_text)
+        text = str(raw_text).strip()
+        if not text:
+            return
+
+        if role == "user":
+            _launched_in_turn.clear()
+            _last_user_transcript["text"] = text
+            _maybe_launch_app_from_speech(text)
+            asyncio.create_task(_broadcast_client_action("CHAT_MESSAGE", {
+                "role": "user",
+                "text": text,
+            }))
+        elif role == "assistant":
+            _maybe_launch_app_from_assistant_reply(text)
+            tools_to_send = list(_current_turn_tools)
+            _current_turn_tools.clear()
+            asyncio.create_task(_broadcast_client_action("CHAT_MESSAGE", {
+                "role": "assistant",
+                "text": text,
+                "tool_calls": tools_to_send,
+            }))
+            try:
+                from db.models import db_save_chat_turn
+                db_save_chat_turn(
+                    user_id=_active_user_id,
+                    session_id=ctx.room.name,
+                    user_message=_last_user_transcript["text"] or "(Voice query)",
+                    spoken_reply=text,
+                    tool_calls=tools_to_send,
+                )
+            except Exception as db_err:
+                logger.warning(f"Error saving LiveKit turn to SQLite: {db_err}")
 
     # Start audio pipeline on room (must be awaited so listening loop starts!)
     await session.start(
