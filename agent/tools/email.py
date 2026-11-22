@@ -251,7 +251,8 @@ def _compose_email(description: str, recipient_name: str = "", sender_name: str 
     """
     effective_sender = sender_name or "Krish"
     api_key = os.environ.get("OPENAI_API_KEY", "")
-    if not api_key or api_key.startswith("your-"):
+    base_url = os.environ.get("OPENAI_BASE_URL", "").strip() or None
+    if not api_key and not base_url:
         is_meeting = any(w in description.lower() for w in ["meet", "sync", "call", "schedule", "catch up"])
         subject = f"Meeting Invitation: Discussion" if is_meeting else f"Message{' for ' + recipient_name if recipient_name else ''}"
         greeting = f"Hi {recipient_name}," if recipient_name else "Hello,"
@@ -260,7 +261,7 @@ def _compose_email(description: str, recipient_name: str = "", sender_name: str 
 
     try:
         from openai import OpenAI  # synchronous client
-        client = OpenAI(api_key=api_key)
+        client = OpenAI(api_key=api_key or "ollama", base_url=base_url)
 
         prompt = f"""You are a professional email assistant.
 The sender is: {effective_sender}.

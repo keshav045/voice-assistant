@@ -69,8 +69,8 @@ app.add_middleware(
 )
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o")
-OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "").strip() or None
+OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "rtu-senior:latest")
+OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "http://localhost:11434/v1").strip() or None
 
 # Pending confirmations cache per session
 _PENDING_CONFIRMATIONS: Dict[str, Dict[str, Any]] = {}
@@ -156,8 +156,19 @@ ACTIVE_TOOL_SCHEMAS = [s for s in TOOL_SCHEMAS if s.get("function", {}).get("nam
 
 def _is_tool_call_aligned_with_intent(tool_name: str, user_text: str) -> bool:
     """Verify that a tool call emitted by an LLM is actually requested by the user,
-    preventing small local models (like Ollama rtu-senior) from executing hallucinated write actions."""
+    preventing small local models (like Ollama rtu-senior) from executing hallucinated write actions or searches."""
     lower = user_text.lower().strip()
+
+    # Block all tool calls if input is a basic conversational greeting or pleasantry
+    greetings = {
+        "hello", "hi", "hey", "hola", "namaste", "sup", "yo",
+        "good morning", "good afternoon", "good evening", "good night",
+        "how are you", "how are you doing", "what's up", "whats up",
+        "who are you", "what can you do", "help", "thanks", "thank you",
+        "ok", "okay", "cool", "great", "nice", "bye", "goodbye"
+    }
+    if lower in greetings or (any(lower.startswith(g + " ") for g in ["hello", "hi", "hey", "namaste", "good morning", "good evening"]) and len(lower.split()) <= 3):
+        return False
 
     if tool_name == "send_email":
         email_keywords = [
@@ -188,6 +199,23 @@ def _is_tool_call_aligned_with_intent(tool_name: str, user_text: str) -> bool:
     if tool_name == "calculator":
         calc_keywords = ["calculate", "math", "+", "-", "*", "/", "%", "sqrt", "power", "sum", "multiply", "divide"]
         return any(k in lower for k in calc_keywords) or any(c.isdigit() for c in user_text)
+
+    if tool_name == "run_python_code":
+        code_keywords = ["python", "code", "run", "script", "execute", "def ", "import ", "program", "function"]
+        return any(k in lower for k in code_keywords)
+
+    if tool_name == "get_current_time":
+        time_keywords = ["time", "date", "clock", "day", "today", "hour"]
+        return any(k in lower for k in time_keywords)
+
+    if tool_name == "web_search":
+        # Disallow web search on pleasantries or conversational questions
+        search_keywords = [
+            "search", "who", "what", "where", "when", "why", "how", "score", "scores",
+            "news", "match", "vs", "cricket", "weather", "latest", "price", "stock",
+            "tell me", "information", "find", "update", "updates", "result", "results"
+        ]
+        return any(k in lower for k in search_keywords)
 
     return True
 
@@ -312,6 +340,20 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                     except Exception:
                         t_args = {}
 
+                    # Remap open_app to send_whatsapp_message if query has message/chat intent
+                    if t_name == "open_app" and str(t_args.get("name", "")).lower() == "whatsapp" and any(k in clean_text.lower() for k in ["message", "text", "chat", "saying", "send"]):
+                        t_name = "send_whatsapp_message"
+                        contact = "Krish" if "krish" in clean_text.lower() else "Contact"
+                        match_name = re.search(r"(?:open|find|to|chat of)\s+([A-Za-z]+)(?:'s)?\s+chat", clean_text, re.IGNORECASE)
+                        if not match_name:
+                            match_name = re.search(r"(?:message|text|send|to)\s+([A-Za-z]+)", clean_text, re.IGNORECASE)
+                        if match_name and match_name.group(1).lower() not in ["whatsapp", "him", "her", "a", "the"]:
+                            contact = match_name.group(1).capitalize()
+
+                        match_msg = re.search(r"(?:message him like|message her like|message saying|saying|like|message:?)\s+['\"]?([^'\"]+)['\"]?$", clean_text, re.IGNORECASE)
+                        msg_body = match_msg.group(1).strip() if match_msg else None
+                        t_args = {"contact_name": contact, "message": msg_body}
+
                     # Anti-Hallucination Guardrail: Reject tools not matching user intent
                     if not _is_tool_call_aligned_with_intent(t_name, clean_text):
                         logger.warning(f"Blocked hallucinated tool call '{t_name}' for query '{clean_text}'")
@@ -388,6 +430,20 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                             except Exception:
                                 t_args = {}
 
+                            # Remap open_app to send_whatsapp_message if query has message/chat intent
+                            if t_name == "open_app" and str(t_args.get("name", "")).lower() == "whatsapp" and any(k in clean_text.lower() for k in ["message", "text", "chat", "saying", "send"]):
+                                t_name = "send_whatsapp_message"
+                                contact = "Krish" if "krish" in clean_text.lower() else "Contact"
+                                match_name = re.search(r"(?:open|find|to|chat of)\s+([A-Za-z]+)(?:'s)?\s+chat", clean_text, re.IGNORECASE)
+                                if not match_name:
+                                    match_name = re.search(r"(?:message|text|send|to)\s+([A-Za-z]+)", clean_text, re.IGNORECASE)
+                                if match_name and match_name.group(1).lower() not in ["whatsapp", "him", "her", "a", "the"]:
+                                    contact = match_name.group(1).capitalize()
+
+                                match_msg = re.search(r"(?:message him like|message her like|message saying|saying|like|message:?)\s+['\"]?([^'\"]+)['\"]?$", clean_text, re.IGNORECASE)
+                                msg_body = match_msg.group(1).strip() if match_msg else None
+                                t_args = {"contact_name": contact, "message": msg_body}
+
                             # Anti-Hallucination Guardrail: Reject tools not matching user intent
                             if not _is_tool_call_aligned_with_intent(t_name, clean_text):
                                 logger.warning(f"Blocked hallucinated tool call '{t_name}' in retry for query '{clean_text}'")
@@ -423,16 +479,104 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                 except Exception as retry_err:
                     logger.error(f"Cloud OpenAI failover error: {retry_err}")
 
-    # Fallback if no LLM reply
-    if not spoken:
-        if executed_tools:
-            last_tool = executed_tools[-1].get("result", {})
-            if isinstance(last_tool, dict) and last_tool.get("spoken"):
-                spoken = last_tool["spoken"]
-        else:
-            lower = clean_text.lower().strip()
+    # For specialized action tools like WhatsApp, prioritize the tool's verified spoken message
+    for et in executed_tools:
+        if et.get("tool") == "send_whatsapp_message":
+            wa_res = et.get("result", {})
+            if wa_res.get("spoken"):
+                spoken = wa_res["spoken"]
+                break
 
-            # 1. Greetings, Pleasantries & Conversational Responses
+    # Explicit user intent enforcement and fallback handling if no tools were executed
+    lower = clean_text.lower().strip()
+    if not executed_tools:
+        # 1. WhatsApp Messaging & Chat Automation
+        if "whatsapp" in lower and any(w in lower for w in ["message", "text", "send", "chat", "to", "him", "her"]):
+            contact = "Krish" if "krish" in lower else "Contact"
+            msg_body = None
+            match_name = re.search(r"(?:open|find|to|chat of)\s+([A-Za-z]+)(?:'s)?\s+chat", clean_text, re.IGNORECASE)
+            if not match_name:
+                match_name = re.search(r"(?:message|text|send|to)\s+([A-Za-z]+)", clean_text, re.IGNORECASE)
+            if match_name and match_name.group(1).lower() not in ["whatsapp", "him", "her", "a", "the"]:
+                contact = match_name.group(1).capitalize()
+
+            match_msg = re.search(r"(?:message him like|message her like|message saying|saying|like|message:?)\s+['\"]?([^'\"]+)['\"]?$", clean_text, re.IGNORECASE)
+            if match_msg:
+                msg_body = match_msg.group(1).strip()
+
+            res = TOOLS_REGISTRY["send_whatsapp_message"](contact_name=contact, message=msg_body)
+            executed_tools.append({"tool": "send_whatsapp_message", "args": {"contact_name": contact, "message": msg_body}, "result": res})
+            spoken = res.get("spoken", f"Opened WhatsApp for {contact}.")
+
+        # 2. Desktop Applications & Web Launcher (YouTube, Spotify, LinkedIn, Calculator, Notepad, etc.)
+        elif any(k in lower for k in ["youtube", "spotify", "linkedin", "gmail", "github", "calculator", "notepad", "explorer"]) or any(lower.startswith(k) for k in ["open ", "launch ", "start ", "play on youtube"]) or "on youtube" in lower:
+            target = "google"
+            query_val = None
+            browser_pref = None
+            if "chrome" in lower:
+                browser_pref = "chrome"
+            elif "edge" in lower:
+                browser_pref = "edge"
+
+            for site in ["youtube", "whatsapp", "linkedin", "gmail", "mail", "github", "spotify", "calculator", "notepad", "explorer"]:
+                if site in lower:
+                    target = site
+                    break
+
+            if target == "youtube":
+                query_val = _extract_youtube_query(clean_text)
+            elif target == "google" and any(w in lower for w in ["search", "find", "google"]):
+                query_val = re.sub(r"^(open|search|google|find)\s+(google\s+)?(for\s+)?", "", clean_text, flags=re.IGNORECASE).strip()
+
+            res = TOOLS_REGISTRY["open_app"](name=target, query=query_val, browser=browser_pref)
+            executed_tools.append({"tool": "open_app", "args": {"name": target, "query": query_val, "browser": browser_pref}, "result": res})
+            spoken = res.get("spoken", f"Opening {target}.")
+
+        # 3. Mathematical Calculations
+        elif any(k in lower for k in ["calculate", "math", "+", "-", "*", "/", "%", "sqrt", "**", "//"]) and any(c.isdigit() for c in clean_text):
+            expr = clean_text.replace("calculate", "").replace("what is", "").strip()
+            res = TOOLS_REGISTRY["calculator"](expression=expr or clean_text)
+            executed_tools.append({"tool": "calculator", "args": {"expression": expr}, "result": res})
+            spoken = res.get("spoken", "Calculated the expression.")
+
+        # 4. Current Time & Date
+        elif ("time" in lower and any(w in lower for w in ["what", "tell", "current", "now", "is"])) or lower in ["time", "current time", "what time is it"]:
+            res = TOOLS_REGISTRY["get_current_time"]()
+            executed_tools.append({"tool": "get_current_time", "args": {}, "result": res})
+            spoken = res.get("spoken", "Checked the current time.")
+
+        # 5. Medical and Medicine Information Search
+        elif any(w in lower for w in [
+            "medicine", "tablet", "capsule", "drug", "dosage", "side effect", "side effects",
+            "precaution", "precautions", "paracetamol", "dolo", "ibuprofen", "crocin", "metformin",
+            "amoxicillin", "azithromycin", "omeprazole", "pantoprazole", "cetirizine", "aspirin", "atorvastatin"
+        ]):
+            med_match = re.search(
+                r"(?:about|for|of|is|medicine|tablet|drug)\s+([a-zA-Z0-9\s-]+?)(?:\s+(?:uses|dosage|dose|side effects|precautions|interactions|safe)|\?|$)",
+                clean_text,
+                re.IGNORECASE,
+            )
+            if med_match:
+                med_name = med_match.group(1).strip()
+            else:
+                med_name = re.sub(r"^(tell me about|what is|how to take|information on|details of)\s+", "", clean_text, flags=re.IGNORECASE).strip()
+
+            topic_val = "all"
+            if any(w in lower for w in ["side effect", "side effects", "adverse"]):
+                topic_val = "side_effects"
+            elif any(w in lower for w in ["dose", "dosage", "how to take", "how much"]):
+                topic_val = "dosage"
+            elif any(w in lower for w in ["use", "uses", "what is it for", "used for"]):
+                topic_val = "uses"
+            elif any(w in lower for w in ["precaution", "precautions", "warning"]):
+                topic_val = "precautions"
+
+            res = TOOLS_REGISTRY["medical_search"](medicine_name=med_name or clean_text, topic=topic_val)
+            executed_tools.append({"tool": "medical_search", "args": {"medicine_name": med_name or clean_text, "topic": topic_val}, "result": res})
+            spoken = res.get("spoken") or f"Retrieved medical details for {med_name}."
+
+        elif not spoken:
+            # 6. Greetings, Pleasantries & Conversational Responses
             greetings = {
                 "hello", "hi", "hey", "hola", "namaste", "sup", "yo",
                 "good morning", "good afternoon", "good evening", "good night",
@@ -444,62 +588,7 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
             elif lower in ["thanks", "thank you", "ok", "okay", "cool", "great", "nice", "bye", "goodbye"]:
                 spoken = "You are welcome! Let me know if you need anything else."
 
-            # 2. WhatsApp Messaging & Chat Automation
-            elif "whatsapp" in lower and any(w in lower for w in ["message", "text", "send", "chat", "to", "him", "her"]):
-                contact = "Krish" if "krish" in lower else "Contact"
-                msg_body = None
-                match_name = re.search(r"(?:open|find|to|chat of)\s+([A-Za-z]+)(?:'s)?\s+chat", clean_text, re.IGNORECASE)
-                if not match_name:
-                    match_name = re.search(r"(?:message|text|send|to)\s+([A-Za-z]+)", clean_text, re.IGNORECASE)
-                if match_name and match_name.group(1).lower() not in ["whatsapp", "him", "her", "a", "the"]:
-                    contact = match_name.group(1).capitalize()
-
-                match_msg = re.search(r"(?:message him like|message her like|message saying|saying|like|message:?)\s+['\"]?([^'\"]+)['\"]?$", clean_text, re.IGNORECASE)
-                if match_msg:
-                    msg_body = match_msg.group(1).strip()
-
-                res = TOOLS_REGISTRY["send_whatsapp_message"](contact_name=contact, message=msg_body)
-                executed_tools.append({"tool": "send_whatsapp_message", "args": {"contact_name": contact, "message": msg_body}, "result": res})
-                spoken = res.get("spoken", f"Opened WhatsApp for {contact}.")
-
-            # 2. Desktop Applications & Web Launcher (YouTube, Spotify, LinkedIn, Calculator, Notepad, etc.)
-            elif any(k in lower for k in ["youtube", "spotify", "linkedin", "gmail", "github", "calculator", "notepad", "explorer"]) or any(lower.startswith(k) for k in ["open ", "launch ", "start ", "play on youtube"]) or "on youtube" in lower:
-                target = "google"
-                query_val = None
-                browser_pref = None
-                if "chrome" in lower:
-                    browser_pref = "chrome"
-                elif "edge" in lower:
-                    browser_pref = "edge"
-
-                for site in ["youtube", "whatsapp", "linkedin", "gmail", "mail", "github", "spotify", "calculator", "notepad", "explorer"]:
-                    if site in lower:
-                        target = site
-                        break
-
-                if target == "youtube":
-                    query_val = _extract_youtube_query(clean_text)
-                elif target == "google" and any(w in lower for w in ["search", "find", "google"]):
-                    query_val = re.sub(r"^(open|search|google|find)\s+(google\s+)?(for\s+)?", "", clean_text, flags=re.IGNORECASE).strip()
-
-                res = TOOLS_REGISTRY["open_app"](name=target, query=query_val, browser=browser_pref)
-                executed_tools.append({"tool": "open_app", "args": {"name": target, "query": query_val, "browser": browser_pref}, "result": res})
-                spoken = res.get("spoken", f"Opening {target}.")
-
-            # 3. Mathematical Calculations
-            elif any(k in lower for k in ["calculate", "math", "+", "-", "*", "/", "%", "sqrt", "**", "//"]) and any(c.isdigit() for c in clean_text):
-                expr = clean_text.replace("calculate", "").replace("what is", "").strip()
-                res = TOOLS_REGISTRY["calculator"](expression=expr or clean_text)
-                executed_tools.append({"tool": "calculator", "args": {"expression": expr}, "result": res})
-                spoken = res.get("spoken", "Calculated the expression.")
-
-            # 4. Current Time & Date
-            elif ("time" in lower and any(w in lower for w in ["what", "tell", "current", "now", "is"])) or lower in ["time", "current time", "what time is it"]:
-                res = TOOLS_REGISTRY["get_current_time"]()
-                executed_tools.append({"tool": "get_current_time", "args": {}, "result": res})
-                spoken = res.get("spoken", "Checked the current time.")
-
-            # 5. Email & Meeting Inquiries / Personal Mail ID Fallback
+            # 7. Email & Meeting Inquiries / Personal Mail ID Fallback
             elif any(w in lower for w in ["mail", "email", "gmail", "send email", "send a mail"]):
                 if "how" in lower and any(w in lower for w in ["mail from", "send from", "my mail", "my email", "own email", "krish", "without app password"]):
                     spoken = (
@@ -522,42 +611,12 @@ async def process_user_turn(user_text: str, session_id: str, user_id: Optional[s
                     executed_tools.append({"tool": "send_email", "args": {"to": to_cand, "description": desc, "sender_name": "Krish"}, "result": res})
                     spoken = res.get("spoken") or "Processed your email request."
 
-            # 6. Medical and Medicine Information Search
-            elif any(w in lower for w in [
-                "medicine", "tablet", "capsule", "drug", "dosage", "side effect", "side effects",
-                "precaution", "precautions", "paracetamol", "dolo", "ibuprofen", "crocin", "metformin",
-                "amoxicillin", "azithromycin", "omeprazole", "pantoprazole", "cetirizine", "aspirin", "atorvastatin"
-            ]):
-                med_match = re.search(
-                    r"(?:about|for|of|is|medicine|tablet|drug)\s+([a-zA-Z0-9\s-]+?)(?:\s+(?:uses|dosage|dose|side effects|precautions|interactions|safe)|\?|$)",
-                    clean_text,
-                    re.IGNORECASE,
-                )
-                if med_match:
-                    med_name = med_match.group(1).strip()
-                else:
-                    med_name = re.sub(r"^(tell me about|what is|how to take|information on|details of)\s+", "", clean_text, flags=re.IGNORECASE).strip()
-
-                topic_val = "all"
-                if any(w in lower for w in ["side effect", "side effects", "adverse"]):
-                    topic_val = "side_effects"
-                elif any(w in lower for w in ["dose", "dosage", "how to take", "how much"]):
-                    topic_val = "dosage"
-                elif any(w in lower for w in ["use", "uses", "what is it for", "used for"]):
-                    topic_val = "uses"
-                elif any(w in lower for w in ["precaution", "precautions", "warning"]):
-                    topic_val = "precautions"
-
-                res = TOOLS_REGISTRY["medical_search"](medicine_name=med_name or clean_text, topic=topic_val)
-                executed_tools.append({"tool": "medical_search", "args": {"medicine_name": med_name or clean_text, "topic": topic_val}, "result": res})
-                spoken = res.get("spoken") or f"Retrieved medical details for {med_name}."
-
             # 8. Universal Web Search Fallback (Cricket scores, news, multilingual facts, queries)
-            elif any(w in lower for w in [
+            elif (any(w in lower for w in [
                 "search", "who", "what", "where", "when", "why", "how", "score", "scores",
                 "news", "match", "vs", "cricket", "weather", "latest", "price", "stock",
                 "tell me", "information", "find", "update", "updates"
-            ]) or len(clean_text.split()) >= 3:
+            ]) or (len(clean_text.split()) >= 3 and not any(g in lower for g in ["hello", "hi", "how are", "good morning", "good evening"]))):
                 search_q = clean_text
                 search_q = re.sub(r"^(search\s+(for\s+)?|who\s+is\s+|what\s+is\s+|tell\s+me\s+about\s+)", "", clean_text, flags=re.IGNORECASE).strip()
                 res = TOOLS_REGISTRY["web_search"](query=search_q or clean_text)

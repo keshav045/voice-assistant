@@ -251,15 +251,19 @@ async def entrypoint(ctx: JobContext):
     logger.info(f"LiveKit session bound to user_id: {_active_user_id}")
 
     # Initialize Voice Pipeline Session with local VAD & fast endpointing (sub-400ms cutoff)
+    local_base = os.environ.get("OPENAI_BASE_URL", "http://localhost:11434/v1")
+    local_model = os.environ.get("OPENAI_MODEL", "rtu-senior:latest")
+    api_key = os.environ.get("OPENAI_API_KEY", "").strip() or "ollama"
+
     session = AgentSession(
         vad=silero.VAD.load(
             activation_threshold=0.50,
             min_speech_duration=0.05,
             min_silence_duration=0.40,
         ),
-        stt=openai.STT(),
-        llm=openai.LLM(model=os.environ.get("OPENAI_MODEL", "gpt-4o")),
-        tts=openai.TTS(voice=os.environ.get("OPENAI_TTS_VOICE", "alloy")),
+        stt=openai.STT(base_url=local_base, api_key=api_key),
+        llm=openai.LLM(model=local_model, base_url=local_base, api_key=api_key),
+        tts=openai.TTS(voice=os.environ.get("OPENAI_TTS_VOICE", "alloy"), base_url=local_base, api_key=api_key),
         turn_detection="vad",
         min_endpointing_delay=0.2,
         max_endpointing_delay=0.8,

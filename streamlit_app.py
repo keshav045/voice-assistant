@@ -28,10 +28,12 @@ try:
 except Exception:
     pass
 
-# Ensure Cloud GPT-4o is active by default
-if "model_engine_choice" not in st.session_state or "Cloud" in str(st.session_state.get("model_engine_choice", "")):
-    os.environ.pop("OPENAI_BASE_URL", None)
-    os.environ["OPENAI_MODEL"] = "gpt-4o"
+# Default to Local Ollama model
+if "model_engine_choice" not in st.session_state:
+    st.session_state.model_engine_choice = "Local Ollama (Offline / Free)"
+    os.environ["OPENAI_BASE_URL"] = "http://localhost:11434/v1"
+    os.environ["OPENAI_MODEL"] = "rtu-senior:latest"
+    os.environ.setdefault("OPENAI_API_KEY", "ollama")
 
 from openai import OpenAI
 from agent.main import process_user_turn, OPENAI_MODEL
@@ -330,7 +332,7 @@ if "last_processed_audio" not in st.session_state:
 def transcribe_uploaded_audio(audio_data: bytes) -> str:
     """Send voice audio recording to OpenAI Whisper API."""
     openai_key = os.environ.get("OPENAI_API_KEY", "")
-    if not openai_key or openai_key.startswith("your-"):
+    if not openai_key or not openai_key.startswith("sk-"):
         return ""
     try:
         # Explicitly use official OpenAI API endpoint for Whisper
@@ -353,7 +355,7 @@ def synthesize_speech(text: str, voice: str = "alloy", speed: float = 1.0) -> by
     if not clean_text:
         return b""
     openai_key = os.environ.get("OPENAI_API_KEY", "")
-    if not openai_key or openai_key.startswith("your-"):
+    if not openai_key or not openai_key.startswith("sk-"):
         return b""
     try:
         # Explicitly use official OpenAI API endpoint for TTS
@@ -485,8 +487,8 @@ with st.sidebar:
     st.markdown("#### AI Model Engine")
     model_choice = st.radio(
         "Engine:",
-        options=["OpenAI GPT-4o (Recommended)", "Local Ollama"],
-        index=0,
+        options=["Local Ollama (Offline / Free)", "OpenAI GPT-4o (Cloud API)"],
+        index=0 if "Local" in str(st.session_state.get("model_engine_choice", "Local")) else 1,
         key="model_engine_choice",
     )
     if "Local" in model_choice:
@@ -498,7 +500,8 @@ with st.sidebar:
         local_url = st.text_input("Endpoint:", value="http://localhost:11434/v1")
         os.environ["OPENAI_BASE_URL"] = local_url
         os.environ["OPENAI_MODEL"] = local_model
-        st.caption(f"Connected to local `{local_model}`")
+        os.environ["OPENAI_API_KEY"] = "ollama"
+        st.caption(f"Connected to local `{local_model}` via `{local_url}`")
     else:
         os.environ.pop("OPENAI_BASE_URL", None)
         os.environ["OPENAI_MODEL"] = "gpt-4o"
