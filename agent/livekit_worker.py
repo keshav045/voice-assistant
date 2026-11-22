@@ -22,9 +22,10 @@ if ROOT_DIR not in sys.path:
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-from livekit.agents import AutoSubscribe, JobContext, WorkerOptions, llm
+from livekit.agents import AutoSubscribe, JobContext, WorkerOptions, llm, stt
 from livekit.agents.voice import Agent, AgentSession
 from livekit.plugins import openai, silero
+from agent.local_voice import LocalWhisperSTT, LocalEdgeTTS
 
 from agent.prompts import SYSTEM_PROMPT
 from agent.tools import (
@@ -255,15 +256,27 @@ async def entrypoint(ctx: JobContext):
     local_model = os.environ.get("OPENAI_MODEL", "rtu-senior:latest")
     api_key = os.environ.get("OPENAI_API_KEY", "").strip() or "ollama"
 
+    vad_detector = silero.VAD.load(
+        activation_threshold=0.50,
+        min_speech_duration=0.05,
+        min_silence_duration=0.40,
+    )
+
+    if api_key.startswith("sk-"):
+        stt_engine = openai.STT(api_key=api_key)
+        tts_engine = openai.TTS(voice=os.environ.get("OPENAI_TTS_VOICE", "alloy"), api_key=api_key)
+    else:
+        stt_local = LocalWhisperSTT(model_size="tiny.en")
+        stt_engine = stt.StreamAdapter(stt=stt_local, vad=vad_detector)
+        tts_engine = LocalEdgeTTS(voice="en-US-ChristopherNeural")
+
+    llm_engine = openai.LLM(model=local_model, base_url=local_base, api_key=api_key)
+
     session = AgentSession(
-        vad=silero.VAD.load(
-            activation_threshold=0.50,
-            min_speech_duration=0.05,
-            min_silence_duration=0.40,
-        ),
-        stt=openai.STT(base_url=local_base, api_key=api_key),
-        llm=openai.LLM(model=local_model, base_url=local_base, api_key=api_key),
-        tts=openai.TTS(voice=os.environ.get("OPENAI_TTS_VOICE", "alloy"), base_url=local_base, api_key=api_key),
+        vad=vad_detector,
+        stt=stt_engine,
+        llm=llm_engine,
+        tts=tts_engine,
         turn_detection="vad",
         min_endpointing_delay=0.2,
         max_endpointing_delay=0.8,

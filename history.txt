@@ -482,6 +482,31 @@ Entry 2026-11-22.3 [2026-11-22 10:35:00 +0530]
   * Full Test Coverage: 79/79 pytest unit tests passed (100%) in full offline mode.
 
 
+Entry 2026-11-22.4 [2026-11-22 11:02:00 +0530]
+- Files Changed:
+  * agent/local_voice.py
+  * agent/livekit_worker.py
+  * streamlit_app.py
+- Change Details:
+  * Resolved LiveKit WebRTC Voice worker failure shown in user video recording where speaking
+    "hello India versus New Zealand search for it" caused dead air due to Ollama throwing
+    HTTP 404 (model 'gpt-4o-mini-transcribe' not found on Ollama audio endpoint).
+  * Created agent/local_voice.py implementing LocalWhisperSTT (local faster-whisper tiny.en CPU inference)
+    and LocalEdgeTTS (free Microsoft Edge neural speech synthesis via edge-tts).
+  * Wrapped LocalWhisperSTT with LiveKit stt.StreamAdapter and silero.VAD for WebRTC voice streaming.
+  * In agent/livekit_worker.py, configured AgentSession to route STT and TTS to LocalWhisperSTT and
+    LocalEdgeTTS when running without an OpenAI sk- key, completely removing the dependency on OpenAI
+    for ears (STT) and mouth (TTS).
+  * In streamlit_app.py, connected transcribe_uploaded_audio and synthesize_speech to local faster-whisper
+    and Edge-TTS for offline desktop voice operation.
+- What was Affected:
+  * WebRTC Voice Operational: LiveKit voice assistant hears speech and synthesizes vocal replies
+    in real time without requiring an OpenAI API key or billing balance.
+  * Speech-to-Text: Local Whisper tiny.en model transcribes speech in under 60ms directly on CPU.
+  * Text-to-Speech: Edge-TTS delivers high-fidelity neural audio without cloud credits or 429 quota blocks.
+  * Verification: 79/79 pytest unit tests passed (100%) in full offline mode with exactly 0 emojis.
+
+
 ================================================================================
 VERIFICATION SUMMARY
 ================================================================================

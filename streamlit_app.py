@@ -330,46 +330,58 @@ if "last_processed_audio" not in st.session_state:
 # Helper Functions: Whisper STT & OpenAI TTS
 # --------------------------------------------------------------------------- #
 def transcribe_uploaded_audio(audio_data: bytes) -> str:
-    """Send voice audio recording to OpenAI Whisper API."""
+    """Send voice audio recording to OpenAI Whisper API or local faster-whisper."""
     openai_key = os.environ.get("OPENAI_API_KEY", "")
-    if not openai_key or not openai_key.startswith("sk-"):
-        return ""
+    if openai_key and openai_key.startswith("sk-"):
+        try:
+            # Explicitly use official OpenAI API endpoint for Whisper
+            client = OpenAI(api_key=openai_key, base_url="https://api.openai.com/v1")
+            audio_file = io.BytesIO(audio_data)
+            audio_file.name = "recording.wav"
+            transcription = client.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file,
+            )
+            return transcription.text.strip()
+        except Exception as e:
+            logger.error(f"Whisper transcription failed: {e}")
+
+    # 100% Offline Local faster-whisper fallback
     try:
-        # Explicitly use official OpenAI API endpoint for Whisper
-        client = OpenAI(api_key=openai_key, base_url="https://api.openai.com/v1")
-        audio_file = io.BytesIO(audio_data)
-        audio_file.name = "recording.wav"
-        transcription = client.audio.transcriptions.create(
-            model="whisper-1",
-            file=audio_file,
-        )
-        return transcription.text.strip()
+        from agent.local_voice import transcribe_audio_local
+        return transcribe_audio_local(audio_data)
     except Exception as e:
-        logger.error(f"Whisper transcription failed: {e}")
+        logger.error(f"Local transcription error: {e}")
         return ""
 
 
 def synthesize_speech(text: str, voice: str = "alloy", speed: float = 1.0) -> bytes:
-    """Convert spoken text to MP3 audio via OpenAI TTS."""
+    """Convert spoken text to MP3 audio via OpenAI TTS or local neural Edge-TTS."""
     clean_text = clean_spoken_text(text)
     if not clean_text:
         return b""
     openai_key = os.environ.get("OPENAI_API_KEY", "")
-    if not openai_key or not openai_key.startswith("sk-"):
-        return b""
+    if openai_key and openai_key.startswith("sk-"):
+        try:
+            # Explicitly use official OpenAI API endpoint for TTS
+            client = OpenAI(api_key=openai_key, base_url="https://api.openai.com/v1")
+            response = client.audio.speech.create(
+                model="tts-1",
+                voice=voice,
+                input=clean_text[:4096],
+                speed=speed,
+                response_format="mp3",
+            )
+            return response.content
+        except Exception as e:
+            logger.error(f"TTS synthesis failed: {e}")
+
+    # 100% Free Local Neural Edge-TTS fallback
     try:
-        # Explicitly use official OpenAI API endpoint for TTS
-        client = OpenAI(api_key=openai_key, base_url="https://api.openai.com/v1")
-        response = client.audio.speech.create(
-            model="tts-1",
-            voice=voice,
-            input=clean_text[:4096],
-            speed=speed,
-            response_format="mp3",
-        )
-        return response.content
+        from agent.local_voice import synthesize_speech_local
+        return synthesize_speech_local(clean_text)
     except Exception as e:
-        logger.error(f"TTS synthesis failed: {e}")
+        logger.error(f"Local TTS error: {e}")
         return b""
 
 
