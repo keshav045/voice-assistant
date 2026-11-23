@@ -136,6 +136,23 @@ For each script, the following specifications are detailed:
   ```
 - **End-to-End Use Case**: Allows developers to test multi-turn conversations and tool calling directly in PowerShell without starting web servers.
 
+### 2.9 `agent/lc_tools.py`
+- **Path**: `agent/lc_tools.py`
+- **Role**: LangChain `@tool` function wrappers for all 18 Nexus tools with human-in-the-loop `interrupt()` safety pauses.
+- **Key Features**:
+  - Irreversible actions (`send_email`, `delete_task`, `create_event`) place `interrupt()` as the very first statement before any side effect can occur.
+  - Safe read-only tools (`search_web`, `calculator`, `medical_search`, `open_app`, `run_python_code`, `list_tasks`, `remember`) execute directly without pause.
+- **End-to-End Use Case**: Exposes Nexus tools to the LangGraph autonomous execution loop while guaranteeing human-in-the-loop safety before executing real-world side effects.
+
+### 2.10 `agent/lc_agent.py`
+- **Path**: `agent/lc_agent.py`
+- **Role**: LangGraph StateGraph autonomous agent with checkpointed state persistence and confirmation resumption.
+- **Key Functions**:
+  - `build_agent_graph(checkpointer, custom_llm)`: Compiles StateGraph with `agent_node`, `ToolNode(LANGGRAPH_TOOLS)`, and persistent SQLite checkpointer (`SqliteSaver`).
+  - `run_langgraph_turn(message, session_id, user_id)`: Executes turns, halts at `__interrupt__` on sensitive actions, and returns confirmation prompts.
+  - `resume_langgraph_turn(decision, session_id)`: Resumes paused runs via `Command(resume="yes"|"no")` using thread checkpoints.
+- **End-to-End Use Case**: Replaces manual tool calling with an autonomous LangGraph agent loop that halts before irreversible actions and resumes upon explicit approval.
+
 ---
 
 ## 3. Tool Suite (`agent/tools/`)
@@ -284,13 +301,14 @@ The evaluation suite implements a 4-pillar, 35-benchmark testing framework:
 
 ## 7. Pytest Unit Test Matrix (`tests/`)
 
-All 79 unit tests can be executed with a single command:
+All 91 unit tests can be executed with a single command:
 ```bash
 backend\.venv\Scripts\python.exe -m pytest tests/ -v
 ```
 
 ### 7.1 Test Suites Overview
-- `tests/test_agent.py` (7 tests): Tests LangGraph agent workflow, approval gating, and tool dispatching.
+- `tests/test_langgraph_safety.py` (8 tests): Validates LangGraph interrupts on irreversible actions (send_email, delete_task), asserts actions never execute before approval, execute exactly once upon 'yes', do not execute on 'no', multi-tool turns (read-only + irreversible), and SQLite checkpointer persistence across restarts.
+- `tests/test_agent.py` (7 tests): Tests agent workflow, approval gating, and tool dispatching.
 - `tests/test_auth_and_history.py` (6 tests): Validates user registration, bcrypt password hashing, token validation, and chat history ordering.
 - `tests/test_calc_and_session.py` (16 tests): Tests all calculator operations (addition, percentages, square roots, division, modulo, negative numbers) and session isolation.
 - `tests/test_email.py` (21 tests): Comprehensive email test matrix covering Google OAuth priority, SMTP fallback, bulk CSV dispatch, and AI composition.

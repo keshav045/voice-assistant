@@ -5,7 +5,7 @@ An intelligent, voice-first AI assistant that does not just talk, but actually t
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
 [![LiveKit WebRTC](https://img.shields.io/badge/LiveKit-WebRTC_Voice-00D2B4.svg)](https://livekit.io/)
-[![Unit Tests](https://img.shields.io/badge/Pytest-83%20Passed-brightgreen.svg)]()
+[![Unit Tests](https://img.shields.io/badge/Pytest-91%20Passed-brightgreen.svg)]()
 [![Evaluations](https://img.shields.io/badge/Evaluations-35%2F35%20Passed-brightgreen.svg)]()
 [![Golden Tests](https://img.shields.io/badge/Golden%20Tests-79%2F79%20Passed-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -118,6 +118,13 @@ flowchart TD
 - Recalls stored preferences on demand: "What is my preferred meeting time?".
 - Ingests and vectorizes local document notes with top-k cosine similarity search.
 
+### 10. LangGraph Agent Loop & Human-in-the-Loop Approval
+- Rebuilt the tool-calling loop as an autonomous LangGraph agent (`agent/lc_agent.py`) using LangChain `@tool` wrappers (`agent/lc_tools.py`) and checkpointed state (`SqliteSaver`).
+- Human-in-the-loop safety gating: Irreversible actions (`send_email`, `delete_task`, `create_event`) pause at an `interrupt()` statement placed as the very first line of each tool before any side-effect can execute.
+- Checkpointed state persistence: When paused for approval, conversation state is checkpointed in SQLite by thread ID (`session_id`).
+- Resumption flow: Resumed via `/api/chat/confirm` with user confirmation (`yes` or `no`). If approved, the action runs exactly once; if declined, it safely cancels without side effects.
+- Multi-tool turn execution: Supports turns combining safe read-only operations with gated irreversible actions in a single flow.
+
 ---
 
 ## Dual Inference Engines: Cloud vs 100% Offline Local
@@ -140,6 +147,8 @@ Nexus AI adapts to your environment based on your `.env` configuration:
 voice-assistant/
 ├── agent/
 │   ├── main.py                 # FastAPI REST and WebSocket API gateway
+│   ├── lc_tools.py             # LangChain @tool wrappers with interrupt() safety pauses
+│   ├── lc_agent.py             # LangGraph StateGraph agent and SQLite checkpointer
 │   ├── livekit_worker.py       # LiveKit WebRTC voice agent worker
 │   ├── prompts.py              # System prompts, persona, and voice rules
 │   ├── safety.py               # Action safety policies and confirmation gating
@@ -173,6 +182,7 @@ voice-assistant/
 │   ├── ingest.py               # Document chunking and embedding pipeline
 │   └── store.py                # Cosine similarity vector store
 ├── tests/
+│   ├── test_langgraph_safety.py# LangGraph interrupts and human-in-the-loop safety tests
 │   ├── test_agent.py           # Agent workflow and safety gating tests
 │   ├── test_auth_and_history.py# Authentication, tokens, and history tests
 │   ├── test_calc_and_session.py# Math engine and session isolation tests

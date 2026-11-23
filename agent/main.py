@@ -92,12 +92,22 @@ class ChatRequest(BaseModel):
     message: str
     session_id: Optional[str] = None
     user_id: Optional[str] = None
+    use_langgraph: Optional[bool] = None
+
+
+class ConfirmRequest(BaseModel):
+    session_id: str
+    approved: bool = True
+    decision: Optional[str] = None
+    user_id: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
     spoken_reply: str
+    reply: Optional[str] = None
     tool_calls_executed: List[Dict[str, Any]] = []
     requires_confirmation: bool = False
+    needs_confirmation: Optional[Any] = None
     confirmation_question: Optional[str] = None
     session_id: str
     latency_ms: float
@@ -1520,6 +1530,43 @@ async def chat_endpoint(req: ChatRequest, authorization: Optional[str] = Header(
     user_id = user["id"] if user else (req.user_id or "guest")
     sess_id = req.session_id or f"sess-{uuid.uuid4().hex[:8]}"
 
+    use_lg = req.use_langgraph if req.use_langgraph is not None else (
+        os.environ.get("USE_LANGGRAPH", "0").lower() in {"1", "true", "yes"}
+    )
+
+    t0 = time.time()
+    if use_lg:
+        from agent.lc_agent import run_langgraph_turn
+        lg_res = run_langgraph_turn(message=req.message, session_id=sess_id, user_id=user_id)
+        latency = (time.time() - t0) * 1000.0
+
+        reply_txt = lg_res.get("reply", "")
+        spoken_txt = lg_res.get("spoken", reply_txt)
+        needs_conf = lg_res.get("needs_confirmation", False)
+        conf_data = lg_res.get("confirmation_data")
+
+        # Save to user's permanent history
+        db_save_chat_turn(
+            user_id=user_id,
+            session_id=sess_id,
+            user_message=req.message,
+            spoken_reply=spoken_txt,
+            tool_calls=[],
+            latency_ms=latency,
+        )
+
+        return ChatResponse(
+            spoken_reply=spoken_txt,
+            reply=reply_txt,
+            tool_calls_executed=[],
+            requires_confirmation=needs_conf,
+            needs_confirmation=conf_data if needs_conf else None,
+            confirmation_question=spoken_txt if needs_conf else None,
+            session_id=sess_id,
+            latency_ms=latency,
+            model=os.environ.get("OPENAI_MODEL", "gpt-4o"),
+        )
+
     result = await process_user_turn(user_text=req.message, session_id=sess_id, user_id=user_id)
 
     # Save to user's permanent history
@@ -1532,7 +1579,85 @@ async def chat_endpoint(req: ChatRequest, authorization: Optional[str] = Header(
         latency_ms=result.get("latency_ms", 0.0),
     )
 
-    return ChatResponse(**result)
+    res_dict = dict(result)
+    res_dict["reply"] = result.get("spoken_reply", "")
+    res_dict["needs_confirmation"] = result.get("confirmation_question") if result.get("requires_confirmation") else None
+    return ChatResponse(**res_dict)
+
+
+@app.post("/api/chat/confirm")
+async def chat_confirm_endpoint(req: ConfirmRequest, authorization: Optional[str] = Header(None)):
+    """Resume a paused confirmation flow (LangGraph interrupt or classic dispatcher)."""
+    user = get_current_user_optional(authorization)
+    user_id = user["id"] if user else (req.user_id or "guest")
+    sess_id = req.session_id
+
+    # 1. First check if classic confirmation dispatcher has a pending action
+    if sess_id in _PENDING_CONFIRMATIONS:
+        confirm_text = req.decision or ("yes" if req.approved else "no")
+        result = await process_user_turn(user_text=confirm_text, session_id=sess_id, user_id=user_id)
+        return {
+            "reply": result.get("spoken_reply", ""),
+            "spoken_reply": result.get("spoken_reply", ""),
+            "session_id": sess_id,
+            "status": "success",
+            "requires_confirmation": result.get("requires_confirmation", False),
+        }
+
+    # 2. Check if LangGraph has a checkpoint waiting on this session
+    from agent.lc_agent import resume_langgraph_turn
+    decision = req.decision or ("yes" if req.approved else "no")
+
+    t0 = time.time()
+    try:
+        lg_res = resume_langgraph_turn(decision=decision, session_id=sess_id)
+        if lg_res.get("status") in {"success", "pending_confirmation"}:
+            latency = (time.time() - t0) * 1000.0
+            reply_txt = lg_res.get("reply", "")
+            spoken_txt = lg_res.get("spoken", reply_txt)
+            needs_conf = lg_res.get("needs_confirmation", False)
+            conf_data = lg_res.get("confirmation_data")
+
+            db_save_chat_turn(
+                user_id=user_id,
+                session_id=sess_id,
+                user_message=f"[Confirm: {decision}]",
+                spoken_reply=spoken_txt,
+                tool_calls=[],
+                latency_ms=latency,
+            )
+
+            return {
+                "reply": reply_txt,
+                "spoken_reply": spoken_txt,
+                "needs_confirmation": conf_data if needs_conf else None,
+                "requires_confirmation": needs_conf,
+                "session_id": sess_id,
+                "status": "success",
+            }
+        elif lg_res.get("status") == "not_found":
+            return {
+                "reply": "No pending action found for this session.",
+                "spoken_reply": "No pending action found for this session.",
+                "session_id": sess_id,
+                "status": "not_found",
+            }
+    except Exception as exc:
+        logger.warning(f"LangGraph resume exception: {exc}")
+
+    return {
+        "reply": "No pending action found for this session.",
+        "spoken_reply": "No pending action found for this session.",
+        "session_id": sess_id,
+        "status": "not_found",
+    }
+
+
+@app.post("/api/langgraph/chat")
+async def langgraph_chat_endpoint(req: ChatRequest, authorization: Optional[str] = Header(None)):
+    """Dedicated endpoint running conversational turns through the LangGraph agent."""
+    req.use_langgraph = True
+    return await chat_endpoint(req, authorization)
 
 
 @app.post("/api/stt")

@@ -51,6 +51,9 @@ pnpm-debug.log*
 
 # Database & persistence
 *.sqlite3
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
 *.db
 *.db-shm
 *.db-wal

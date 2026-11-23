@@ -13,7 +13,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "Here are the latest AI news headlines: 1. \"Losing the battle\": AI hands predators new ways to target children Source: UN News 2. \"New approach enables physically consistent AI models of chaotic systems\" Source: MIT News 3. \"AI News: Artificial Intelligence Trends And Top AI Stocks To Watch\" Source: Investor's Business Daily 4. \"Al Jazeera explains: The US-China AI race is entering a new phase\" Source: [Al Jazeera](",
+    "spoken": "Here are the latest AI news articles: 1. Title: New approach enables physically consistent AI models of chaotic systems Snippet: MIT News Source: Link 2. Title: Losing the battle: AI hands predators new ways to target children Snippet: UN News Source: Link 3. Title: Microsoft unveils Copilot Workspaces, new AI models and Azure plans at Ignite Snippet: EdTech Innovation Hub Source: Link 4. Title: Apple Risks Losing the AI Agent War With an Outdated Playbook Snippet: Bloomberg.com Source:",
     "tools": [
       {
         "name": "web_search",
@@ -26,36 +26,36 @@
           "count": 8,
           "results": [
             {
-              "title": "\u2018Losing the battle\u2019: AI hands predators new ways to target children - UN News",
-              "snippet": "\u2018Losing the battle\u2019: AI hands predators new ways to target children UN News",
-              "source": "https://news.google.com/rss/articles/CBMiV0FVX3lxTE52UzVlQ1BHYWxMOTJ4THRUT0R3bktnNnJkNnpUX2pONjVKNTZ5X0tzWXh6OXJIb0d1eU84d1NtZXRKVzFKVlhRU09jbGtFc0xaUDhvbVRnTQ?oc=5"
-            },
-            {
               "title": "New approach enables physically consistent AI models of chaotic systems - MIT News",
               "snippet": "New approach enables physically consistent AI models of chaotic systems MIT News",
               "source": "https://news.google.com/rss/articles/CBMimgFBVV95cUxNVHZLNng1dlZUQzFJR0VqRjYyYVduYXVWd0tpZ3dJSkxpSDQ0M3BGdU5UTUxRSHpnaEtpb28ySUhmRU9fVnVEZGd1QjM4RmF5ZXQ3Y0JteVl6WjVBSG12bE9ydmV0MjVWN3lGMTlyWTFWZ3pQeHBiR1VsNUZMUWs0a0d5UlRaN3UwV3pXbm5TY2haakxuTW01bnV3?oc=5"
             },
             {
+              "title": "\u2018Losing the battle\u2019: AI hands predators new ways to target children - UN News",
+              "snippet": "\u2018Losing the battle\u2019: AI hands predators new ways to target children UN News",
+              "source": "https://news.google.com/rss/articles/CBMiV0FVX3lxTE52UzVlQ1BHYWxMOTJ4THRUT0R3bktnNnJkNnpUX2pONjVKNTZ5X0tzWXh6OXJIb0d1eU84d1NtZXRKVzFKVlhRU09jbGtFc0xaUDhvbVRnTQ?oc=5"
+            },
+            {
+              "title": "Microsoft unveils Copilot Workspaces, new AI models and Azure plans at Ignite - EdTech Innovation Hub",
+              "snippet": "Microsoft unveils Copilot Workspaces, new AI models and Azure plans at Ignite EdTech Innovation Hub",
+              "source": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxOWFVVSWNSNVloczlpVURrcHBfUElVZUkwaWV2TGgxNEs4QTFBMlZyVndUT3YzYTdLZ3NUTV9zTHlwenRvTGZFeXFsT0tYbkgycHpXMTh4VHR6RnVqbFlTdm1vOWo0MDVWcUxrcHVReHpMakdqUENTVTNrUDljOE04TG5NTC1WTC1hbVJFYmZwZWVCZEtyY01kSGlTRzFYV3dRMkM4NTNVTl9sbVZ3VUYza0lMWjJ2RHMy?oc=5"
+            },
+            {
+              "title": "Apple Risks Losing the AI Agent War With an Outdated Playbook - Bloomberg.com",
+              "snippet": "Apple Risks Losing the AI Agent War With an Outdated Playbook Bloomberg.com",
+              "source": "https://news.google.com/rss/articles/CBMizgFBVV95cUxQY0NlQ2FFZWVRd2FPTTJ4cjhKU3Vjb1hXdlZ2R1pfN2IxdlBxMDRZWmRMS1FyNXFSamtldk5GcVVPdnlxOFc2cmRsbS12TnFSdGhKeUx5NEF5dFJHUE12WDR2NGpZckk5cm5Ha3YzeXp0RkR2Y1BuTnhDWDczS18tTTlTWFplX0oyQy1SRDhFRS1jbzY3RnlIMWU1eHB1UktHWmpMT003MXV4d2l0bEg0QVp2bWJrWFUzQ3Rsdk5UbG9zNS1rLWlZV0pjejZQUQ?oc=5"
+            },
+            {
               "title": "AI News: Artificial Intelligence Trends And Top AI Stocks To Watch - Investor's Business Daily",
               "snippet": "AI News: Artificial Intelligence Trends And Top AI Stocks To Watch Investor's Business Daily",
               "source": "https://news.google.com/rss/articles/CBMilwFBVV95cUxQMTVTWnJlZkpsVU9ZV0g1WHdKQVBKOFFvcUpPeTJuMW9iT2FTMWI1N2hMYk1ud1cwQlBEVlJObDFVTnpoNnBhejJrZnVFelQ5V3NNRklrM2RlaHUtc2NsbmxWcVV1MWVzd082RUdTYmtJVW9MUmJRTG5sV1dJN3JCd1JNX2Z4VnZtV3VpbzdrNXdKNTVSc3FB?oc=5"
-            },
-            {
-              "title": "Al Jazeera explains: The US-China AI race is entering a new phase - Al Jazeera",
-              "snippet": "Al Jazeera explains: The US-China AI race is entering a new phase Al Jazeera",
-              "source": "https://news.google.com/rss/articles/CBMitwFBVV95cUxNaVFZdUxjYzl0bnYzVFFqQWludTZucUh3d2JFWk1BRE5OR05kaldIbmpScFVvUDF3MUlfRkJfbXBLM0czTVVTYVdNbUdEa0gtQ0pMVUhUNzRQcXlfa2xpdE1Ca3ZBb2lOUFBtUFNyT0lvTmRrcnhFM0xLUF9FUmhlRHdFWUdKdlRFT3BZcVFaNVl4bFJ3YVl1UXlrbU1DUmVlMC1XQ2luY1g0NWhldFVwRktuZ3VCTmvSAbwBQVVfeXFMUGJTZm50S3FWWktrSVpIV1MtazZ0OV9NYTRNSm0ycjdRSGxFNXItUm5McHI2bFRwVVFNS3hEX1RhaURpREtZbHJ0ZUQ1LTkxazlZVklyTEJkZjcwVC1uaEJwMXJfUEhybmhYcGd2aHJVejhIa1l6NWdqemVma09JeVc1UzFJdjItdjBMT2gzWTZSUkpRWU1LNmQ2MmswaEJCMHV6WEFiOXdmczU5Q2t1QjY1S0NuUmJ0c09UVVY?oc=5"
-            },
-            {
-              "title": "Cognition in talks for new funding at $75 billion valuation, Bloomberg News reports - Reuters",
-              "snippet": "Cognition in talks for new funding at $75 billion valuation, Bloomberg News reports Reuters",
-              "source": "https://news.google.com/rss/articles/CBMivwFBVV95cUxOcWhpaU9neVJMd3hnYmh2YlYzbl9DMF8yWjFqQ2k4LWZVazFRTHdLNmh6alVaM29vaTIwUjFHX1FWWksyX3k4Y1ZmRHk0V21mcldQa29vUXR1QWQyX2xaT1NRaTVHaW1UZGRXQllFM0ticDU1S2lxSG5kMGNLdE1SRnFCNzFGMnd1TW1tVlRWcTZrQVlBVVI5UWx0M29xR2gyckhhTmxKVHVxWllDZlQ3WkJoS1V0VW0tVFpoS0JRTQ?oc=5"
             }
           ],
-          "spoken": "\u2018Losing the battle\u2019: AI hands predators new ways to target children - UN News: \u2018Losing the battle\u2019: AI hands predators new ways to target children UN News New approach enables physically consistent AI models of chaotic systems - MIT News: New approach enables physically consistent AI models of chaotic systems MIT News"
+          "spoken": "New approach enables physically consistent AI models of chaotic systems - MIT News: New approach enables physically consistent AI models of chaotic systems MIT News \u2018Losing the battle\u2019: AI hands predators new ways to target children - UN News: \u2018Losing the battle\u2019: AI hands predators new ways to target children UN News"
         }
       }
     ],
-    "seconds": 21.33
+    "seconds": 20.29
   },
   {
     "id": "T002",
@@ -71,7 +71,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "Live Cricket Score: New Zealand 119/2 & 368/10 v India 720/9 Live Cricket Score: Kurunegala Youth Cricket Club 368/10 & 2 v Burgher Recreation Club 311/6 & 336/10",
+    "spoken": "Live Cricket Score: New Zealand 239/5 & 368/10 v India 720/9 Live Cricket Score: New South Wales 149/4 v Queensland 278/10",
     "tools": [
       {
         "name": "web_search",
@@ -81,39 +81,39 @@
         "result": {
           "success": true,
           "query": "What is the cricket score today?",
-          "count": 43,
+          "count": 15,
           "results": [
             {
-              "title": "New Zealand 119/2 & 368/10 * v India 720/9",
-              "snippet": "Live Cricket Score: New Zealand 119/2 & 368/10 * v India 720/9",
+              "title": "New Zealand 239/5 & 368/10 * v India 720/9",
+              "snippet": "Live Cricket Score: New Zealand 239/5 & 368/10 * v India 720/9",
               "source": "http://www.cricinfo.com/ci/engine/match/1539442.html?CMP=OTC-RSS"
             },
             {
-              "title": "Kurunegala Youth Cricket Club 368/10 & 2 * v Burgher Recreation Club 311/6 & 336/10",
-              "snippet": "Live Cricket Score: Kurunegala Youth Cricket Club 368/10 & 2 * v Burgher Recreation Club 311/6 & 336/10",
-              "source": "http://www.cricinfo.com/ci/engine/match/1560148.html?CMP=OTC-RSS"
+              "title": "New South Wales 149/4 * v Queensland 278/10",
+              "snippet": "Live Cricket Score: New South Wales 149/4 * v Queensland 278/10",
+              "source": "http://www.cricinfo.com/ci/engine/match/1544876.html?CMP=OTC-RSS"
             },
             {
-              "title": "Nugegoda Sports Welfare Club 618/7 v Nondescripts Cricket Club 176/7 & 287/10 *",
-              "snippet": "Live Cricket Score: Nugegoda Sports Welfare Club 618/7 v Nondescripts Cricket Club 176/7 & 287/10 *",
-              "source": "http://www.cricinfo.com/ci/engine/match/1560146.html?CMP=OTC-RSS"
+              "title": "Western Australia v Tasmania 131/4 *",
+              "snippet": "Live Cricket Score: Western Australia v Tasmania 131/4 *",
+              "source": "http://www.cricinfo.com/ci/engine/match/1544877.html?CMP=OTC-RSS"
             },
             {
-              "title": "Police Sports Club 612/6 v Badureliya Sports Club 341/10 & 129/10 *",
-              "snippet": "Live Cricket Score: Police Sports Club 612/6 v Badureliya Sports Club 341/10 & 129/10 *",
-              "source": "http://www.cricinfo.com/ci/engine/match/1560147.html?CMP=OTC-RSS"
+              "title": "Pakistan Women v Sri Lanka Women 140/6 *",
+              "snippet": "Live Cricket Score: Pakistan Women v Sri Lanka Women 140/6 *",
+              "source": "http://www.cricinfo.com/ci/engine/match/1557569.html?CMP=OTC-RSS"
             },
             {
-              "title": "Bloomfield Cricket and Athletic Club 309/10 & 262/7 v Panadura Sports Club 322/10 & 55/1 *",
-              "snippet": "Live Cricket Score: Bloomfield Cricket and Athletic Club 309/10 & 262/7 v Panadura Sports Club 322/10 & 55/1 *",
-              "source": "http://www.cricinfo.com/ci/engine/match/1560151.html?CMP=OTC-RSS"
+              "title": "Afghanistan A v Hong Kong 27/4 *",
+              "snippet": "Live Cricket Score: Afghanistan A v Hong Kong 27/4 *",
+              "source": "http://www.cricinfo.com/ci/engine/match/1562350.html?CMP=OTC-RSS"
             }
           ],
-          "spoken": "Live Cricket Score: New Zealand 119/2 & 368/10 * v India 720/9 Live Cricket Score: Kurunegala Youth Cricket Club 368/10 & 2 * v Burgher Recreation Club 311/6 & 336/10"
+          "spoken": "Live Cricket Score: New Zealand 239/5 & 368/10 * v India 720/9 Live Cricket Score: New South Wales 149/4 * v Queensland 278/10"
         }
       }
     ],
-    "seconds": 9.22
+    "seconds": 9.69
   },
   {
     "id": "T003",
@@ -140,7 +140,7 @@
         "result": {
           "success": true,
           "query": "Python 3.13 features, give me 3 results",
-          "count": 8,
+          "count": 5,
           "results": [
             {
               "title": "Get started with the free-threaded build of Python 3.13 - InfoWorld",
@@ -162,7 +162,7 @@
         }
       }
     ],
-    "seconds": 3.1
+    "seconds": 2.61
   },
   {
     "id": "T004",
@@ -177,7 +177,7 @@
     },
     "error": null,
     "notes": "no crash; empty or 'nothing found' is fine",
-    "spoken": "Here are three results for the query \"asdkjhqwe zxcmnb 12345\": 1. \"qwertzuiopasdfghjklyxcvbnm song - YouTube\" (Oct 10, 2019) 2. \"abcd 12345 Rhymes ABC Alphabet Song Alphabet Songs for ... - YouTube\" (Mar 7, 2023) 3. \"ABCDEFGHIJKLMNOPQRSTUVWXYZ ABC Song | Learn ABC ... - YouTube\" (Apr 27, 2024)",
+    "spoken": "Create multiple Zoom meetings simultaneously: Jul 8, 2021 \u00b7 Hi @tejendra.pratap.ju, Yes, you can create Zoom meetings and host meetings simultaneously. To host \u2026 Embed Zoom Meeting Registration form to website: Oct 9, 2019 \u00b7 Hey @sandyviteri, thanks for posting and using Zoom! There is a way to do this, although it does require minimum \u2026",
     "tools": [
       {
         "name": "web_search",
@@ -190,26 +190,26 @@
           "count": 3,
           "results": [
             {
-              "title": "qwertzuiopasdfghjklyxcvbnm song - YouTube",
-              "snippet": "Oct 10, 2019 \u00b7 qwertzuiopasdfghjklyxcvbnmqwertzuiopasdfghjklyxcvbnm \u2026",
-              "source": "https://www.youtube.com/watch?v=1sgfODcZm6s"
+              "title": "Create multiple Zoom meetings simultaneously",
+              "snippet": "Jul 8, 2021 \u00b7 Hi @tejendra.pratap.ju, Yes, you can create Zoom meetings and host meetings simultaneously. To host \u2026",
+              "source": "https://devforum.zoom.us/t/create-multiple-zoom-meetings-simultaneously/53861"
             },
             {
-              "title": "abcd 12345 Rhymes ABC Alphabet Song Alphabet Songs for ... - YouTube",
-              "snippet": "Mar 7, 2023 \u00b7 abcd 12345 Rhymes ABC Alphabet Song Alphabet Songs for children ABC songs for children ABCD in Hindi abc song, \u2026",
-              "source": "https://www.youtube.com/watch?v=QXmXvfudW2g"
+              "title": "Embed Zoom Meeting Registration form to website",
+              "snippet": "Oct 9, 2019 \u00b7 Hey @sandyviteri, thanks for posting and using Zoom! There is a way to do this, although it does require minimum \u2026",
+              "source": "https://devforum.zoom.us/t/embed-zoom-meeting-registration-form-to-website/6199"
             },
             {
-              "title": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ABC Song | Learn ABC \u2026",
-              "snippet": "Apr 27, 2024 \u00b7 Next time won\u2019t you sing with me? A B C D E F G, H I J K L M N O P, Q R S T U V, W X Y and Z. Now I know my \u2026",
-              "source": "https://www.youtube.com/watch?v=OyOVpmSXdDw"
+              "title": "Latest Meeting SDK topics - Zoom Developer Forum",
+              "snippet": "Nov 9, 2026 \u00b7 Meeting SDKs allow new and existing applications to embed Zoom meeting and webinar experiences.",
+              "source": "https://devforum.zoom.us/c/meeting-sdk/56"
             }
           ],
-          "spoken": "qwertzuiopasdfghjklyxcvbnm song - YouTube: Oct 10, 2019 \u00b7 qwertzuiopasdfghjklyxcvbnmqwertzuiopasdfghjklyxcvbnm \u2026 abcd 12345 Rhymes ABC Alphabet Song Alphabet Songs for ... - YouTube: Mar 7, 2023 \u00b7 abcd 12345 Rhymes ABC Alphabet Song Alphabet Songs for children ABC songs for children ABCD in Hindi abc song, \u2026"
+          "spoken": "Create multiple Zoom meetings simultaneously: Jul 8, 2021 \u00b7 Hi @tejendra.pratap.ju, Yes, you can create Zoom meetings and host meetings simultaneously. To host \u2026 Embed Zoom Meeting Registration form to website: Oct 9, 2019 \u00b7 Hey @sandyviteri, thanks for posting and using Zoom! There is a way to do this, although it does require minimum \u2026"
         }
       }
     ],
-    "seconds": 5.35
+    "seconds": 1.53
   },
   {
     "id": "T005",
@@ -231,18 +231,18 @@
       {
         "name": "calculator",
         "args": {
-          "expression": "Calculate 25 * 4 + 10"
+          "expression": "25 * 4 + 10"
         },
         "result": {
           "success": true,
-          "expression": "Calculate 25 * 4 + 10",
+          "expression": "25 * 4 + 10",
           "result": 110.0,
           "spoken": "The answer is 110.",
           "formatted": "110"
         }
       }
     ],
-    "seconds": 1.06
+    "seconds": 1.43
   },
   {
     "id": "T006",
@@ -274,7 +274,7 @@
         }
       }
     ],
-    "seconds": 0.51
+    "seconds": 0.54
   },
   {
     "id": "T007",
@@ -306,7 +306,7 @@
         }
       }
     ],
-    "seconds": 0.54
+    "seconds": 0.57
   },
   {
     "id": "T008",
@@ -353,9 +353,9 @@
     },
     "error": null,
     "notes": "polite error, no crash",
-    "spoken": "The answer is undefined.",
+    "spoken": "Division by zero is undefined.",
     "tools": [],
-    "seconds": 0.43
+    "seconds": 0.48
   },
   {
     "id": "T010",
@@ -370,9 +370,9 @@
     },
     "error": null,
     "notes": "must be rejected by AST check",
-    "spoken": "The answer is to return the system directory.",
+    "spoken": "The answer is dir.",
     "tools": [],
-    "seconds": 0.49
+    "seconds": 0.47
   },
   {
     "id": "T011",
@@ -388,20 +388,20 @@
     },
     "error": null,
     "notes": "dynamic; verify manually against clock",
-    "spoken": "The current time is Sunday, November 22, 2026 at 03:42 PM (Asia/Kolkata).",
+    "spoken": "The current time is Monday, November 23, 2026 at 12:09 PM (Asia/Kolkata).",
     "tools": [
       {
         "name": "get_current_time",
         "args": {},
         "result": {
           "success": true,
-          "spoken": "The current time is Sunday, November 22, 2026 at 03:42 PM (Asia/Kolkata).",
-          "iso": "2026-11-22T15:42:40.917880+05:30",
+          "spoken": "The current time is Monday, November 23, 2026 at 12:09 PM (Asia/Kolkata).",
+          "iso": "2026-11-23T12:09:36.764612+05:30",
           "timezone": "Asia/Kolkata"
         }
       }
     ],
-    "seconds": 0.8
+    "seconds": 0.51
   },
   {
     "id": "T012",
@@ -417,7 +417,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "The current time is Sunday, November 22, 2026 at 05:12 AM (America/New_York).",
+    "spoken": "The current time is Monday, November 23, 2026 at 01:39 AM (America/New_York).",
     "tools": [
       {
         "name": "get_current_time",
@@ -426,13 +426,13 @@
         },
         "result": {
           "success": true,
-          "spoken": "The current time is Sunday, November 22, 2026 at 05:12 AM (America/New_York).",
-          "iso": "2026-11-22T05:12:50.184333-05:00",
+          "spoken": "The current time is Monday, November 23, 2026 at 01:39 AM (America/New_York).",
+          "iso": "2026-11-23T01:39:45.856653-05:00",
           "timezone": "America/New_York"
         }
       }
     ],
-    "seconds": 9.06
+    "seconds": 8.89
   },
   {
     "id": "T013",
@@ -448,7 +448,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "The current time is Sunday, November 22, 2026 at 07:12 PM (Asia/Tokyo).",
+    "spoken": "The current time is Monday, November 23, 2026 at 03:39 PM (Asia/Tokyo).",
     "tools": [
       {
         "name": "get_current_time",
@@ -457,13 +457,13 @@
         },
         "result": {
           "success": true,
-          "spoken": "The current time is Sunday, November 22, 2026 at 07:12 PM (Asia/Tokyo).",
-          "iso": "2026-11-22T19:12:51.254496+09:00",
+          "spoken": "The current time is Monday, November 23, 2026 at 03:39 PM (Asia/Tokyo).",
+          "iso": "2026-11-23T15:39:46.914566+09:00",
           "timezone": "Asia/Tokyo"
         }
       }
     ],
-    "seconds": 0.86
+    "seconds": 0.84
   },
   {
     "id": "T014",
@@ -493,7 +493,7 @@
         }
       }
     ],
-    "seconds": 0.76
+    "seconds": 0.81
   },
   {
     "id": "T015",
@@ -524,7 +524,7 @@
         }
       }
     ],
-    "seconds": 0.54
+    "seconds": 0.66
   },
   {
     "id": "T016",
@@ -555,7 +555,7 @@
         }
       }
     ],
-    "seconds": 0.55
+    "seconds": 0.54
   },
   {
     "id": "T017",
@@ -588,7 +588,7 @@
         }
       }
     ],
-    "seconds": 8.88
+    "seconds": 8.7
   },
   {
     "id": "T018",
@@ -621,7 +621,7 @@
         }
       }
     ],
-    "seconds": 0.62
+    "seconds": 1.6
   },
   {
     "id": "T019",
@@ -654,7 +654,7 @@
         }
       }
     ],
-    "seconds": 0.51
+    "seconds": 0.79
   },
   {
     "id": "T020",
@@ -687,7 +687,7 @@
         }
       }
     ],
-    "seconds": 0.51
+    "seconds": 0.99
   },
   {
     "id": "T021",
@@ -720,7 +720,7 @@
         }
       }
     ],
-    "seconds": 0.5
+    "seconds": 0.79
   },
   {
     "id": "T022",
@@ -753,7 +753,7 @@
         }
       }
     ],
-    "seconds": 8.56
+    "seconds": 8.85
   },
   {
     "id": "T023",
@@ -786,7 +786,7 @@
         }
       }
     ],
-    "seconds": 0.49
+    "seconds": 0.56
   },
   {
     "id": "T024",
@@ -815,7 +815,7 @@
         }
       }
     ],
-    "seconds": 0.56
+    "seconds": 0.81
   },
   {
     "id": "T025",
@@ -849,7 +849,7 @@
         }
       }
     ],
-    "seconds": 0.81
+    "seconds": 0.97
   },
   {
     "id": "T026",
@@ -882,7 +882,7 @@
         }
       }
     ],
-    "seconds": 0.59
+    "seconds": 0.8
   },
   {
     "id": "T027",
@@ -909,7 +909,7 @@
         }
       }
     ],
-    "seconds": 10.24
+    "seconds": 10.06
   },
   {
     "id": "T028",
@@ -958,7 +958,7 @@
         }
       }
     ],
-    "seconds": 1.72
+    "seconds": 3.82
   },
   {
     "id": "T029",
@@ -1005,7 +1005,7 @@
         }
       }
     ],
-    "seconds": 2.35
+    "seconds": 2.13
   },
   {
     "id": "T030",
@@ -1051,7 +1051,7 @@
         }
       }
     ],
-    "seconds": 1.95
+    "seconds": 1.8
   },
   {
     "id": "T031",
@@ -1084,7 +1084,7 @@
         }
       }
     ],
-    "seconds": 3.28
+    "seconds": 4.01
   },
   {
     "id": "T032",
@@ -1133,7 +1133,7 @@
         }
       }
     ],
-    "seconds": 11.93
+    "seconds": 10.96
   },
   {
     "id": "T033",
@@ -1166,11 +1166,11 @@
           "provider": "google_gmail_api",
           "sender_name": "Keshav",
           "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Golden Test\".",
-          "body": "Hello Keshav,\n\nThis is a test email confirming the meeting scheduled for next week at 3 PM. Please confirm your availability. \n\nBest regards,\nKeshav"
+          "body": "This is a test email. It's a test.\n\nBest regards,\nKeshav"
         }
       }
     ],
-    "seconds": 7.36
+    "seconds": 6.86
   },
   {
     "id": "T034",
@@ -1202,11 +1202,11 @@
           "provider": "google_gmail_api",
           "sender_name": "Keshav",
           "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Request for Leave Tomorrow\".",
-          "body": "Hello Keshav,\n\nI am writing to request your understanding and approval for a leave of absence on the following day. I am available to discuss any urgent matters or provide necessary information before my absence. Please let me know if there are any specific arrangements or deadlines I need to be aware of. Thank you for your consideration.\n\nBest regards,\nKeshav"
+          "body": "Hello Keshav,\n\nI am writing to request a leave tomorrow due to an urgent personal matter. I will be available via email and phone to address any urgent matters that may arise during my absence. Please let me know if you need any specific information or assistance.\n\nThank you for understanding.\n\nBest regards,\nKeshav"
         }
       }
     ],
-    "seconds": 7.3
+    "seconds": 7.5
   },
   {
     "id": "T035",
@@ -1236,7 +1236,7 @@
         }
       }
     ],
-    "seconds": 1.31
+    "seconds": 1.21
   },
   {
     "id": "T036",
@@ -1263,7 +1263,7 @@
         }
       }
     ],
-    "seconds": 1.18
+    "seconds": 0.7
   },
   {
     "id": "T037",
@@ -1304,7 +1304,7 @@
         }
       }
     ],
-    "seconds": 10.31
+    "seconds": 10.16
   },
   {
     "id": "T038",
@@ -1353,7 +1353,7 @@
         }
       }
     ],
-    "seconds": 0.98
+    "seconds": 1.04
   },
   {
     "id": "T039",
@@ -1384,7 +1384,7 @@
         }
       }
     ],
-    "seconds": 0.99
+    "seconds": 0.77
   },
   {
     "id": "T040",
@@ -1418,7 +1418,7 @@
         }
       }
     ],
-    "seconds": 1.22
+    "seconds": 0.92
   },
   {
     "id": "T041",
@@ -1443,9 +1443,9 @@
         },
         "result": {
           "success": true,
-          "draft_id": "draft-3b6aee",
+          "draft_id": "draft-3b9a3c",
           "draft": {
-            "id": "draft-3b6aee",
+            "id": "draft-3b9a3c",
             "reply_to": "recipient@example.com",
             "subject": "Re: Golden Test Update",
             "body": "Draft a reply to the Golden Test email saying I will respond tomorrow",
@@ -1455,7 +1455,7 @@
         }
       }
     ],
-    "seconds": 0.81
+    "seconds": 0.85
   },
   {
     "id": "T042",
@@ -1480,9 +1480,9 @@
         },
         "result": {
           "success": true,
-          "draft_id": "draft-9f82fc",
+          "draft_id": "draft-b3e6cb",
           "draft": {
-            "id": "draft-9f82fc",
+            "id": "draft-b3e6cb",
             "reply_to": "recipient@example.com",
             "subject": "Re: Golden Test Update",
             "body": "Draft a formal reply to the Golden Test email thanking them",
@@ -1492,7 +1492,7 @@
         }
       }
     ],
-    "seconds": 9.88
+    "seconds": 9.46
   },
   {
     "id": "T043",
@@ -1545,7 +1545,7 @@
         }
       }
     ],
-    "seconds": 0.48
+    "seconds": 1.23
   },
   {
     "id": "T044",
@@ -1598,7 +1598,7 @@
         }
       }
     ],
-    "seconds": 0.7
+    "seconds": 0.73
   },
   {
     "id": "T045",
@@ -1650,7 +1650,7 @@
         }
       }
     ],
-    "seconds": 0.86
+    "seconds": 0.72
   },
   {
     "id": "T046",
@@ -1685,7 +1685,7 @@
         }
       }
     ],
-    "seconds": 0.65
+    "seconds": 0.76
   },
   {
     "id": "T047",
@@ -1720,7 +1720,7 @@
         }
       }
     ],
-    "seconds": 10.04
+    "seconds": 9.73
   },
   {
     "id": "T048",
@@ -1749,7 +1749,7 @@
         "result": {
           "success": true,
           "event": {
-            "id": "evt-56e712",
+            "id": "evt-79e98b",
             "title": "Golden Sync",
             "start": "tomorrow 4 PM",
             "end": "5 PM",
@@ -1760,7 +1760,7 @@
         }
       }
     ],
-    "seconds": 0.82
+    "seconds": 0.88
   },
   {
     "id": "T049",
@@ -1818,18 +1818,18 @@
         "result": {
           "success": true,
           "task": {
-            "id": "task-53e10ebf",
+            "id": "task-a3fcff6a",
             "title": "buy milk",
             "due_at": null,
             "status": "pending",
-            "created_at": "2026-11-22T10:14:50.520095+00:00"
+            "created_at": "2026-11-23T06:41:49.250064+00:00"
           },
-          "task_id": "task-53e10ebf",
+          "task_id": "task-a3fcff6a",
           "spoken": "Added task: 'buy milk'."
         }
       }
     ],
-    "seconds": 0.53
+    "seconds": 0.61
   },
   {
     "id": "T051",
@@ -1856,18 +1856,18 @@
         "result": {
           "success": true,
           "task": {
-            "id": "task-83f14a55",
+            "id": "task-42f81c23",
             "title": "submit report due Friday",
             "due_at": null,
             "status": "pending",
-            "created_at": "2026-11-22T10:14:51.313077+00:00"
+            "created_at": "2026-11-23T06:41:50.028412+00:00"
           },
-          "task_id": "task-83f14a55",
+          "task_id": "task-42f81c23",
           "spoken": "Added task: 'submit report due Friday'."
         }
       }
     ],
-    "seconds": 0.79
+    "seconds": 0.57
   },
   {
     "id": "T052",
@@ -1895,7 +1895,7 @@
         }
       }
     ],
-    "seconds": 9.94
+    "seconds": 9.76
   },
   {
     "id": "T053",
@@ -1911,7 +1911,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "You have 14 pending tasks: submit report due Friday, buy milk, Task: 900.0 and 11 more.",
+    "spoken": "You have 16 pending tasks: submit report due Friday, buy milk, Task: 900.0 and 13 more.",
     "tools": [
       {
         "name": "list_tasks",
@@ -1920,14 +1920,30 @@
         },
         "result": {
           "success": true,
-          "count": 14,
+          "count": 16,
           "tasks": [
             {
-              "id": "task-83f14a55",
+              "id": "task-42f81c23",
               "title": "submit report due Friday",
               "due_at": null,
               "status": "pending",
-              "created_at": "2026-11-22T10:14:51.313077+00:00",
+              "created_at": "2026-11-23T06:41:50.028412+00:00",
+              "completed_at": null
+            },
+            {
+              "id": "task-a3fcff6a",
+              "title": "buy milk",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-23T06:41:49.250064+00:00",
+              "completed_at": null
+            },
+            {
+              "id": "task-31f5f5ff",
+              "title": "Task: 900.0",
+              "due_at": null,
+              "status": "pending",
+              "created_at": "2026-11-22T10:16:19.880589+00:00",
               "completed_at": null
             },
             {
@@ -2035,11 +2051,11 @@
               "completed_at": null
             }
           ],
-          "spoken": "You have 14 pending tasks: submit report due Friday, buy milk, Task: 900.0 and 11 more."
+          "spoken": "You have 16 pending tasks: submit report due Friday, buy milk, Task: 900.0 and 13 more."
         }
       }
     ],
-    "seconds": 0.55
+    "seconds": 0.56
   },
   {
     "id": "T054",
@@ -2068,11 +2084,11 @@
           "count": 1,
           "tasks": [
             {
-              "id": "task-83f14a55",
+              "id": "task-42f81c23",
               "title": "submit report due Friday",
               "due_at": null,
               "status": "pending",
-              "created_at": "2026-11-22T10:14:51.313077+00:00",
+              "created_at": "2026-11-23T06:41:50.028412+00:00",
               "completed_at": null
             }
           ],
@@ -2080,12 +2096,12 @@
         }
       }
     ],
-    "seconds": 0.64
+    "seconds": 0.63
   },
   {
     "id": "T055",
     "category": "complete_task",
-    "prompt": "Mark task task-83f14a55 as done",
+    "prompt": "Mark task task-42f81c23 as done",
     "pass": true,
     "checks": {
       "no_crash": true,
@@ -2096,18 +2112,18 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "Marked task 'task-83f14a55' as completed.",
+    "spoken": "Marked task 'task-42f81c23' as completed.",
     "tools": [
       {
         "name": "complete_task",
         "args": {
-          "task_id": "task-83f14a55",
-          "id": "task-83f14a55"
+          "task_id": "task-42f81c23",
+          "id": "task-42f81c23"
         },
         "result": {
           "success": true,
-          "task_id": "task-83f14a55",
-          "spoken": "Marked task 'task-83f14a55' as completed."
+          "task_id": "task-42f81c23",
+          "spoken": "Marked task 'task-42f81c23' as completed."
         }
       }
     ],
@@ -2139,19 +2155,19 @@
           "count": 1,
           "tasks": [
             {
-              "id": "task-83f14a55",
+              "id": "task-42f81c23",
               "title": "submit report due Friday",
               "due_at": null,
               "status": "completed",
-              "created_at": "2026-11-22T10:14:51.313077+00:00",
-              "completed_at": "2026-11-22T10:15:04.127674+00:00"
+              "created_at": "2026-11-23T06:41:50.028412+00:00",
+              "completed_at": "2026-11-23T06:42:02.483616+00:00"
             }
           ],
           "spoken": "You have 1 completed task: submit report due Friday."
         }
       }
     ],
-    "seconds": 0.64
+    "seconds": 0.69
   },
   {
     "id": "T057",
@@ -2183,12 +2199,12 @@
         }
       }
     ],
-    "seconds": 9.79
+    "seconds": 9.47
   },
   {
     "id": "T058",
     "category": "delete_task",
-    "prompt": "Delete task task-83f14a55",
+    "prompt": "Delete task task-42f81c23",
     "pass": true,
     "checks": {
       "no_crash": true,
@@ -2200,22 +2216,22 @@
     },
     "error": null,
     "notes": "must ask confirmation (HITL)",
-    "spoken": "Are you sure you want me to permanently delete task 'task-83f14a55'?",
+    "spoken": "Are you sure you want me to permanently delete task 'task-42f81c23'?",
     "tools": [
       {
         "name": "delete_task",
         "args": {
-          "task_id": "task-83f14a55",
-          "id": "task-83f14a55"
+          "task_id": "task-42f81c23",
+          "id": "task-42f81c23"
         },
         "result": {
           "success": true,
-          "task_id": "task-83f14a55",
-          "spoken": "Deleted task 'task-83f14a55'."
+          "task_id": "task-42f81c23",
+          "spoken": "Deleted task 'task-42f81c23'."
         }
       }
     ],
-    "seconds": 0.7
+    "seconds": 0.73
   },
   {
     "id": "T059",
@@ -2277,7 +2293,7 @@
         }
       }
     ],
-    "seconds": 0.1
+    "seconds": 0.15
   },
   {
     "id": "T061",
@@ -2308,7 +2324,7 @@
         }
       }
     ],
-    "seconds": 0.07
+    "seconds": 0.13
   },
   {
     "id": "T062",
@@ -2339,7 +2355,7 @@
         }
       }
     ],
-    "seconds": 0.11
+    "seconds": 0.07
   },
   {
     "id": "T063",
@@ -2474,7 +2490,7 @@
     },
     "error": null,
     "notes": "needs test note: 'My WiFi password hint is blue-tiger'",
-    "spoken": "According to the file 'wifi_notes.txt' (WiFi), the WiFi password hint is 'blue-tiger'.",
+    "spoken": "Here is the WiFi hint from your document: WiFi: My WiFi password hint is blue-tiger",
     "tools": [
       {
         "name": "search_my_docs",
@@ -2498,7 +2514,7 @@
         }
       }
     ],
-    "seconds": 11.61
+    "seconds": 10.92
   },
   {
     "id": "T068",
@@ -2528,7 +2544,7 @@
         }
       }
     ],
-    "seconds": 0.66
+    "seconds": 0.72
   },
   {
     "id": "T069",
@@ -2553,16 +2569,16 @@
         "result": {
           "success": true,
           "fact": {
-            "id": "fact-d871ee1b",
+            "id": "fact-5a0e309c",
             "fact": "my favourite colour is blue",
             "category": "general",
-            "created_at": "2026-11-22T10:15:34.486635+00:00"
+            "created_at": "2026-11-23T06:42:32.039247+00:00"
           },
           "spoken": "I will remember that: my favourite colour is blue."
         }
       }
     ],
-    "seconds": 0.55
+    "seconds": 0.59
   },
   {
     "id": "T070",
@@ -2607,7 +2623,7 @@
         }
       }
     ],
-    "seconds": 10.26
+    "seconds": 10.21
   },
   {
     "id": "T072",
@@ -2623,7 +2639,7 @@
     "notes": "no tool should be called",
     "spoken": "Why don't scientists trust atoms? Because they can't account for them!",
     "tools": [],
-    "seconds": 9.7
+    "seconds": 9.63
   },
   {
     "id": "T073",
@@ -2655,7 +2671,7 @@
     },
     "error": null,
     "notes": "typo tolerance",
-    "spoken": "Google Cloud latest news and announcements - Google Cloud: Google Cloud latest news and announcements Google Cloud Learning English from the News - BBC: Learning English from the News BBC",
+    "spoken": "Google Cloud latest news and announcements - Google Cloud: Google Cloud latest news and announcements Google Cloud Cognition in talks for new funding at $75 billion valuation, Bloomberg News reports - Reuters: Cognition in talks for new funding at $75 billion valuation, Bloomberg News reports Reuters",
     "tools": [
       {
         "name": "web_search",
@@ -2665,7 +2681,7 @@
         "result": {
           "success": true,
           "query": "lateest ai nwes",
-          "count": 8,
+          "count": 5,
           "results": [
             {
               "title": "Google Cloud latest news and announcements - Google Cloud",
@@ -2673,9 +2689,9 @@
               "source": "https://news.google.com/rss/articles/CBMihgFBVV95cUxNREwxdGg2aXlreXo5blo4WENaSFZEV2NGckE3MzBTbk1WeDQ5eVJsMkdjdlNnVUx5R1QxbHJSMmVRUmRHbkZWeV9PY2ExYXhxZ19tQnpjTFlPTWtPZy1VWmdxUFBKV2dFZmt2WHR0NmQtUlR6bzRVUVZpcHpVOGVuYnR5UHBUdw?oc=5"
             },
             {
-              "title": "Learning English from the News - BBC",
-              "snippet": "Learning English from the News BBC",
-              "source": "https://news.google.com/rss/articles/CBMikwFBVV95cUxQMUVDNUpoVUxFanNzZnYwUWlIV3k2ZDc5c3V2MlU5RE1lOFp4QUx6MmFWZkZBeVpsUXV2dDV3NVFEdzlReDFkZk5KWkxvdExvSWphb3lMekVJaHVGVEp5T2NreG15WHh6T0N0WmZsM3p1SWJ3REROVE9EX3BoOFYtN25KZlBtMHpXMVdfNWxac0NRZms?oc=5"
+              "title": "Cognition in talks for new funding at $75 billion valuation, Bloomberg News reports - Reuters",
+              "snippet": "Cognition in talks for new funding at $75 billion valuation, Bloomberg News reports Reuters",
+              "source": "https://news.google.com/rss/articles/CBMivwFBVV95cUxOcWhpaU9neVJMd3hnYmh2YlYzbl9DMF8yWjFqQ2k4LWZVazFRTHdLNmh6alVaM29vaTIwUjFHX1FWWksyX3k4Y1ZmRHk0V21mcldQa29vUXR1QWQyX2xaT1NRaTVHaW1UZGRXQllFM0ticDU1S2lxSG5kMGNLdE1SRnFCNzFGMnd1TW1tVlRWcTZrQVlBVVI5UWx0M29xR2gyckhhTmxKVHVxWllDZlQ3WkJoS1V0VW0tVFpoS0JRTQ?oc=5"
             },
             {
               "title": "The latest AI news we announced in October 2026 - blog.google",
@@ -2683,21 +2699,21 @@
               "source": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxNVzhIaGZmbzJ0NEFDSzlhcG93cXczNlNoTWtpYXFuWjR0MjBwRWppUGdKTjZSYUVrQXAyc0RQck1CQmZaMHg4XzNXRlpPOXlPYi04T2V5TllPYnFNQWc5b0w1UEhreGp1TGRZR05NWEVlX25sVzhsSEFUcVRjQzVQREhzRHVPVjlGTjl3?oc=5"
             },
             {
-              "title": "Nvidia: Latest news and insights - Network World",
-              "snippet": "Nvidia: Latest news and insights Network World",
-              "source": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxNWExZTWxnWHNCbTBzdEF0emk3b1lQLWN5RVZ4ZmJVNU5lN3dUSHEtTlU1R1RXZVVZQzhMeTVFVXY2Vk1pQXh1SFcyazB6UHR4Q0hyWXpPcFJqc093Sk8xUTVWanN5ZlBPWGtlU0VaMGNhNklGZ1lORnVBYnZTRkhGT3RRQThkMVpE?oc=5"
-            },
-            {
               "title": "Before - Microsoft's latest custom chip: Maia 300 - Microsoft Source",
               "snippet": "Before - Microsoft's latest custom chip: Maia 300 Microsoft Source",
               "source": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE1tWUJXcEE5b0haaGRtb2NjNjlrOHJrb2IyYm1qXy1BUG5GekxqUnZ2Y3AtWEtTZEdPR2k3WG5rc3ZFcmdrcWdBMlhMYjUtZw?oc=5"
+            },
+            {
+              "title": "The Entertainment Industry\u2019s Biggest Names Back Stability AI in Latest Funding Round - Stability AI",
+              "snippet": "The Entertainment Industry\u2019s Biggest Names Back Stability AI in Latest Funding Round Stability AI",
+              "source": "https://news.google.com/rss/articles/CBMirAFBVV95cUxOV3pBSEo3YmZLblVfcWtubXZVQUloeGZYMW0yMVVKR1JHQV9BVnRLaHJkdXg3QmhXZWpFU1lwcjVkQmIyS2tGZnFnMXVvT2tEd1hfeWVmZXFWTzdZc0Z3VG5idkZKdnJ4cDhkU3lyV3ZzS05WVUYwN2R1UUJQbkppd1Q1NHJWWVhHQWw5SDB6LWN2d0RZc2FKZ25KMnRuZHRUQ21sYVF2T25DU1l5?oc=5"
             }
           ],
-          "spoken": "Google Cloud latest news and announcements - Google Cloud: Google Cloud latest news and announcements Google Cloud Learning English from the News - BBC: Learning English from the News BBC"
+          "spoken": "Google Cloud latest news and announcements - Google Cloud: Google Cloud latest news and announcements Google Cloud Cognition in talks for new funding at $75 billion valuation, Bloomberg News reports - Reuters: Cognition in talks for new funding at $75 billion valuation, Bloomberg News reports Reuters"
         }
       }
     ],
-    "seconds": 2.47
+    "seconds": 2.28
   },
   {
     "id": "T075",
@@ -2725,7 +2741,7 @@
         "result": {
           "success": true,
           "event": {
-            "id": "evt-01c004",
+            "id": "evt-15bda3",
             "title": "5 baje",
             "start": "5 PM",
             "end": "tomorrow 5 PM",
@@ -2736,7 +2752,7 @@
         }
       }
     ],
-    "seconds": 1.05
+    "seconds": 1.18
   },
   {
     "id": "T076",
@@ -2751,20 +2767,20 @@
     },
     "error": null,
     "notes": "Hinglish",
-    "spoken": "The current time is Sunday, November 22, 2026 at 03:46 PM (Asia/Kolkata).",
+    "spoken": "The current time is Monday, November 23, 2026 at 12:12 PM (Asia/Kolkata).",
     "tools": [
       {
         "name": "get_current_time",
         "args": {},
         "result": {
           "success": true,
-          "spoken": "The current time is Sunday, November 22, 2026 at 03:46 PM (Asia/Kolkata).",
-          "iso": "2026-11-22T15:46:00.116417+05:30",
+          "spoken": "The current time is Monday, November 23, 2026 at 12:12 PM (Asia/Kolkata).",
+          "iso": "2026-11-23T12:12:57.478039+05:30",
           "timezone": "Asia/Kolkata"
         }
       }
     ],
-    "seconds": 0.7
+    "seconds": 0.69
   },
   {
     "id": "T077",
@@ -2788,17 +2804,12 @@
         "result": {
           "success": true,
           "query": "today's tech news",
-          "count": 8,
+          "count": 5,
           "results": [
             {
               "title": "Today's Top Movers: Axon Surges on Nationwide Deals as Anthropic Drags Tech Down - marketscreener.com",
               "snippet": "Today's Top Movers: Axon Surges on Nationwide Deals as Anthropic Drags Tech Down marketscreener.com",
               "source": "https://news.google.com/rss/articles/CBMizAFBVV95cUxQMjAzMmpjek1QTDd2dzJNZ3B0YUIxTnRrUkRJME1weHJoY0F3VTFlZ0lsdVZnS3dZRXh6dXJoYm9FMUZlbnF1MU8yd2FnUGkwbHlCZDA2UkVPcXdpS2l3eTFaNU1LRVl5dmpkVG5BWlNYNmxGTEJvTmNSUXhfNDFDY0E5ZmZwRFJ5YXZjbmFvNllnMWJ4cmhYQXZnUi1hRi1uN2FuUWdyT1JYbXVjdl8zQWpZWk1IWnJjYVFmYnF5VWpvT0JYMDg4VUJfNEw?oc=5"
-            },
-            {
-              "title": "'College GameDay' picks for Week 12, including Miami-Virginia Tech - Yahoo Sports",
-              "snippet": "'College GameDay' picks for Week 12, including Miami-Virginia Tech Yahoo Sports",
-              "source": "https://news.google.com/rss/articles/CBMihAFBVV95cUxOTHpDOGRkdTVGS2RCclFJeGdwbW1QcGR3NzYxRWFuU25FbVYyM3JEaGFEeVBkaktfckJaYmFHeDRsWS1lYWJGZnI2a2RWLURzWWFaMnNWM21rYXk1QTNFU0NZQlA2TmxtN2VtZFNVMmZiRG5xdFp3NnpyTXNEaFhrUFlWOVY?oc=5"
             },
             {
               "title": "Nasdaq wipes out 2026 gains, TSX, Dow and S&P 500 fall into correction territory - CBC",
@@ -2814,9 +2825,14 @@
               "title": "Women make up 53% of science & technology ranks - European Commission",
               "snippet": "Women make up 53% of science & technology ranks European Commission",
               "source": "https://news.google.com/rss/articles/CBMifkFVX3lxTE1NYnQwcXBHaWtPa200MTZSUjNMMUNVWFBHQlE4QS1xcHFSSnV0anJ3NnNuMElhbGZVeXZyME1aNXpZbTUxS1ZnS19tSmludVhXWDVzZU5zc2NsQWh6dW1QaTMxZ3BNcHNTNjlnMnBoRDdJRVc5X0tSTjFNNklyZw?oc=5"
+            },
+            {
+              "title": "Tech launches (June 5, 2026): Xiaomi TV FX Mini LED, Galaxy Watch new features, and more - The Indian Express",
+              "snippet": "Tech launches (June 5, 2026): Xiaomi TV FX Mini LED, Galaxy Watch new features, and more The Indian Express",
+              "source": "https://news.google.com/rss/articles/CBMi1gFBVV95cUxQTHlVNHduUnk5SXdKWmhRVzN0aUFwazR4cnBsb2JQTUZ0dm5DZGZNSnlfRTRaQ0phOEJGQWZWM0t0SXM2Vzh5bjhoUU1IWVEzZ2lMOEl6TWhoQnByNW5ZQy1PS3ZSS1dDUGFjZFE5ZmEtR1ZtaDZjRFBKS1AyRnJmbGFncTNYRFd6MUlkRmYyY2Z2SVZIX3V4X2thTkVPUWtkUHc3MmpVaWhyS0JESXA3QS1fUDZUbUoyMHBIY3ZZbEZ5LVRvMVdXbXJvOUl2Vk5lSG9pQ2ln0gHcAUFVX3lxTE93cDdPcmozMFMzVHhNZzhMa0h3ZkFObHVHSlpiT3hVXy1EVVZmVUxfNGRJWmw5cU5RaGN1MTZ1c1ZrZHpWWnJ6cWJhZ1JhTnJsZlpMV2g2clhHSEIzT1pabTUwZ3R6eHhOdVY4cVF2SkR0eXZ2WUFFYjJsU2s2UWV6WWVDY1haTC1qTnk4YnAwc1NxMDBFV0x0MkZ0WEwyZGNHQ3kweWRSQVFnQUJld19VTnJIVE9HbjZSUE45OTdhZ0lsdERYTmM5MFY5RkRRcjRHSWVQRENZSnRSUTg?oc=5"
             }
           ],
-          "spoken": "Today's Top Movers: Axon Surges on Nationwide Deals as Anthropic Drags Tech Down - marketscreener.com: Today's Top Movers: Axon Surges on Nationwide Deals as Anthropic Drags Tech Down marketscreener.com 'College GameDay' picks for Week 12, including Miami-Virginia Tech - Yahoo Sports: 'College GameDay' picks for Week 12, including Miami-Virginia Tech Yahoo Sports"
+          "spoken": "Today's Top Movers: Axon Surges on Nationwide Deals as Anthropic Drags Tech Down - marketscreener.com: Today's Top Movers: Axon Surges on Nationwide Deals as Anthropic Drags Tech Down marketscreener.com Nasdaq wipes out 2026 gains, TSX, Dow and S&P 500 fall into correction territory - CBC: Nasdaq wipes out 2026 gains, TSX, Dow and S&P 500 fall into correction territory CBC"
         }
       },
       {
@@ -2834,11 +2850,11 @@
           "provider": "google_gmail_api",
           "sender_name": "Keshav",
           "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Tech News Summary\".",
-          "body": "Hello Keshav,\n\nToday's tech news highlights include the latest advancements in artificial intelligence, the release of a new operating system, and the breakthrough in quantum computing. Additionally, there's a report on the impact of blockchain technology on the financial industry. Please find the detailed summaries below:\n\n1. AI Innovation: New breakthroughs in machine learning algorithms are set to revolutionize healthcare diagnostics.\n2. Operating System Update: A fresh update to the Linux kernel promises improved performance and security features.\n3. Quantum Computing Breakthrough: A team has successfully developed a prototype that could potentially solve complex computational problems faster than classical computers.\n4. Blockchain Impact: New regulations are expected to boost the adoption of blockchain in supply chain management and financial transactions.\n\nBest regards,\nKeshav"
+          "body": "Hello Keshav,\n\nToday's tech news roundup includes several interesting developments across various sectors. Here's a quick summary:\n\n1. **Google Announces New AI Capabilities**: Google has released a new AI model that significantly enhances its language translation capabilities, making it more accurate and faster.\n\n2. **Microsoft Teams Update Enhances Collaboration**: Microsoft has updated its popular collaboration tool, adding features that allow for better integration with other Microsoft products and improved security measures.\n\n3. **Apple Launches New Smartwatch**: Apple has unveiled a new smartwatch model that combines advanced health tracking features with a sleek design, aiming to attract a broader customer base.\n\n4. **Samsung Expands IoT Ecosystem**: Samsung has expanded its Internet of Things (IoT) ecosystem by announcing the launch of a new smart home device that integrates with existing Samsung smart appliances.\n\n5. **Facebook Launches New VR Experience**: Facebook has introduced a new virtual reality (VR) platform that allows users to explore virtual worlds with enhanced visual and auditory experiences.\n\nPlease find the full details in the attached document. If you have any questions or need further information, feel free to reach out.\n\nBest regards,\nKeshav"
         }
       }
     ],
-    "seconds": 17.89
+    "seconds": 18.42
   },
   {
     "id": "T078",
@@ -2877,18 +2893,18 @@
         "result": {
           "success": true,
           "task": {
-            "id": "task-31f5f5ff",
+            "id": "task-ad26909a",
             "title": "Task: 900.0",
             "due_at": null,
             "status": "pending",
-            "created_at": "2026-11-22T10:16:19.880589+00:00"
+            "created_at": "2026-11-23T06:43:17.731518+00:00"
           },
-          "task_id": "task-31f5f5ff",
+          "task_id": "task-ad26909a",
           "spoken": "Added task: 'Task: 900.0'."
         }
       }
     ],
-    "seconds": 1.47
+    "seconds": 1.4
   },
   {
     "id": "T079",
@@ -2932,7 +2948,7 @@
         "result": {
           "success": true,
           "event": {
-            "id": "evt-4b6ade",
+            "id": "evt-696678",
             "title": "Meeting",
             "start": "tomorrow 14:00",
             "end": "tomorrow 14:30",
@@ -2943,6 +2959,6 @@
         }
       }
     ],
-    "seconds": 0.88
+    "seconds": 0.69
   }
 ]
