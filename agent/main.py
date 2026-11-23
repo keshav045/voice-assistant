@@ -1659,6 +1659,75 @@ async def langgraph_chat_endpoint(req: ChatRequest, authorization: Optional[str]
     return await chat_endpoint(req, authorization)
 
 
+# --- Screening, Tracing & Persistence Endpoints ---
+
+@app.get("/api/traces")
+async def get_traces_endpoint(
+    limit: int = 50,
+    session_id: Optional[str] = None,
+    authorization: Optional[str] = Header(None),
+):
+    """Retrieve recent execution waterfall spans and LLM traces from SQLite."""
+    from agent.tracing import list_traces
+    return {"traces": list_traces(limit=limit, session_id=session_id)}
+
+
+@app.get("/api/traces/{trace_id}")
+async def get_trace_endpoint(trace_id: str):
+    """Retrieve full detail and timing for a specific trace span."""
+    from agent.tracing import get_trace
+    tr = get_trace(trace_id)
+    if not tr:
+        raise HTTPException(status_code=404, detail="Trace not found")
+    return tr
+
+
+@app.delete("/api/traces")
+async def clear_traces_endpoint():
+    """Clear all stored traces."""
+    from agent.tracing import clear_traces
+    ok = clear_traces()
+    return {"success": ok}
+
+
+@app.get("/api/checkpoints")
+async def list_checkpoints_endpoint(limit: int = 50):
+    """List recent persistent LangGraph checkpoints."""
+    from agent.persistence import list_saved_threads
+    return {"threads": list_saved_threads(limit=limit)}
+
+
+@app.get("/api/checkpoints/{session_id}")
+async def get_checkpoint_endpoint(session_id: str):
+    """Get checkpoint state and pending interrupts for a thread."""
+    from agent.persistence import get_checkpoint_state
+    return get_checkpoint_state(session_id)
+
+
+@app.get("/api/persistence/health")
+async def persistence_health_endpoint():
+    """Validate persistence layers: SQLite WAL status, checkpointer connectivity, and record counts."""
+    from agent.persistence import health_check_persistence
+    return health_check_persistence()
+
+
+class ScreeningCheckRequest(BaseModel):
+    text: str
+    target: str = "input"
+    user_id: Optional[str] = "guest"
+
+
+@app.post("/api/screening/check")
+async def screening_check_endpoint(req: ScreeningCheckRequest):
+    """Screen arbitrary input or output text through the safety guardrails engine."""
+    from agent.screening import screen_input, screen_output
+    if req.target == "output":
+        res = screen_output(req.text)
+    else:
+        res = screen_input(req.text, user_id=req.user_id or "guest")
+    return res.to_dict()
+
+
 @app.post("/api/stt")
 async def stt_endpoint(file: UploadFile = File(...)):
     """Transcribe speech audio file using Whisper or local faster-whisper."""

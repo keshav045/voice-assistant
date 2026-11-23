@@ -790,3 +790,132 @@ def db_get_user_email_profile(user_id: Optional[str] = None) -> Optional[Dict[st
         return dict(row) if row else None
 
 
+# --- Execution Tracing & Observability Operations ---
+def db_record_trace(
+    trace_id: str,
+    session_id: str,
+    name: str,
+    run_type: str = "chain",
+    start_time: float = 0.0,
+    end_time: Optional[float] = None,
+    latency_ms: Optional[float] = None,
+    status: str = "success",
+    inputs: Any = None,
+    outputs: Any = None,
+    metadata: Any = None,
+    user_id: str = "guest",
+) -> Dict[str, Any]:
+    """Persist an execution trace span to SQLite for local observability."""
+    import json
+    now = datetime.now(timezone.utc).isoformat()
+    inp_json = json.dumps(inputs) if inputs is not None else "{}"
+    out_json = json.dumps(outputs) if outputs is not None else "{}"
+    meta_json = json.dumps(metadata) if metadata is not None else "{}"
+
+    with get_db_connection() as conn:
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS execution_traces (
+                id TEXT PRIMARY KEY,
+                session_id TEXT NOT NULL,
+                user_id TEXT NOT NULL DEFAULT 'guest',
+                name TEXT NOT NULL,
+                run_type TEXT NOT NULL DEFAULT 'chain',
+                start_time REAL NOT NULL,
+                end_time REAL,
+                latency_ms REAL,
+                status TEXT NOT NULL DEFAULT 'running',
+                inputs_json TEXT,
+                outputs_json TEXT,
+                metadata_json TEXT,
+                created_at TEXT NOT NULL
+            )"""
+        )
+        conn.execute(
+            """INSERT OR REPLACE INTO execution_traces 
+               (id, session_id, user_id, name, run_type, start_time, end_time, latency_ms, status, inputs_json, outputs_json, metadata_json, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (trace_id, session_id, user_id, name, run_type, start_time, end_time, latency_ms, status, inp_json, out_json, meta_json, now),
+        )
+        conn.commit()
+
+    return {
+        "id": trace_id,
+        "session_id": session_id,
+        "name": name,
+        "run_type": run_type,
+        "latency_ms": latency_ms,
+        "status": status,
+        "created_at": now,
+    }
+
+
+def db_list_traces(limit: int = 50, session_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Retrieve execution traces ordered by creation time descending."""
+    import json
+    with get_db_connection() as conn:
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS execution_traces (
+                id TEXT PRIMARY KEY,
+                session_id TEXT NOT NULL,
+                user_id TEXT NOT NULL DEFAULT 'guest',
+                name TEXT NOT NULL,
+                run_type TEXT NOT NULL DEFAULT 'chain',
+                start_time REAL NOT NULL,
+                end_time REAL,
+                latency_ms REAL,
+                status TEXT NOT NULL DEFAULT 'running',
+                inputs_json TEXT,
+                outputs_json TEXT,
+                metadata_json TEXT,
+                created_at TEXT NOT NULL
+            )"""
+        )
+        if session_id:
+            cur = conn.execute(
+                "SELECT * FROM execution_traces WHERE session_id = ? ORDER BY start_time DESC, created_at DESC LIMIT ?",
+                (session_id, limit),
+            )
+        else:
+            cur = conn.execute(
+                "SELECT * FROM execution_traces ORDER BY start_time DESC, created_at DESC LIMIT ?",
+                (limit,),
+            )
+        rows = [dict(r) for r in cur.fetchall()]
+        for r in rows:
+            r["trace_id"] = r.get("id")
+            for k in ["inputs_json", "outputs_json", "metadata_json"]:
+                if r.get(k):
+                    try:
+                        r[k.replace("_json", "")] = json.loads(r[k])
+                    except Exception:
+                        r[k.replace("_json", "")] = r[k]
+        return rows
+
+
+def db_get_trace(trace_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieve a single execution trace by ID."""
+    import json
+    with get_db_connection() as conn:
+        cur = conn.execute("SELECT * FROM execution_traces WHERE id = ? LIMIT 1", (trace_id,))
+        row = cur.fetchone()
+        if not row:
+            return None
+        r = dict(row)
+        r["trace_id"] = r.get("id")
+        for k in ["inputs_json", "outputs_json", "metadata_json"]:
+            if r.get(k):
+                try:
+                    r[k.replace("_json", "")] = json.loads(r[k])
+                except Exception:
+                    r[k.replace("_json", "")] = r[k]
+        return r
+
+
+def db_clear_traces() -> bool:
+    """Clear all stored execution traces."""
+    with get_db_connection() as conn:
+        conn.execute("DELETE FROM execution_traces")
+        conn.commit()
+    return True
+
+

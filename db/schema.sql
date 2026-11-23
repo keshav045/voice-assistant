@@ -149,4 +149,22 @@ CREATE TABLE IF NOT EXISTS user_oauth_tokens (
     updated_at TEXT NOT NULL
 );
 
+-- Execution Tracing & Observability (LangSmith & Local SQLite Traces)
+CREATE TABLE IF NOT EXISTS execution_traces (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    user_id TEXT NOT NULL DEFAULT 'guest',
+    name TEXT NOT NULL,
+    run_type TEXT NOT NULL DEFAULT 'chain',
+    start_time REAL NOT NULL,
+    end_time REAL,
+    latency_ms REAL,
+    status TEXT NOT NULL DEFAULT 'running',
+    inputs_json TEXT,
+    outputs_json TEXT,
+    metadata_json TEXT,
+    created_at TEXT NOT NULL
+);
+
+
 
