@@ -44,7 +44,6 @@ from db.models import (
     db_get_session_turns,
     db_delete_chat_session,
 )
-from agent.prompts import SYSTEM_PROMPT
 from agent.prompts import SYSTEM_PROMPT, COMPACT_SYSTEM_PROMPT
 from agent.confirm import requires_confirmation, format_read_back, is_confirmed
 from agent.memory import get_memory_context

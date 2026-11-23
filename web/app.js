@@ -634,7 +634,7 @@ async function submitChatTurn(textOverride) {
       pendingWindow = null;
     }
 
-    appendAssistantBubble(data.spoken_reply, data.tool_calls_executed);
+    appendAssistantBubble(data.spoken_reply || data.reply, data.tool_calls_executed, data.requires_confirmation || Boolean(data.needs_confirmation));
 
     const latLabel = document.getElementById("turn-latency-label");
     if (latLabel && data.latency_ms) {
@@ -756,7 +756,7 @@ function appendUserBubble(text) {
   container.scrollTop = container.scrollHeight;
 }
 
-function appendAssistantBubble(text, toolCalls) {
+function appendAssistantBubble(text, toolCalls, requiresConfirmation = false) {
   const container = document.getElementById("chat-messages");
   if (!container) return;
 
@@ -845,6 +845,29 @@ function appendAssistantBubble(text, toolCalls) {
     }
   }
 
+  let confirmationHtml = "";
+  if (requiresConfirmation) {
+    confirmationHtml = `
+      <div class="mt-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-on-surface flex flex-col gap-2 shadow-xs max-w-md">
+        <div class="flex items-center gap-1.5 text-xs font-bold text-amber-700">
+          <span class="material-symbols-outlined text-[15px]">verified_user</span>
+          <span>Confirmation Required</span>
+        </div>
+        <p class="text-[11px] text-on-surface-variant leading-normal">This action creates, modifies, or sends real data. Do you want to proceed?</p>
+        <div class="flex items-center gap-2 mt-1">
+          <button onclick="handleConfirmationDecision(this, true)" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">check</span>
+            <span>Yes, Proceed</span>
+          </button>
+          <button onclick="handleConfirmationDecision(this, false)" class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-medium border border-surface-container transition-colors flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">close</span>
+            <span>No, Cancel</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
   bubble.innerHTML = `
     <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5 shadow-sm">
       AI
@@ -857,10 +880,36 @@ function appendAssistantBubble(text, toolCalls) {
       ${toolBadgeHtml}
       ${richCardHtml}
       ${actionLinkHtml}
+      ${confirmationHtml}
     </div>
   `;
   container.appendChild(bubble);
   container.scrollTop = container.scrollHeight;
+}
+
+async function handleConfirmationDecision(btnEl, approved) {
+  const box = btnEl ? btnEl.closest(".p-3") : null;
+  if (box) {
+    box.innerHTML = `<span class="text-xs text-on-surface-variant font-medium flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>Resuming: ${approved ? "Approved" : "Cancelled"}...</span>`;
+  }
+  const thinkingId = appendThinkingBubble();
+  try {
+    const res = await fetch("/api/chat/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(authToken ? { "Authorization": `Bearer ${authToken}` } : {}) },
+      body: JSON.stringify({ session_id: currentSessionId, approved: approved })
+    });
+    const data = await res.json();
+    removeMessage(thinkingId);
+    appendAssistantBubble(data.spoken_reply || data.reply, [], data.requires_confirmation || Boolean(data.needs_confirmation));
+    if (audioOutputEnabled && (data.spoken_reply || data.reply)) {
+      playSpokenAudio(data.spoken_reply || data.reply);
+    }
+    loadHistory();
+  } catch (err) {
+    removeMessage(thinkingId);
+    appendAssistantBubble("Error processing confirmation: " + err.message, []);
+  }
 }
 
 function appendThinkingBubble() {
@@ -917,6 +966,9 @@ async function checkGmailStatus() {
       if (unlinkedBox) unlinkedBox.classList.add("hidden");
       if (linkedBox) linkedBox.classList.remove("hidden");
       if (emailSpan) emailSpan.innerText = data.email;
+      if (!currentUser) {
+        checkAuthStatus();
+      }
     } else {
       if (pill) {
         pill.innerText = data.oauth_configured ? "Not Linked" : "Ready";
@@ -964,6 +1016,7 @@ async function disconnectGmailAccount() {
     });
     await res.json();
     checkGmailStatus();
+    checkAuthStatus();
   } catch (err) {
     alert("Could not disconnect Gmail: " + err.message);
   }

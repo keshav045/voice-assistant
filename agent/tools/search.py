@@ -182,7 +182,13 @@ def web_search(query: str, max_results: int = 5) -> Dict[str, Any]:
 
     # 3. DuckDuckGo Search (Lite backend)
     try:
-        from duckduckgo_search import DDGS
+        try:
+            from ddgs import DDGS
+        except ImportError:
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)
+                from duckduckgo_search import DDGS
         with DDGS() as ddgs:
             ddg_results = list(ddgs.text(clean_query, backend="lite", max_results=3))
             for r in ddg_results:
