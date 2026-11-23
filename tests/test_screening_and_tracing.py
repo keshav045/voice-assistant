@@ -212,6 +212,36 @@ def test_fastapi_traces_endpoints(client):
     assert "traces" in res.json()
 
 
+def test_fastapi_langsmith_status_endpoint(client):
+    res = client.get("/api/langsmith/status")
+    assert res.status_code == 200
+    data = res.json()
+    assert "enabled" in data
+    assert "project" in data
+    assert "endpoint" in data
+    assert "has_api_key" in data
+
+
+def test_langsmith_dynamic_callback_activation(monkeypatch):
+    from agent.tracing import get_active_callbacks, is_langsmith_enabled
+
+    # Initially false without key
+    monkeypatch.setenv("LANGCHAIN_TRACING_V2", "false")
+    monkeypatch.setenv("LANGSMITH_API_KEY", "")
+    assert is_langsmith_enabled() is False
+    cbs = get_active_callbacks("test-sess")
+    assert len(cbs) == 1
+
+    # When enabled with key
+    monkeypatch.setenv("LANGCHAIN_TRACING_V2", "true")
+    monkeypatch.setenv("LANGSMITH_API_KEY", "lsv2_pt_testkey1234567890")
+    monkeypatch.setenv("LANGSMITH_PROJECT", "test-project")
+    assert is_langsmith_enabled() is True
+    cbs_with_ls = get_active_callbacks("test-sess")
+    assert len(cbs_with_ls) == 2
+    assert any("LangChainTracer" in type(c).__name__ for c in cbs_with_ls)
+
+
 def test_fastapi_persistence_health_endpoint(client):
     res = client.get("/api/persistence/health")
     assert res.status_code == 200

@@ -1672,6 +1672,13 @@ async def get_traces_endpoint(
     return {"traces": list_traces(limit=limit, session_id=session_id)}
 
 
+@app.get("/api/langsmith/status")
+async def langsmith_status_endpoint():
+    """Inspect current LangSmith tracing integration status."""
+    from agent.tracing import get_langsmith_status
+    return get_langsmith_status()
+
+
 @app.get("/api/traces/{trace_id}")
 async def get_trace_endpoint(trace_id: str):
     """Retrieve full detail and timing for a specific trace span."""

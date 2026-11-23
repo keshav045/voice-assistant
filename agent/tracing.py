@@ -363,6 +363,41 @@ def trace_span(
         )
 
 
+def is_langsmith_enabled() -> bool:
+    """Check if LangSmith tracing is enabled and configured with an API key."""
+    api_key = os.environ.get("LANGSMITH_API_KEY", "").strip()
+    tracing = (
+        os.environ.get("LANGCHAIN_TRACING_V2", "false").lower() in {"1", "true", "yes"} or
+        os.environ.get("LANGSMITH_TRACING", "false").lower() in {"1", "true", "yes"}
+    )
+    return bool(tracing and api_key and not api_key.startswith("your-"))
+
+
+def get_langsmith_status() -> Dict[str, Any]:
+    """Inspect current LangSmith connectivity and configuration status."""
+    project = os.environ.get("LANGSMITH_PROJECT", "nexus-ai-assistant").strip()
+    endpoint = os.environ.get("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com").strip()
+    api_key = os.environ.get("LANGSMITH_API_KEY", "").strip()
+    enabled = is_langsmith_enabled()
+
+    client_ready = False
+    if enabled:
+        try:
+            from langsmith import Client
+            client = Client(api_url=endpoint, api_key=api_key)
+            client_ready = True
+        except Exception as exc:
+            logger.debug(f"Could not initialize LangSmith client: {exc}")
+
+    return {
+        "enabled": enabled,
+        "project": project,
+        "endpoint": endpoint,
+        "has_api_key": bool(api_key and not api_key.startswith("your-")),
+        "client_ready": client_ready,
+    }
+
+
 def get_active_callbacks(
     session_id: str = "default",
     user_id: str = "guest",
@@ -371,10 +406,12 @@ def get_active_callbacks(
     callbacks: List[BaseCallbackHandler] = [NexusTracer(session_id=session_id, user_id=user_id)]
 
     # Add LangSmith tracer if configured and enabled
-    if LANGCHAIN_TRACING_ENABLED and LANGSMITH_API_KEY:
+    if is_langsmith_enabled():
         try:
             from langchain_core.tracers import LangChainTracer
-            callbacks.append(LangChainTracer(project_name=LANGSMITH_PROJECT))
+            project = os.environ.get("LANGSMITH_PROJECT", "nexus-ai-assistant").strip()
+            callbacks.append(LangChainTracer(project_name=project))
+            logger.info(f"LangSmith cloud tracing active for project: {project}")
         except Exception as e:
             logger.debug(f"Could not load LangChainTracer: {e}")
 
