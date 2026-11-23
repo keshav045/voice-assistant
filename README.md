@@ -4,10 +4,11 @@ An intelligent, voice-first AI assistant that does not just talk, but actually t
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
+[![LangGraph](https://img.shields.io/badge/LangGraph-Autonomous_Agent-blueviolet.svg)](https://langchain-ai.github.io/langgraph/)
 [![LiveKit WebRTC](https://img.shields.io/badge/LiveKit-WebRTC_Voice-00D2B4.svg)](https://livekit.io/)
-[![Unit Tests](https://img.shields.io/badge/Pytest-91%20Passed-brightgreen.svg)]()
+[![Unit Tests](https://img.shields.io/badge/Pytest-110%20Passed-brightgreen.svg)]()
 [![Evaluations](https://img.shields.io/badge/Evaluations-35%2F35%20Passed-brightgreen.svg)]()
-[![Golden Tests](https://img.shields.io/badge/Golden%20Tests-79%2F79%20Passed-brightgreen.svg)]()
+[![Golden Tests](https://img.shields.io/badge/Golden%20Tests-78%2F79%20Passed-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
@@ -21,13 +22,13 @@ Most voice assistant projects on the internet fall into one of two categories:
 
 I wanted something closer to a dependable personal co-pilot: an assistant you can talk to naturally while working at your desk. It needs to hold a conversation, reason through code, summarize live news, and answer complex questions. More importantly, it needs to perform real-world actions on your computer: sending emails via your authenticated Gmail address, searching clinical medicine databases, opening desktop programs and browser tabs, finding free calendar slots, and managing to-do items.
 
-Nexus AI was built to solve this problem with low latency, robust error handling, and clean software architecture.
+Nexus AI was built to solve this problem with low latency, robust error handling, guardrail safety screening, deep local and cloud tracing, and clean software architecture.
 
 ---
 
 ## Architectural Overview
 
-Nexus AI operates on a hybrid architecture that supports both cloud-based inference (OpenAI GPT-4o, Whisper, and TTS-1) and 100% offline local inference (Ollama with Qwen 2.5, local faster-whisper, and Microsoft Edge-TTS).
+Nexus AI operates on a hybrid architecture supporting both cloud-based inference (OpenAI GPT-4o, Whisper, and TTS-1) and 100% offline local inference (Ollama with Qwen 2.5, local faster-whisper, and Microsoft Edge-TTS).
 
 ```mermaid
 flowchart TD
@@ -39,28 +40,32 @@ flowchart TD
         LiveKitCloud <-->|3. Low-Latency Stream| LiveKitWorker[agent/livekit_worker.py]
         LiveKitWorker --> VAD[Silero Neural VAD - 400ms Cutoff]
         VAD --> STT[Whisper STT: Cloud or Local tiny.en]
-        STT --> Dispatcher[Autonomous Tool Dispatcher]
-        Dispatcher --> TTS[TTS: OpenAI Alloy or Edge-TTS Christopher]
+        STT --> AgentLoop[Autonomous Agent & Safety Guardrails]
+        AgentLoop --> TTS[TTS: OpenAI Alloy or Edge-TTS Christopher]
     end
 
     subgraph CoreBackend["FastAPI Gateway & Session Manager"]
         WebUI -->|HTTP /api/chat| FastAPIServer[agent/main.py]
-        FastAPIServer --> Dispatcher
+        FastAPIServer --> ScreeningEngine[Bidirectional Screening & Guardrails]
+        ScreeningEngine --> LangGraphAgent[LangGraph StateGraph Engine]
+        LangGraphAgent --> TracingEngine[Local SQLite & LangSmith Tracer]
         FastAPIServer --> OAuth[Google OAuth 2.0 Handler]
     end
 
-    subgraph ToolSuite["Integrated Autonomous Tool Matrix"]
-        Dispatcher --> T1[Clinical Medicine Search: Curated + OpenFDA]
-        Dispatcher --> T2[Email Engine: Google OAuth REST + SMTP + Bulk CSV]
-        Dispatcher --> T3[App Launcher: Windows OS startfile + Browser]
-        Dispatcher --> T4[Web Search: Live News RSS + DuckDuckGo]
-        Dispatcher --> T5[Math & Code: AST Calculator + Isolated Python REPL]
-        Dispatcher --> T6[Calendar & Tasks: Slot Detection + Daily To-Dos]
-        Dispatcher --> T7[Memory & RAG: Semantic Fact Store + Document Search]
+    subgraph ToolSuite["Integrated Autonomous Tool Matrix (18 Tools)"]
+        LangGraphAgent --> T1[Clinical Medicine: Curated DB + OpenFDA]
+        LangGraphAgent --> T2[Email Engine: Google OAuth REST + SMTP + Bulk CSV]
+        LangGraphAgent --> T3[App Launcher: Windows OS startfile + Browser]
+        LangGraphAgent --> T4[Web Search: Live News RSS + DuckDuckGo]
+        LangGraphAgent --> T5[Math & Code: AST Calculator + Isolated Python REPL]
+        LangGraphAgent --> T6[Calendar & Tasks: Slot Detection + Daily To-Dos]
+        LangGraphAgent --> T7[Memory & RAG: Semantic Fact Store + Document Search]
     end
 
-    FastAPIServer --> SQLite[(SQLite in WAL Mode)]
-    LiveKitWorker --> SQLite
+    subgraph PersistenceLayer["Multi-Store Persistence (WAL Mode)"]
+        LangGraphAgent <--> Checkpoints[(checkpoints.sqlite - LangGraph Threads)]
+        FastAPIServer <--> MainDB[(nexus.db - Users, History, Tasks, Traces)]
+    end
 ```
 
 ---
@@ -106,7 +111,7 @@ flowchart TD
 ### 7. AST-Safe Calculator & Isolated Python Code Sandbox
 - Math calculations are evaluated using Abstract Syntax Tree (AST) parsing with no insecure `eval()` calls.
 - Supports arithmetic, percentages, square roots, powers, and multi-step financial expressions.
-- Includes an isolated Python REPL for running algorithmic code snippets, testing logic, and verifying scripts.
+- Includes an isolated Python REPL with timeout validation and AST security inspection to prevent unauthorized operating system execution or infinite loops.
 
 ### 8. Calendar Scheduling & Task Management
 - Find free slots: "Find a 30-minute free slot tomorrow afternoon".
@@ -118,12 +123,45 @@ flowchart TD
 - Recalls stored preferences on demand: "What is my preferred meeting time?".
 - Ingests and vectorizes local document notes with top-k cosine similarity search.
 
-### 10. LangGraph Agent Loop & Human-in-the-Loop Approval
-- Rebuilt the tool-calling loop as an autonomous LangGraph agent (`agent/lc_agent.py`) using LangChain `@tool` wrappers (`agent/lc_tools.py`) and checkpointed state (`SqliteSaver`).
-- Human-in-the-loop safety gating: Irreversible actions (`send_email`, `delete_task`, `create_event`) pause at an `interrupt()` statement placed as the very first line of each tool before any side-effect can execute.
+### 10. LangGraph Autonomous Agent & Human-in-the-Loop Interrupts
+- Built around a LangGraph `StateGraph(AgentState)` tool loop with compiled `ToolNode` dispatching.
+- Human-in-the-loop safety gating: Irreversible actions (`send_email`, `delete_task`, `create_event`) halt at an `interrupt()` statement placed as the very first line of each tool before any side-effect can execute.
 - Checkpointed state persistence: When paused for approval, conversation state is checkpointed in SQLite by thread ID (`session_id`).
 - Resumption flow: Resumed via `/api/chat/confirm` with user confirmation (`yes` or `no`). If approved, the action runs exactly once; if declined, it safely cancels without side effects.
 - Multi-tool turn execution: Supports turns combining safe read-only operations with gated irreversible actions in a single flow.
+
+### 11. Bidirectional Screening & Guardrails Engine (`agent/screening.py`)
+- **Input Screening**:
+  - Prompt injection defense: Blocks attempts to override system prompts, escape jailbreaks (`DAN`), or disregard prior instructions.
+  - Harmful intent refusal: Catches toxic, dangerous, or illegal requests and returns safe, non-punitive refusals.
+  - Out-of-scope physical boundary gating: Refuses requests attempting to manipulate physical world appliances, vehicles, or unverified wire transfers.
+  - Credential and PII masking: Automatically detects and redacts raw API keys (`sk-...`), bearer tokens, and credit card numbers before forwarding queries to the LLM.
+- **Output Screening**:
+  - Zero-markdown voice sanitization: Strips markdown headers, bullet symbols, bold asterisks, inline code ticks, and raw URLs before feeding text to TTS engines.
+  - Medical consultation disclaimer enforcement: Automatically verifies that any medical pharmacology reply includes a reminder to consult a licensed physician.
+  - Secret redaction: Intercepts accidental key leaks in model completions.
+
+### 12. Tracing & Observability (`agent/tracing.py`)
+- **100% Offline Local Tracing**:
+  - Automatically records full execution waterfalls, LLM calls, tool spans, latencies, and token metrics into SQLite (`execution_traces` table).
+  - Works entirely offline without requiring paid API keys, credit cards, or external network egress.
+  - Context manager `trace_span` enables custom span tracking for granular profiling.
+- **LangSmith Cloud Tracing**:
+  - Seamlessly integrates with LangSmith Cloud via `LangChainTracer` when `LANGCHAIN_TRACING_V2=true` and `LANGSMITH_API_KEY` are provided in `.env`.
+- **Trace Management API**:
+  - `GET /api/traces`: Lists recent execution waterfall spans with latency and status filters.
+  - `GET /api/traces/{trace_id}`: Retrieves comprehensive input, output, and metadata trees for a run.
+  - `DELETE /api/traces`: Wipes stored traces for clean evaluation benchmarking.
+
+### 13. State Persistence & Checkpointing (`agent/persistence.py`)
+- **WAL-Mode SQLite Checkpointer**:
+  - Employs `SqliteSaver` pointing to `db/checkpoints.sqlite` configured with Write-Ahead Logging (`PRAGMA journal_mode=WAL`) and `PRAGMA synchronous=NORMAL`.
+  - Guarantees crash resilience and process reload recovery for interrupted agent runs.
+- **Thread Inspection & Health Probing**:
+  - `GET /api/checkpoints`: Lists stored thread IDs and latest checkpoint IDs.
+  - `GET /api/checkpoints/{session_id}`: Inspects thread state, message count, and pending approval interrupts.
+  - `GET /api/persistence/health`: Checks SQLite connection, WAL journal mode status, and table record counts.
+  - `export_session_bundle`: Exports a consolidated snapshot containing chat turns, traces, and checkpoint state for auditing.
 
 ---
 
@@ -137,6 +175,7 @@ Nexus AI adapts to your environment based on your `.env` configuration:
 | Speech-to-Text (STT) | OpenAI Whisper API | Local faster-whisper (`tiny.en`) |
 | Text-to-Speech (TTS) | OpenAI TTS-1 (`alloy` / `echo`) | Microsoft Edge-TTS (`en-US-ChristopherNeural`) |
 | Turn Detection | Silero Neural VAD | Silero Neural VAD |
+| Tracing & Spans | LangSmith Cloud Tracing | Local SQLite Waterfall Spans |
 | Latency | Sub-500ms | Sub-400ms (zero cloud egress) |
 
 ---
@@ -149,6 +188,9 @@ voice-assistant/
 │   ├── main.py                 # FastAPI REST and WebSocket API gateway
 │   ├── lc_tools.py             # LangChain @tool wrappers with interrupt() safety pauses
 │   ├── lc_agent.py             # LangGraph StateGraph agent and SQLite checkpointer
+│   ├── screening.py            # Bidirectional input/output guardrails engine
+│   ├── tracing.py              # Local SQLite and LangSmith execution tracer
+│   ├── persistence.py          # State persistence, WAL checkpointer, and health checks
 │   ├── livekit_worker.py       # LiveKit WebRTC voice agent worker
 │   ├── prompts.py              # System prompts, persona, and voice rules
 │   ├── safety.py               # Action safety policies and confirmation gating
@@ -171,8 +213,10 @@ voice-assistant/
 │       ├── docs.py             # Document search and note retrieval
 │       └── memory_tools.py     # Remember and forget tool bindings
 ├── db/
-│   ├── schema.sql              # Database DDL schema (users, tokens, history, OAuth)
-│   └── models.py               # SQLite WAL-mode abstraction layer
+│   ├── schema.sql              # Database DDL schema (users, tokens, history, traces, OAuth)
+│   ├── models.py               # SQLite WAL-mode abstraction layer
+│   ├── nexus.db                # Primary application database
+│   └── checkpoints.sqlite      # LangGraph persistent thread checkpoint database
 ├── evals/
 │   ├── run_suite.py            # Master evaluation suite runner (35 benchmarks)
 │   ├── harness.py              # Benchmark execution and scoring engine
@@ -182,6 +226,7 @@ voice-assistant/
 │   ├── ingest.py               # Document chunking and embedding pipeline
 │   └── store.py                # Cosine similarity vector store
 ├── tests/
+│   ├── test_screening_and_tracing.py # Guardrails, local tracing, and persistence tests
 │   ├── test_langgraph_safety.py# LangGraph interrupts and human-in-the-loop safety tests
 │   ├── test_agent.py           # Agent workflow and safety gating tests
 │   ├── test_auth_and_history.py# Authentication, tokens, and history tests
@@ -199,10 +244,31 @@ voice-assistant/
 ├── run_server.py               # FastAPI backend entrypoint (port 8000)
 ├── run_livekit.py              # LiveKit agent worker entrypoint
 ├── run_voice.py                # Standalone local desktop microphone runner
-├── run_golden_tests.py         # Golden Dataset 79-scenario validation runner
+├── run_golden_tests.py         # Golden Dataset validation runner
 ├── requirements.txt            # Python dependencies
 └── .env.example                # Sample environment configuration template
 ```
+
+---
+
+## REST & WebSocket API Reference
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/chat` | Main chat endpoint supporting both classic dispatcher and LangGraph agent runs. |
+| `POST` | `/api/chat/confirm` | Resumes a paused execution interrupted for human-in-the-loop approval. |
+| `POST` | `/api/langgraph/chat` | Dedicated LangGraph agent turn execution endpoint. |
+| `POST` | `/api/screening/check` | Evaluates arbitrary input or output text against the guardrails screening engine. |
+| `GET` | `/api/traces` | Lists recent execution waterfall spans and latency metrics from SQLite. |
+| `GET` | `/api/traces/{trace_id}` | Retrieves full span details and timing trees for a specific trace. |
+| `DELETE` | `/api/traces` | Clears stored execution traces. |
+| `GET` | `/api/checkpoints` | Lists stored persistent LangGraph thread IDs. |
+| `GET` | `/api/checkpoints/{session_id}` | Returns checkpoint state, message count, and pending approval interrupts. |
+| `GET` | `/api/persistence/health` | Validates database connectivity, WAL mode, checkpointer status, and table counts. |
+| `GET` | `/api/livekit/token` | Generates cryptographically signed LiveKit WebRTC audio room tokens. |
+| `POST` | `/api/stt` | Transcribes uploaded speech audio files (Whisper or local faster-whisper). |
+| `POST` | `/api/tts` | Synthesizes text to MP3 audio (OpenAI TTS-1 or local Edge-TTS). |
+| `WS` | `/ws/voice/{session_id}` | Real-time bidirectional WebSocket voice and text event stream. |
 
 ---
 
@@ -243,15 +309,20 @@ Copy the example environment template:
 cp .env.example .env
 ```
 
-Open `.env` in your code editor and populate your keys:
+Open `.env` in your code editor and populate your settings:
 
 ```ini
 # Core LLM API Key (leave empty or use 'ollama' if using local Ollama)
 OPENAI_API_KEY=your-openai-api-key-here
 
-# Optional: Local Ollama Configuration (defaults to 127.0.0.1:11434)
+# Local Ollama Configuration (defaults to 127.0.0.1:11434)
 OPENAI_BASE_URL=http://localhost:11434/v1
 OPENAI_MODEL=qwen2.5:1.5b
+
+# Optional: LangSmith Cloud Tracing (leave false for 100% local SQLite tracing)
+LANGCHAIN_TRACING_V2=false
+LANGSMITH_API_KEY=your-langsmith-api-key-here
+LANGSMITH_PROJECT=nexus-ai-assistant
 
 # LiveKit WebRTC Cloud Credentials (get free keys at cloud.livekit.io)
 LIVEKIT_URL=wss://your-project.livekit.cloud
@@ -281,7 +352,7 @@ The web dashboard is now running at `http://localhost:8000`.
 ```bash
 backend\.venv\Scripts\python.exe run_livekit.py dev
 ```
-The voice worker will connect to LiveKit Cloud and wait for audio room joins.
+The voice worker connects to LiveKit Cloud and awaits incoming audio room joins.
 
 ---
 
@@ -304,16 +375,16 @@ The voice worker will connect to LiveKit Cloud and wait for audio room joins.
 
 ---
 
-## Test Suites & Evaluation Verification
+## Test Suites & Verification
 
-The codebase includes testing at three distinct levels:
+The codebase includes testing across three rigorous validation frameworks:
 
-### 1. Pytest Unit Test Suite (83 Tests)
-Covers all modules, tools, database CRUD operations, and security policies:
+### 1. Pytest Unit Test Suite (110 Tests)
+Covers all modules, tools, screening policies, local tracing spans, checkpointer persistence, database CRUD, and security gates:
 ```bash
 backend\.venv\Scripts\python.exe -m pytest tests/ -v
 ```
-**Status: 83 passed in 65s (100% pass rate).**
+**Status: 110 passed in 87s (100% pass rate).**
 
 ### 2. Master Evaluation Suite (35 Benchmarks)
 Evaluates retrieval accuracy, latency, cost profiling, safety gating, and prompt leakage defense:
@@ -323,11 +394,11 @@ backend\.venv\Scripts\python.exe -m evals.run_suite
 **Status: 35/35 passed (100% pass rate, Production Promotion Approved).**
 
 ### 3. Golden Test Dataset (79 Scenarios)
-Comprehensive end-to-end multi-turn conversation and tool calling verification:
+Comprehensive end-to-end multi-turn conversation and tool calling verification with the local model:
 ```bash
 backend\.venv\Scripts\python.exe run_golden_tests.py
 ```
-**Status: 79/79 passed (100% pass rate).**
+**Status: 78/79 passed (98% pass rate).**
 
 ---
 
