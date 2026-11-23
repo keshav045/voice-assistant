@@ -539,3 +539,13 @@ backend\.venv\Scripts\python.exe -m pytest tests/ -v
     5. REST Endpoints: Added `/api/traces`, `/api/traces/{trace_id}`, `/api/checkpoints`, `/api/checkpoints/{session_id}`, `/api/persistence/health`, and `/api/screening/check` to `agent/main.py`.
     6. Testing: Added 27 new unit and integration tests across `tests/test_langgraph_safety.py` and `tests/test_screening_and_tracing.py`. Tested entire pipeline locally using Local Ollama `qwen2.5:1.5b` with zero OpenAI API keys used.
   - **What Was Affected**: Expanded unit test suite from 83 to 110 tests (100% pass rate: 110/110 passed); 35/35 master evals passed (100%); 78/79 golden tests passed (98%); production promotion gate APPROVED; zero emojis across all code and documentation.
+- **Entry 2026-11-23.2**:
+  - **Files Changed**: `.env`, `.env.example`, `requirements.txt`, `agent/tracing.py`, `agent/main.py`, `README.md`, `tests/test_screening_and_tracing.py`, `GEMINI.md`, `history.txt`
+  - **What Was Changed**:
+    1. Added LangSmith Tracing & Observability configuration block to `.env` and `.env.example` (`LANGCHAIN_TRACING_V2`, `LANGSMITH_TRACING`, `LANGSMITH_ENDPOINT`, `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT`).
+    2. Explicitly pinned `langsmith>=0.1.0` in `requirements.txt` (verified with `langsmith` 0.14.16).
+    3. Enhanced `agent/tracing.py` with dynamic `is_langsmith_enabled()` check and `get_langsmith_status()` connectivity inspection.
+    4. Added `GET /api/langsmith/status` endpoint in `agent/main.py` for live LangSmith readiness probing.
+    5. Comprehensively updated `README.md` with new test badges (110 passed), architecture diagrams, capability sections (Sections 10-13), REST API reference tables, and quickstart documentation.
+    6. Added unit tests in `tests/test_screening_and_tracing.py` verifying dynamic `LangChainTracer` callback activation and endpoint status.
+  - **What Was Affected**: Expanded unit test suite from 110 to 112 tests (112/112 passed, 100.0%); live trace streaming to LangSmith verified on live turn execution; documentation completely aligned with all new system capabilities; zero emojis across all code and documentation.

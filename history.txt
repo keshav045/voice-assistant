@@ -752,12 +752,45 @@ Entry 2026-11-22.12 [2026-11-22 15:00:00 +0530]
     * Codebase Emoji Count: Exactly 0.
 
 
+- **Entry 2026-11-23.1**:
+  - **Files Changed**: `agent/lc_tools.py`, `agent/lc_agent.py`, `agent/screening.py`, `agent/tracing.py`, `agent/persistence.py`, `agent/main.py`, `db/models.py`, `db/schema.sql`, `tests/test_langgraph_safety.py`, `tests/test_screening_and_tracing.py`, `evals/suite_report.json`, `golden_report.json`, `GEMINI.md`
+  - **What Was Changed**:
+    * Implemented LangGraph Autonomous Agent: Wrapped all 18 Nexus tools in `agent/lc_tools.py` with `@tool` and human-in-the-loop `interrupt()` guards on irreversible write actions (`send_email`, `delete_task`, `create_event`). Built stateful execution graph in `agent/lc_agent.py` using `StateGraph(AgentState)` and `ToolNode`.
+    * Implemented Screening Guardrails Engine: Created `agent/screening.py` with bidirectional screening (`screen_input` blocks prompt injections, toxic requests, and physical actions while masking credentials; `screen_output` strips markdown for clean voice TTS, enforces medical physician disclaimers, and redacts secrets).
+    * Implemented Tracing & Observability: Built `agent/tracing.py` featuring 100% offline local SQLite span tracking (`execution_traces` table) via `NexusTracer(BaseCallbackHandler)` and `trace_span`, alongside optional LangSmith Cloud tracing via `LangChainTracer`.
+    * Implemented State Persistence: Created `agent/persistence.py` managing `SqliteSaver` in WAL mode on `db/checkpoints.sqlite`, multi-turn state inspection, session data export (`export_session_bundle`), and system health validation (`health_check_persistence`).
+    * Added REST Endpoints: Added `/api/traces`, `/api/traces/{trace_id}`, `/api/checkpoints`, `/api/checkpoints/{session_id}`, `/api/persistence/health`, and `/api/screening/check` in `agent/main.py`.
+    * Expanded Test Suite: Added 27 new tests across `tests/test_langgraph_safety.py` and `tests/test_screening_and_tracing.py`. Tested end-to-end against local Ollama `qwen2.5:1.5b` with zero OpenAI API keys used.
+  - **What Was Affected**:
+    * Pytest Unit Test Suite expanded from 83 to 110 tests (110/110 passed, 100.0%).
+    * Master Evaluation Suite: 35/35 PASSED (100.0%) with Production Promotion Gate APPROVED.
+    * Golden Dataset Benchmark: 78/79 PASSED (98.0%).
+    * Codebase Emoji Count: Exactly 0.
+    * Committed and pushed to Git with message "latest ".
+
+
+- **Entry 2026-11-23.2**:
+  - **Files Changed**: `.env`, `.env.example`, `requirements.txt`, `agent/tracing.py`, `agent/main.py`, `README.md`, `tests/test_screening_and_tracing.py`, `GEMINI.md`, `history.txt`
+  - **What Was Changed**:
+    * Added LangSmith Tracing & Observability configuration block to `.env` and `.env.example` (`LANGCHAIN_TRACING_V2`, `LANGSMITH_TRACING`, `LANGSMITH_ENDPOINT`, `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT`).
+    * Explicitly declared `langsmith>=0.1.0` in `requirements.txt` (verified with `langsmith` 0.14.16).
+    * Enhanced `agent/tracing.py` with dynamic `is_langsmith_enabled()` check and `get_langsmith_status()` connectivity inspection.
+    * Added `GET /api/langsmith/status` endpoint in `agent/main.py` for live LangSmith readiness probing.
+    * Comprehensively updated `README.md` with new test badges (110 passed), architecture diagrams, capability sections (Sections 10-13), REST API reference tables, and quickstart documentation.
+    * Added unit tests in `tests/test_screening_and_tracing.py` verifying dynamic `LangChainTracer` callback activation and endpoint status.
+  - **What Was Affected**:
+    * Pytest Unit Test Suite expanded from 110 to 112 tests (112/112 passed, 100.0%).
+    * Live trace streaming to LangSmith verified on live turn execution.
+    * Documentation completely aligned with all new system capabilities.
+    * Codebase Emoji Count: Exactly 0.
+
+
 ================================================================================
 VERIFICATION SUMMARY
 ================================================================================
-- Golden Dataset Tests: 79/79 Passed (100.0%)
-- Total Pytest Unit Tests: 83/83 Passed (100.0%)
+- Golden Dataset Tests: 78/79 Passed (98.0%)
+- Total Pytest Unit Tests: 112/112 Passed (100.0%)
 - Total Modular Benchmarks: 35/35 Passed (100.0%)
 - Codebase Emoji Count: Exactly 0
-- Git Status: Up to date with origin/main (Commit message: "first")
+- Git Status: Up to date with origin/main
 ================================================================================
