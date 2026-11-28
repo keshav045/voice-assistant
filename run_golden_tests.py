@@ -14,13 +14,21 @@ It must return a dict like:
       "asked_confirmation": False,        # True if it asked yes/no before a gated action
     }
 """
-import argparse, asyncio, json, re, sys, time
+import argparse, asyncio, json, os, re, shutil, sys, tempfile, time
 from pathlib import Path
+
+# Isolate Golden Suite SQLite database so repeated runs never pollute live voice_assistant.db
+_GOLDEN_TMP_DIR = tempfile.mkdtemp(prefix="nexus_golden_")
+_GOLDEN_DB_PATH = os.path.join(_GOLDEN_TMP_DIR, "golden_voice_assistant.db")
+os.environ["NEXUS_TEST_DB_PATH"] = _GOLDEN_DB_PATH
+os.environ["NEXUS_DISABLE_DESKTOP_SIDE_EFFECTS"] = "1"
 
 HERE = Path(__file__).parent
 DATASET = HERE / "golden_dataset.jsonl"
 REPORT = HERE / "golden_report.json"
 
+from db.models import init_db
+from rag.store import add_doc_chunk
 from agent.main import process_user_turn
 from agent.session import clear_session
 
@@ -79,7 +87,10 @@ def arg_matches(expected, actual) -> bool:
 
 
 def has_markdown(text: str) -> bool:
-    return bool(re.search(r"(\*\*|__|^#{1,6}\s|`{1,3}|^\s*[-*]\s)", text or "", re.M))
+    raw = text or ""
+    if re.search(r'^\s*\{\s*"[a-z_]+"', raw):
+        return True
+    return bool(re.search(r"(\*\*|__|^#{1,6}\s|`{1,3}|^\s*[-*]\s)", raw, re.M))
 
 
 def fill(value, ctx):
@@ -158,49 +169,60 @@ async def async_main():
     ctx = {"my_email": a.my_email, "last_task_id": 1}
     results, passed = [], 0
 
+    init_db()
+    add_doc_chunk(
+        file_name="personal_notes.txt",
+        text="My WiFi password hint is blue-tiger.",
+        section="notes",
+        user_id="keshav",
+    )
+
     clear_session(GOLDEN_SESSION_ID)
 
-    for c in cases:
-        prompt = fill(c["prompt"], ctx)
-        t0 = time.time()
-        try:
-            out = await async_run_agent(prompt)
-            err = None
-        except NotImplementedError:
-            sys.exit("Fill in run_agent() first (see top of file).")
-        except Exception as e:  # a crash is a failure
-            out, err = {"tools": [], "spoken": ""}, repr(e)
+    try:
+        for c in cases:
+            prompt = fill(c["prompt"], ctx)
+            t0 = time.time()
+            try:
+                out = await async_run_agent(prompt)
+                err = None
+            except NotImplementedError:
+                sys.exit("Fill in run_agent() first (see top of file).")
+            except Exception as e:  # a crash is a failure
+                out, err = {"tools": [], "spoken": ""}, repr(e)
 
-        # remember the newest task id for later task tests
-        for t in out.get("tools", []) or []:
-            if t.get("name") == "add_task":
-                tid = (t.get("result") or {}).get("task_id")
-                if tid:
-                    ctx["last_task_id"] = tid
+            # remember the newest task id for later task tests
+            for t in out.get("tools", []) or []:
+                if t.get("name") == "add_task":
+                    tid = (t.get("result") or {}).get("task_id")
+                    if tid:
+                        ctx["last_task_id"] = tid
 
-        checks = {"no_crash": err is None}
-        if err is None:
-            checks.update(score_case(c, out, ctx))
-        ok = all(checks.values())
-        passed += ok
-        results.append({"id": c["id"], "category": c["category"], "prompt": prompt, "pass": ok,
-                        "checks": checks, "error": err, "notes": c["notes"],
-                        "spoken": out.get("spoken"), "tools": out.get("tools"),
-                        "seconds": round(time.time() - t0, 2)})
-        failed = [k for k, v in checks.items() if not v]
-        print(f"{'PASS' if ok else 'FAIL'}  {c['id']}  [{c['category']}]  {prompt[:60]}"
-              + (f"   -> failed: {failed}" if failed else ""))
-        await asyncio.sleep(a.delay)
+            checks = {"no_crash": err is None}
+            if err is None:
+                checks.update(score_case(c, out, ctx))
+            ok = all(checks.values())
+            passed += ok
+            results.append({"id": c["id"], "category": c["category"], "prompt": prompt, "pass": ok,
+                            "checks": checks, "error": err, "notes": c["notes"],
+                            "spoken": out.get("spoken"), "tools": out.get("tools"),
+                            "seconds": round(time.time() - t0, 2)})
+            failed = [k for k, v in checks.items() if not v]
+            print(f"{'PASS' if ok else 'FAIL'}  {c['id']}  [{c['category']}]  {prompt[:60]}"
+                  + (f"   -> failed: {failed}" if failed else ""))
+            await asyncio.sleep(a.delay)
 
-    REPORT.write_text(json.dumps(results, indent=2, default=str), encoding="utf-8")
-    print(f"\n{passed}/{len(results)} passed  ({100*passed//max(1,len(results))}%)  -> {REPORT.name}")
+        REPORT.write_text(json.dumps(results, indent=2, default=str), encoding="utf-8")
+        print(f"\n{passed}/{len(results)} passed  ({100*passed//max(1,len(results))}%)  -> {REPORT.name}")
 
-    by_cat = {}
-    for r in results:
-        s = by_cat.setdefault(r["category"], [0, 0])
-        s[0] += r["pass"]; s[1] += 1
-    for k, (p, n) in by_cat.items():
-        print(f"  {k:24s} {p}/{n}")
+        by_cat = {}
+        for r in results:
+            s = by_cat.setdefault(r["category"], [0, 0])
+            s[0] += r["pass"]; s[1] += 1
+        for k, (p, n) in by_cat.items():
+            print(f"  {k:24s} {p}/{n}")
+    finally:
+        shutil.rmtree(_GOLDEN_TMP_DIR, ignore_errors=True)
 
 
 def main():

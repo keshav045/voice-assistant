@@ -11,7 +11,16 @@ services:
       - "${PORT:-8000}:8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-http://host.docker.internal:11434/v1}
+      - OPENAI_MODEL=${OPENAI_MODEL:-qwen2.5:1.5b}
+      - LIVEKIT_URL=${LIVEKIT_URL}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - WHISPER_MODEL_SIZE=${WHISPER_MODEL_SIZE:-base.en}
+      - PIPER_VOICE=${PIPER_VOICE:-en_US-lessac-medium}
       - PORT=8000
       - HOST=0.0.0.0
       - DB_PATH=/app/data/voice_assistant.db

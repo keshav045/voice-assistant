@@ -33,20 +33,54 @@ from db.models import (
 
 logger = logging.getLogger("nexus.persistence")
 
-CHECKPOINTS_DB_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "db", "checkpoints.sqlite"
+CHECKPOINTS_DB_PATH = os.environ.get(
+    "NEXUS_TEST_CHECKPOINTS_DB_PATH",
+    os.environ.get(
+        "CHECKPOINTS_DB_PATH",
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "db", "checkpoints.sqlite"),
+    ),
 )
 
 _GLOBAL_CHECKPOINTER: Optional[BaseCheckpointSaver] = None
+_GLOBAL_CHECKPOINTER_PATH: Optional[str] = None
+_GLOBAL_CHECKPOINTER_CONN: Optional[sqlite3.Connection] = None
+
+
+def _resolve_checkpoints_db_path(explicit_path: Optional[str] = None) -> str:
+    """Resolve the active LangGraph checkpoints SQLite path honoring test/env overrides."""
+    if explicit_path:
+        return explicit_path
+    return (
+        os.environ.get("NEXUS_TEST_CHECKPOINTS_DB_PATH")
+        or os.environ.get("CHECKPOINTS_DB_PATH")
+        or CHECKPOINTS_DB_PATH
+    )
+
+
+def reset_checkpointer() -> None:
+    """Close and reset any cached singleton checkpointer connection."""
+    global _GLOBAL_CHECKPOINTER, _GLOBAL_CHECKPOINTER_PATH, _GLOBAL_CHECKPOINTER_CONN
+    if _GLOBAL_CHECKPOINTER_CONN is not None:
+        try:
+            _GLOBAL_CHECKPOINTER_CONN.close()
+        except Exception:
+            pass
+    _GLOBAL_CHECKPOINTER = None
+    _GLOBAL_CHECKPOINTER_PATH = None
+    _GLOBAL_CHECKPOINTER_CONN = None
 
 
 def get_checkpointer(db_path: Optional[str] = None) -> BaseCheckpointSaver:
     """Get or create singleton persistent SQLite checkpointer in WAL mode."""
-    global _GLOBAL_CHECKPOINTER
-    if _GLOBAL_CHECKPOINTER is not None and db_path is None:
+    global _GLOBAL_CHECKPOINTER, _GLOBAL_CHECKPOINTER_PATH, _GLOBAL_CHECKPOINTER_CONN
+    target_path = _resolve_checkpoints_db_path(db_path)
+    if (
+        _GLOBAL_CHECKPOINTER is not None
+        and db_path is None
+        and _GLOBAL_CHECKPOINTER_PATH == target_path
+    ):
         return _GLOBAL_CHECKPOINTER
 
-    target_path = db_path or CHECKPOINTS_DB_PATH
     try:
         os.makedirs(os.path.dirname(os.path.abspath(target_path)), exist_ok=True)
         conn = sqlite3.connect(target_path, check_same_thread=False)
@@ -56,7 +90,10 @@ def get_checkpointer(db_path: Optional[str] = None) -> BaseCheckpointSaver:
         saver = SqliteSaver(conn)
         saver.setup()
         if db_path is None:
+            reset_checkpointer()
             _GLOBAL_CHECKPOINTER = saver
+            _GLOBAL_CHECKPOINTER_PATH = target_path
+            _GLOBAL_CHECKPOINTER_CONN = conn
         return saver
     except Exception as exc:
         logger.warning(f"Failed to initialize SqliteSaver at {target_path} ({exc}); falling back to InMemorySaver")
@@ -106,10 +143,11 @@ def get_checkpoint_state(thread_id: str, graph_instance: Any = None) -> Dict[str
 
 def list_saved_threads(limit: int = 50) -> List[Dict[str, Any]]:
     """Query thread IDs stored in the SQLite checkpointer database."""
-    target_path = CHECKPOINTS_DB_PATH
+    target_path = _resolve_checkpoints_db_path()
     if not os.path.exists(target_path):
         return []
 
+    conn = None
     try:
         conn = sqlite3.connect(target_path, check_same_thread=False)
         cur = conn.cursor()
@@ -120,7 +158,6 @@ def list_saved_threads(limit: int = 50) -> List[Dict[str, Any]]:
             (limit,),
         )
         rows = cur.fetchall()
-        conn.close()
         return [
             {
                 "thread_id": r[0],
@@ -132,25 +169,37 @@ def list_saved_threads(limit: int = 50) -> List[Dict[str, Any]]:
     except Exception as exc:
         logger.debug(f"Could not query checkpoints table directly: {exc}")
         return []
+    finally:
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 def delete_thread_checkpoint(thread_id: str) -> bool:
     """Delete checkpoint records for a specific thread."""
-    target_path = CHECKPOINTS_DB_PATH
+    target_path = _resolve_checkpoints_db_path()
     if not os.path.exists(target_path):
         return False
 
+    conn = None
     try:
         conn = sqlite3.connect(target_path, check_same_thread=False)
         conn.execute("DELETE FROM checkpoints WHERE thread_id = ?", (thread_id,))
         conn.execute("DELETE FROM checkpoint_blobs WHERE thread_id = ?", (thread_id,))
         conn.execute("DELETE FROM checkpoint_writes WHERE thread_id = ?", (thread_id,))
         conn.commit()
-        conn.close()
         return True
     except Exception as exc:
         logger.error(f"Error deleting checkpoint for {thread_id}: {exc}")
         return False
+    finally:
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 def export_session_bundle(session_id: str, user_id: str = "guest") -> Dict[str, Any]:

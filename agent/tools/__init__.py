@@ -1,7 +1,7 @@
 """Tools catalog and dispatcher for Personal Voice Assistant."""
 
 from typing import Any, Callable, Dict, List
-from agent.tools.search import web_search, get_current_time
+from agent.tools.search import web_search, get_current_time, get_live_news
 from agent.tools.calendar import list_events, find_free_slot, create_event
 from agent.tools.email import search_email, search_emails, summarize_email, draft_reply, send_email  # send_email does real SMTP
 from agent.tools.tasks import add_task, list_tasks, complete_task, delete_task
@@ -15,6 +15,7 @@ from agent.tools.medical import medical_search
 
 TOOLS_REGISTRY: Dict[str, Callable[..., Any]] = {
     "web_search": web_search,
+    "get_live_news": get_live_news,
     "get_current_time": get_current_time,
     "calculator": calculator,
     "medical_search": medical_search,
@@ -121,12 +122,27 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "get_live_news",
+            "description": "Fetch live headline briefings for a standard news category ONLY (top, world, india, technology, business, sports, science, health). For explicit search queries ('search ...'), live cricket scores, or specific topics, use web_search instead.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "topic": {"type": "string", "description": "Standard news category: 'top', 'world', 'india', 'technology', 'business', 'sports', 'science', or 'health'."},
+                    "max_results": {"type": "integer", "description": "Maximum number of headlines to return (default 5)."},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "web_search",
             "description": "Search the web for real-time information, latest news headlines, live cricket scores, sports match scorecards, current events, and up-to-date facts. Do NOT call this when the user asks to open or search inside YouTube, WhatsApp, or specific applications (use open_app instead).",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "query": {"type": "string", "description": "The search query string"},
+                    "max_results": {"type": "integer", "description": "Maximum number of results to return (default 5)."},
                 },
                 "required": ["query"],
             },
@@ -168,7 +184,7 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "timezone_str": {"type": "string", "description": "Optional timezone identifier e.g. Asia/Kolkata"},
+                    "timezone": {"type": "string", "description": "IANA timezone identifier e.g. Asia/Kolkata, America/New_York, Asia/Tokyo"},
                 },
             },
         },

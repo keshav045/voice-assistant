@@ -1,0 +1,527 @@
+{
+  "rescored_runs": {
+    "task1b_ollama_stopped.json": {
+      "clips": 15,
+      "avg_wer": 0.2382,
+      "avg_wer_excl_hinglish_P11_P12": 0.1477,
+      "entity_matched": 25,
+      "entity_expected": 30,
+      "entity_accuracy": 0.8333,
+      "entity_acc_excl_hinglish": 0.8276
+    },
+    "task1b_ollama_idle.json": {
+      "clips": 15,
+      "avg_wer": 0.2382,
+      "avg_wer_excl_hinglish_P11_P12": 0.1477,
+      "entity_matched": 25,
+      "entity_expected": 30,
+      "entity_accuracy": 0.8333,
+      "entity_acc_excl_hinglish": 0.8276
+    },
+    "task1b_ollama_generating.json": {
+      "clips": 15,
+      "avg_wer": 0.2382,
+      "avg_wer_excl_hinglish_P11_P12": 0.1477,
+      "entity_matched": 25,
+      "entity_expected": 30,
+      "entity_accuracy": 0.8333,
+      "entity_acc_excl_hinglish": 0.8276
+    },
+    "task1d_threads_3.json": {
+      "clips": 15,
+      "avg_wer": 0.2382,
+      "avg_wer_excl_hinglish_P11_P12": 0.1477,
+      "entity_matched": 25,
+      "entity_expected": 30,
+      "entity_accuracy": 0.8333,
+      "entity_acc_excl_hinglish": 0.8276
+    },
+    "task1d_threads_6.json": {
+      "clips": 15,
+      "avg_wer": 0.2382,
+      "avg_wer_excl_hinglish_P11_P12": 0.1477,
+      "entity_matched": 25,
+      "entity_expected": 30,
+      "entity_accuracy": 0.8333,
+      "entity_acc_excl_hinglish": 0.8276
+    },
+    "task1d_threads_12.json": {
+      "clips": 15,
+      "avg_wer": 0.2382,
+      "avg_wer_excl_hinglish_P11_P12": 0.1477,
+      "entity_matched": 25,
+      "entity_expected": 30,
+      "entity_accuracy": 0.8333,
+      "entity_acc_excl_hinglish": 0.8276
+    },
+    "task1e_vad_off.json": {
+      "clips": 15,
+      "avg_wer": 0.2382,
+      "avg_wer_excl_hinglish_P11_P12": 0.1477,
+      "entity_matched": 25,
+      "entity_expected": 30,
+      "entity_accuracy": 0.8333,
+      "entity_acc_excl_hinglish": 0.8276
+    },
+    "task2a_tiny_b1_default.json": {
+      "clips": 15,
+      "avg_wer": 0.2875,
+      "avg_wer_excl_hinglish_P11_P12": 0.1875,
+      "entity_matched": 24,
+      "entity_expected": 30,
+      "entity_accuracy": 0.8,
+      "entity_acc_excl_hinglish": 0.8276
+    },
+    "task2a_tiny_b1_prompt.json": {
+      "clips": 15,
+      "avg_wer": 0.2752,
+      "avg_wer_excl_hinglish_P11_P12": 0.1905,
+      "entity_matched": 23,
+      "entity_expected": 30,
+      "entity_accuracy": 0.7667,
+      "entity_acc_excl_hinglish": 0.7931
+    },
+    "task2a_tiny_b3_prompt.json": {
+      "clips": 15,
+      "avg_wer": 0.2724,
+      "avg_wer_excl_hinglish_P11_P12": 0.1701,
+      "entity_matched": 24,
+      "entity_expected": 30,
+      "entity_accuracy": 0.8,
+      "entity_acc_excl_hinglish": 0.8276
+    },
+    "task2c_base_b1_prompt.json": {
+      "clips": 15,
+      "avg_wer": 0.2751,
+      "avg_wer_excl_hinglish_P11_P12": 0.1999,
+      "entity_matched": 24,
+      "entity_expected": 30,
+      "entity_accuracy": 0.8,
+      "entity_acc_excl_hinglish": 0.7931
+    }
+  },
+  "category_breakdown": {
+    "task1b_ollama_stopped.json": {
+      "clean_english": {
+        "clip_count": 3,
+        "avg_wer": 0.1111,
+        "entity_matched": 5,
+        "entity_expected": 5,
+        "entity_accuracy": 1.0
+      },
+      "indian_english_accent": {
+        "clip_count": 2,
+        "avg_wer": 0.1875,
+        "entity_matched": 3,
+        "entity_expected": 3,
+        "entity_accuracy": 1.0
+      },
+      "numbers_amounts_emails": {
+        "clip_count": 3,
+        "avg_wer": 0.1595,
+        "entity_matched": 8,
+        "entity_expected": 10,
+        "entity_accuracy": 0.8
+      },
+      "names": {
+        "clip_count": 2,
+        "avg_wer": 0.2666,
+        "entity_matched": 3,
+        "entity_expected": 6,
+        "entity_accuracy": 0.5
+      },
+      "hinglish": {
+        "clip_count": 2,
+        "avg_wer": 0.8264,
+        "entity_matched": 1,
+        "entity_expected": 1,
+        "entity_accuracy": 1.0
+      },
+      "noisy_far_mic": {
+        "clip_count": 2,
+        "avg_wer": 0.0,
+        "entity_matched": 1,
+        "entity_expected": 1,
+        "entity_accuracy": 1.0
+      },
+      "pauses_corrections": {
+        "clip_count": 1,
+        "avg_wer": 0.2,
+        "entity_matched": 4,
+        "entity_expected": 4,
+        "entity_accuracy": 1.0
+      }
+    },
+    "task2a_tiny_b1_default.json": {
+      "clean_english": {
+        "clip_count": 3,
+        "avg_wer": 0.2434,
+        "entity_matched": 4,
+        "entity_expected": 5,
+        "entity_accuracy": 0.8
+      },
+      "indian_english_accent": {
+        "clip_count": 2,
+        "avg_wer": 0.1875,
+        "entity_matched": 3,
+        "entity_expected": 3,
+        "entity_accuracy": 1.0
+      },
+      "numbers_amounts_emails": {
+        "clip_count": 3,
+        "avg_wer": 0.2071,
+        "entity_matched": 7,
+        "entity_expected": 10,
+        "entity_accuracy": 0.7
+      },
+      "names": {
+        "clip_count": 2,
+        "avg_wer": 0.0556,
+        "entity_matched": 5,
+        "entity_expected": 6,
+        "entity_accuracy": 0.8333
+      },
+      "hinglish": {
+        "clip_count": 2,
+        "avg_wer": 0.9375,
+        "entity_matched": 0,
+        "entity_expected": 1,
+        "entity_accuracy": 0.0
+      },
+      "noisy_far_mic": {
+        "clip_count": 2,
+        "avg_wer": 0.2,
+        "entity_matched": 1,
+        "entity_expected": 1,
+        "entity_accuracy": 1.0
+      },
+      "pauses_corrections": {
+        "clip_count": 1,
+        "avg_wer": 0.2,
+        "entity_matched": 4,
+        "entity_expected": 4,
+        "entity_accuracy": 1.0
+      }
+    },
+    "task2a_tiny_b1_prompt.json": {
+      "clean_english": {
+        "clip_count": 3,
+        "avg_wer": 0.1898,
+        "entity_matched": 4,
+        "entity_expected": 5,
+        "entity_accuracy": 0.8
+      },
+      "indian_english_accent": {
+        "clip_count": 2,
+        "avg_wer": 0.1875,
+        "entity_matched": 3,
+        "entity_expected": 3,
+        "entity_accuracy": 1.0
+      },
+      "numbers_amounts_emails": {
+        "clip_count": 3,
+        "avg_wer": 0.2364,
+        "entity_matched": 7,
+        "entity_expected": 10,
+        "entity_accuracy": 0.7
+      },
+      "names": {
+        "clip_count": 2,
+        "avg_wer": 0.1111,
+        "entity_matched": 4,
+        "entity_expected": 6,
+        "entity_accuracy": 0.6667
+      },
+      "hinglish": {
+        "clip_count": 2,
+        "avg_wer": 0.8264,
+        "entity_matched": 0,
+        "entity_expected": 1,
+        "entity_accuracy": 0.0
+      },
+      "noisy_far_mic": {
+        "clip_count": 2,
+        "avg_wer": 0.2,
+        "entity_matched": 1,
+        "entity_expected": 1,
+        "entity_accuracy": 1.0
+      },
+      "pauses_corrections": {
+        "clip_count": 1,
+        "avg_wer": 0.2,
+        "entity_matched": 4,
+        "entity_expected": 4,
+        "entity_accuracy": 1.0
+      }
+    },
+    "task2a_tiny_b3_prompt.json": {
+      "clean_english": {
+        "clip_count": 3,
+        "avg_wer": 0.1898,
+        "entity_matched": 4,
+        "entity_expected": 5,
+        "entity_accuracy": 0.8
+      },
+      "indian_english_accent": {
+        "clip_count": 2,
+        "avg_wer": 0.1875,
+        "entity_matched": 3,
+        "entity_expected": 3,
+        "entity_accuracy": 1.0
+      },
+      "numbers_amounts_emails": {
+        "clip_count": 3,
+        "avg_wer": 0.1852,
+        "entity_matched": 8,
+        "entity_expected": 10,
+        "entity_accuracy": 0.8
+      },
+      "names": {
+        "clip_count": 2,
+        "avg_wer": 0.0556,
+        "entity_matched": 4,
+        "entity_expected": 6,
+        "entity_accuracy": 0.6667
+      },
+      "hinglish": {
+        "clip_count": 2,
+        "avg_wer": 0.9375,
+        "entity_matched": 0,
+        "entity_expected": 1,
+        "entity_accuracy": 0.0
+      },
+      "noisy_far_mic": {
+        "clip_count": 2,
+        "avg_wer": 0.2,
+        "entity_matched": 1,
+        "entity_expected": 1,
+        "entity_accuracy": 1.0
+      },
+      "pauses_corrections": {
+        "clip_count": 1,
+        "avg_wer": 0.2,
+        "entity_matched": 4,
+        "entity_expected": 4,
+        "entity_accuracy": 1.0
+      }
+    },
+    "task2c_base_b1_prompt.json": {
+      "clean_english": {
+        "clip_count": 3,
+        "avg_wer": 0.1111,
+        "entity_matched": 5,
+        "entity_expected": 5,
+        "entity_accuracy": 1.0
+      },
+      "indian_english_accent": {
+        "clip_count": 2,
+        "avg_wer": 0.1875,
+        "entity_matched": 3,
+        "entity_expected": 3,
+        "entity_accuracy": 1.0
+      },
+      "numbers_amounts_emails": {
+        "clip_count": 3,
+        "avg_wer": 0.2155,
+        "entity_matched": 8,
+        "entity_expected": 10,
+        "entity_accuracy": 0.8
+      },
+      "names": {
+        "clip_count": 2,
+        "avg_wer": 0.3222,
+        "entity_matched": 2,
+        "entity_expected": 6,
+        "entity_accuracy": 0.3333
+      },
+      "hinglish": {
+        "clip_count": 2,
+        "avg_wer": 0.7639,
+        "entity_matched": 1,
+        "entity_expected": 1,
+        "entity_accuracy": 1.0
+      },
+      "noisy_far_mic": {
+        "clip_count": 2,
+        "avg_wer": 0.2,
+        "entity_matched": 1,
+        "entity_expected": 1,
+        "entity_accuracy": 1.0
+      },
+      "pauses_corrections": {
+        "clip_count": 1,
+        "avg_wer": 0.2,
+        "entity_matched": 4,
+        "entity_expected": 4,
+        "entity_accuracy": 1.0
+      }
+    }
+  },
+  "task5_gap_check": {
+    "sum_of_stage_avgs_ms": 3382.1,
+    "server_ttfa_avg_ms": 3745.8,
+    "avg_gap_ms": 363.7,
+    "sum_of_stage_p50s_ms": 3028.9,
+    "server_ttfa_p50_ms": 3500.5,
+    "p50_vs_sum_of_p50s_gap_ms": 471.6,
+    "per_turn_gaps_ms": [
+      423.4,
+      319.0,
+      343.1,
+      566.5,
+      166.4
+    ]
+  },
+  "per_clip_baseline_stopped": [
+    {
+      "clip": "synth_P14.wav",
+      "category": "noisy_far_mic",
+      "dur_s": 1.8228,
+      "warm_p50_ms": 1000.5,
+      "warm_p95_ms": 1041.0,
+      "warm_rtf_p50": 0.5489,
+      "wer": 0.0,
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P09.wav",
+      "category": "names",
+      "dur_s": 1.9157,
+      "warm_p50_ms": 1015.1,
+      "warm_p95_ms": 1143.3,
+      "warm_rtf_p50": 0.5299,
+      "wer": 0.2,
+      "entity_accuracy": 0.5
+    },
+    {
+      "clip": "synth_P05.wav",
+      "category": "indian_english_accent",
+      "dur_s": 2.1479,
+      "warm_p50_ms": 1113.4,
+      "warm_p95_ms": 1204.6,
+      "warm_rtf_p50": 0.5184,
+      "wer": 0.0,
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P13.wav",
+      "category": "noisy_far_mic",
+      "dur_s": 2.4962,
+      "warm_p50_ms": 931.5,
+      "warm_p95_ms": 995.1,
+      "warm_rtf_p50": 0.3732,
+      "wer": 0.0,
+      "entity_accuracy": null
+    },
+    {
+      "clip": "synth_P01.wav",
+      "category": "clean_english",
+      "dur_s": 2.5426,
+      "warm_p50_ms": 1005.4,
+      "warm_p95_ms": 1070.2,
+      "warm_rtf_p50": 0.3954,
+      "wer": 0.0,
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P11.wav",
+      "category": "hinglish",
+      "dur_s": 2.7981,
+      "warm_p50_ms": 1074.1,
+      "warm_p95_ms": 1234.0,
+      "warm_rtf_p50": 0.3839,
+      "wer": 0.875,
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P02.wav",
+      "category": "clean_english",
+      "dur_s": 2.8096,
+      "warm_p50_ms": 1030.8,
+      "warm_p95_ms": 1143.9,
+      "warm_rtf_p50": 0.3669,
+      "wer": 0.0,
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P03.wav",
+      "category": "clean_english",
+      "dur_s": 2.8445,
+      "warm_p50_ms": 1007.6,
+      "warm_p95_ms": 1194.0,
+      "warm_rtf_p50": 0.3542,
+      "wer": 0.3333,
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P04.wav",
+      "category": "indian_english_accent",
+      "dur_s": 3.0186,
+      "warm_p50_ms": 1011.1,
+      "warm_p95_ms": 1150.3,
+      "warm_rtf_p50": 0.335,
+      "wer": 0.375,
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P12.wav",
+      "category": "hinglish",
+      "dur_s": 3.0303,
+      "warm_p50_ms": 1072.0,
+      "warm_p95_ms": 1147.7,
+      "warm_rtf_p50": 0.3538,
+      "wer": 0.7778,
+      "entity_accuracy": null
+    },
+    {
+      "clip": "synth_P10.wav",
+      "category": "names",
+      "dur_s": 3.3901,
+      "warm_p50_ms": 1052.4,
+      "warm_p95_ms": 1292.5,
+      "warm_rtf_p50": 0.3104,
+      "wer": 0.3333,
+      "entity_accuracy": 0.5
+    },
+    {
+      "clip": "synth_P15.wav",
+      "category": "pauses_corrections",
+      "dur_s": 3.3901,
+      "warm_p50_ms": 1050.9,
+      "warm_p95_ms": 1069.4,
+      "warm_rtf_p50": 0.31,
+      "wer": 0.2,
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P06.wav",
+      "category": "numbers_amounts_emails",
+      "dur_s": 3.5991,
+      "warm_p50_ms": 1158.9,
+      "warm_p95_ms": 1447.8,
+      "warm_rtf_p50": 0.322,
+      "wer": 0.1429,
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P07.wav",
+      "category": "numbers_amounts_emails",
+      "dur_s": 4.0635,
+      "warm_p50_ms": 1074.5,
+      "warm_p95_ms": 1569.2,
+      "warm_rtf_p50": 0.2644,
+      "wer": 0.1538,
+      "entity_accuracy": 0.6667
+    },
+    {
+      "clip": "synth_P08.wav",
+      "category": "numbers_amounts_emails",
+      "dur_s": 4.7601,
+      "warm_p50_ms": 1069.3,
+      "warm_p95_ms": 1625.7,
+      "warm_rtf_p50": 0.2246,
+      "wer": 0.1818,
+      "entity_accuracy": 0.6667
+    }
+  ]
+}

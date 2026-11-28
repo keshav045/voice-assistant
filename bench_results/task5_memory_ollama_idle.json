@@ -1,0 +1,102 @@
+{
+  "ollama_processes": [
+    {
+      "ProcessName": "ollama",
+      "Id": 18284,
+      "RAM_MB": 46.5,
+      "Private_MB": 71.3
+    }
+  ],
+  "os_memory_idle": {
+    "TotalVisibleMemorySize": 7698540,
+    "FreePhysicalMemory": 954000,
+    "TotalVirtualMemorySize": 26393236,
+    "FreeVirtualMemory": 9595176
+  },
+  "top10_processes_idle": [
+    {
+      "ProcessName": "Memory Compression",
+      "Id": 4180,
+      "RAM_MB": 646,
+      "Private_MB": 6.8
+    },
+    {
+      "ProcessName": "llama-server",
+      "Id": 10640,
+      "RAM_MB": 634.1,
+      "Private_MB": 1997.9
+    },
+    {
+      "ProcessName": "Code",
+      "Id": 18052,
+      "RAM_MB": 330.1,
+      "Private_MB": 406.6
+    },
+    {
+      "ProcessName": "agy",
+      "Id": 7184,
+      "RAM_MB": 304.5,
+      "Private_MB": 362.8
+    },
+    {
+      "ProcessName": "Code",
+      "Id": 14340,
+      "RAM_MB": 221.9,
+      "Private_MB": 387.4
+    },
+    {
+      "ProcessName": "MsMpEng",
+      "Id": 7200,
+      "RAM_MB": 186.6,
+      "Private_MB": 417.8
+    },
+    {
+      "ProcessName": "Code",
+      "Id": 14536,
+      "RAM_MB": 120,
+      "Private_MB": 724.1
+    },
+    {
+      "ProcessName": "explorer",
+      "Id": 10024,
+      "RAM_MB": 93.3,
+      "Private_MB": 209.2
+    },
+    {
+      "ProcessName": "OneDrive",
+      "Id": 6940,
+      "RAM_MB": 85.9,
+      "Private_MB": 153.1
+    },
+    {
+      "ProcessName": "powershell",
+      "Id": 12228,
+      "RAM_MB": 78.8,
+      "Private_MB": 62
+    }
+  ],
+  "api_ps": {
+    "models": [
+      {
+        "name": "qwen2.5:1.5b",
+        "model": "qwen2.5:1.5b",
+        "size": 1169382440,
+        "digest": "65ec06548149b04c096a120e4a6da9d4017ea809c91734ea5631e89f96ddc57b",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen2",
+          "families": [
+            "qwen2"
+          ],
+          "parameter_size": "1.5B",
+          "quantization_level": "Q4_K_M"
+        },
+        "expires_at": "2026-11-28T15:52:30.4862508+05:30",
+        "size_vram": 1169382440,
+        "context_length": 4096,
+        "runner": "llamacpp"
+      }
+    ]
+  }
+}

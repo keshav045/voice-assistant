@@ -21,16 +21,33 @@ default_db_path = (
     else os.path.join(os.path.dirname(os.path.dirname(__file__)), "voice_assistant.db")
 )
 
-DB_PATH = os.environ.get("DB_PATH", os.environ.get("SQLITE_DB_PATH", default_db_path))
+_INITIAL_DB_PATH = os.environ.get(
+    "NEXUS_TEST_DB_PATH",
+    os.environ.get("DB_PATH", os.environ.get("SQLITE_DB_PATH", default_db_path)),
+)
+DB_PATH = _INITIAL_DB_PATH
 SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "schema.sql")
+
+
+def _resolve_db_path() -> str:
+    """Resolve active SQLite database path while honoring test/runtime overrides."""
+    if DB_PATH != _INITIAL_DB_PATH:
+        return DB_PATH
+    return (
+        os.environ.get("NEXUS_TEST_DB_PATH")
+        or os.environ.get("DB_PATH")
+        or os.environ.get("SQLITE_DB_PATH")
+        or DB_PATH
+    )
 
 
 def get_db_connection() -> sqlite3.Connection:
     """Return a production-ready connection to the SQLite database with WAL mode (or standard rollback on serverless)."""
-    db_dir = os.path.dirname(os.path.abspath(DB_PATH))
+    active_path = _resolve_db_path()
+    db_dir = os.path.dirname(os.path.abspath(active_path))
     if db_dir and not os.path.exists(db_dir):
         os.makedirs(db_dir, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH, timeout=30.0, check_same_thread=False)
+    conn = sqlite3.connect(active_path, timeout=30.0, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     try:
         if not IS_SERVERLESS:
@@ -43,88 +60,276 @@ def get_db_connection() -> sqlite3.Connection:
     return conn
 
 
+def _ensure_column(conn: sqlite3.Connection, table: str, column: str, column_ddl: str) -> None:
+    """Safely add a column to an existing SQLite table if missing."""
+    cols = {row[1] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+    if column not in cols:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {column_ddl}")
+
+
 def init_db() -> None:
-    """Initialize database tables from schema.sql."""
+    """Initialize database tables from schema.sql and run safe forward migrations."""
     with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
         schema_sql = f.read()
     with get_db_connection() as conn:
         conn.executescript(schema_sql)
+        _ensure_column(conn, "tasks", "user_id", "TEXT NOT NULL DEFAULT 'guest'")
+        _ensure_column(conn, "tasks", "priority", "TEXT NOT NULL DEFAULT 'medium'")
+        _ensure_column(conn, "memory_facts", "user_id", "TEXT NOT NULL DEFAULT 'guest'")
+        _ensure_column(conn, "reminders", "user_id", "TEXT NOT NULL DEFAULT 'guest'")
+        _ensure_column(conn, "notes", "user_id", "TEXT NOT NULL DEFAULT 'guest'")
+        _ensure_column(conn, "doc_chunks", "user_id", "TEXT NOT NULL DEFAULT 'guest'")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_tasks_user_status ON tasks(user_id, status)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_calendar_events_user_start ON calendar_events(user_id, start)")
+        try:
+            conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique ON users(email) WHERE email IS NOT NULL")
+        except sqlite3.IntegrityError:
+            pass
         conn.commit()
 
 
 # --- Task Operations ---
-def db_add_task(title: str, due_at: Optional[str] = None) -> Dict[str, Any]:
+def _resolve_task_row(
+    conn: sqlite3.Connection,
+    task_id: str,
+    user_id: Optional[str] = None,
+) -> Optional[Dict[str, Any]]:
+    """Resolve a single task row by exact ID, exact title, or >=3-char title substring."""
+    clean = str(task_id or "").strip()
+    if not clean:
+        return None
+    uid_clause = " AND user_id = ?" if user_id else ""
+    uid_params = (user_id,) if user_id else ()
+
+    # 1. Exact primary ID match
+    cur = conn.execute(
+        f"SELECT * FROM tasks WHERE id = ?{uid_clause} LIMIT 1",
+        (clean, *uid_params),
+    )
+    row = cur.fetchone()
+    if row:
+        return dict(row)
+
+    # 2. Case-insensitive exact title match
+    cur = conn.execute(
+        f"SELECT * FROM tasks WHERE LOWER(title) = LOWER(?){uid_clause} ORDER BY created_at DESC, rowid DESC LIMIT 1",
+        (clean, *uid_params),
+    )
+    row = cur.fetchone()
+    if row:
+        return dict(row)
+
+    # 3. Substring title match only for queries >= 3 chars to prevent accidental wildcard matches
+    if len(clean) >= 3:
+        cur = conn.execute(
+            f"SELECT * FROM tasks WHERE LOWER(title) LIKE ?{uid_clause} ORDER BY created_at DESC, rowid DESC LIMIT 1",
+            (f"%{clean.lower()}%", *uid_params),
+        )
+        row = cur.fetchone()
+        if row:
+            return dict(row)
+    return None
+
+
+def db_add_task(
+    title: str,
+    due_at: Optional[str] = None,
+    priority: str = "medium",
+    user_id: Optional[str] = None,
+) -> Dict[str, Any]:
     task_id = f"task-{uuid.uuid4().hex[:8]}"
     now = datetime.now(timezone.utc).isoformat()
+    eff_uid = (user_id or "guest").strip() or "guest"
+    eff_prio = (priority or "medium").strip().lower()
     with get_db_connection() as conn:
         conn.execute(
-            "INSERT INTO tasks (id, title, due_at, status, created_at) VALUES (?, ?, ?, 'pending', ?)",
-            (task_id, title, due_at, now),
+            "INSERT INTO tasks (id, user_id, title, priority, due_at, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', ?)",
+            (task_id, eff_uid, title, eff_prio, due_at, now),
         )
         conn.commit()
-    return {"id": task_id, "title": title, "due_at": due_at, "status": "pending", "created_at": now}
+    return {
+        "id": task_id,
+        "user_id": eff_uid,
+        "title": title,
+        "priority": eff_prio,
+        "due_at": due_at,
+        "status": "pending",
+        "created_at": now,
+    }
 
 
-def db_list_tasks(status: Optional[str] = None) -> List[Dict[str, Any]]:
+def db_list_tasks(status: Optional[str] = None, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
     with get_db_connection() as conn:
+        clauses: List[str] = []
+        params: List[Any] = []
         if status:
-            cur = conn.execute("SELECT * FROM tasks WHERE status = ? ORDER BY created_at DESC", (status,))
-        else:
-            cur = conn.execute("SELECT * FROM tasks ORDER BY created_at DESC")
+            clauses.append("status = ?")
+            params.append(status)
+        if user_id:
+            clauses.append("user_id = ?")
+            params.append(user_id)
+        where = f" WHERE {' AND '.join(clauses)}" if clauses else ""
+        cur = conn.execute(f"SELECT * FROM tasks{where} ORDER BY created_at DESC, rowid DESC", tuple(params))
         return [dict(row) for row in cur.fetchall()]
 
 
-def db_complete_task(task_id: str) -> bool:
+def db_find_task(task_id: str, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """Find a task without mutating it (used for HITL confirmation validation)."""
+    with get_db_connection() as conn:
+        return _resolve_task_row(conn, task_id, user_id=user_id)
+
+
+def db_complete_task(task_id: str, user_id: Optional[str] = None) -> bool:
     now = datetime.now(timezone.utc).isoformat()
     with get_db_connection() as conn:
+        row = _resolve_task_row(conn, task_id, user_id=user_id)
+        if not row:
+            return False
         cur = conn.execute(
-            "UPDATE tasks SET status = 'completed', completed_at = ? WHERE id = ? OR title LIKE ?",
-            (now, task_id, f"%{task_id}%"),
+            "UPDATE tasks SET status = 'completed', completed_at = ? WHERE id = ?",
+            (now, row["id"]),
         )
         conn.commit()
         return cur.rowcount > 0
 
 
-def db_delete_task(task_id: str) -> bool:
+def db_delete_task(task_id: str, user_id: Optional[str] = None) -> bool:
     with get_db_connection() as conn:
-        cur = conn.execute(
-            "DELETE FROM tasks WHERE id = ? OR title LIKE ?",
-            (str(task_id), f"%{task_id}%"),
-        )
+        row = _resolve_task_row(conn, task_id, user_id=user_id)
+        if not row:
+            return False
+        cur = conn.execute("DELETE FROM tasks WHERE id = ?", (row["id"],))
         conn.commit()
         return cur.rowcount > 0
 
 
 # --- Memory Operations ---
-def db_add_fact(fact: str, category: str = "general") -> Dict[str, Any]:
-    fact_id = f"fact-{uuid.uuid4().hex[:8]}"
+def db_add_fact(
+    fact: str,
+    category: str = "general",
+    user_id: Optional[str] = None,
+) -> Dict[str, Any]:
     now = datetime.now(timezone.utc).isoformat()
+    eff_uid = (user_id or "guest").strip() or "guest"
+    clean_fact = str(fact).strip()
     with get_db_connection() as conn:
+        existing = conn.execute(
+            "SELECT * FROM memory_facts WHERE user_id = ? AND LOWER(fact) = LOWER(?) LIMIT 1",
+            (eff_uid, clean_fact),
+        ).fetchone()
+        if existing:
+            conn.execute(
+                "UPDATE memory_facts SET last_used_at = ?, category = ? WHERE id = ?",
+                (now, category or existing["category"], existing["id"]),
+            )
+            conn.commit()
+            return {
+                "id": existing["id"],
+                "user_id": eff_uid,
+                "fact": existing["fact"],
+                "category": category or existing["category"],
+                "created_at": existing["created_at"],
+            }
+        fact_id = f"fact-{uuid.uuid4().hex[:8]}"
         conn.execute(
-            "INSERT INTO memory_facts (id, fact, category, created_at, last_used_at) VALUES (?, ?, ?, ?, ?)",
-            (fact_id, fact, category, now, now),
+            "INSERT INTO memory_facts (id, user_id, fact, category, created_at, last_used_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (fact_id, eff_uid, clean_fact, category, now, now),
         )
         conn.commit()
-    return {"id": fact_id, "fact": fact, "category": category, "created_at": now}
+    return {"id": fact_id, "user_id": eff_uid, "fact": clean_fact, "category": category, "created_at": now}
 
 
-def db_list_facts(category: Optional[str] = None) -> List[Dict[str, Any]]:
+def db_list_facts(category: Optional[str] = None, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
     with get_db_connection() as conn:
+        clauses: List[str] = []
+        params: List[Any] = []
         if category:
-            cur = conn.execute("SELECT * FROM memory_facts WHERE category = ? ORDER BY created_at DESC", (category,))
-        else:
-            cur = conn.execute("SELECT * FROM memory_facts ORDER BY created_at DESC")
+            clauses.append("category = ?")
+            params.append(category)
+        if user_id:
+            clauses.append("user_id = ?")
+            params.append(user_id)
+        where = f" WHERE {' AND '.join(clauses)}" if clauses else ""
+        cur = conn.execute(f"SELECT * FROM memory_facts{where} ORDER BY created_at DESC, rowid DESC", tuple(params))
         return [dict(row) for row in cur.fetchall()]
 
 
-def db_forget_fact(fact_query: str) -> bool:
+def db_forget_fact(fact_query: str, user_id: Optional[str] = None) -> bool:
+    clean_q = str(fact_query or "").strip()
+    if not clean_q:
+        return False
     with get_db_connection() as conn:
-        cur = conn.execute(
-            "DELETE FROM memory_facts WHERE id = ? OR fact LIKE ?",
-            (fact_query, f"%{fact_query}%"),
-        )
+        if user_id:
+            cur = conn.execute(
+                "DELETE FROM memory_facts WHERE user_id = ? AND (id = ? OR LOWER(fact) LIKE ?)",
+                (user_id, clean_q, f"%{clean_q.lower()}%"),
+            )
+        else:
+            cur = conn.execute(
+                "DELETE FROM memory_facts WHERE id = ? OR LOWER(fact) LIKE ?",
+                (clean_q, f"%{clean_q.lower()}%"),
+            )
         conn.commit()
         return cur.rowcount > 0
+
+
+# --- Persistent Calendar Operations ---
+def db_list_calendar_events(
+    user_id: Optional[str] = None,
+    calendar_id: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    eff_uid = (user_id or "guest").strip() or "guest"
+    with get_db_connection() as conn:
+        clauses = ["status != 'cancelled'", "user_id = ?"]
+        params: List[Any] = [eff_uid]
+        if calendar_id:
+            clauses.append("calendar_id = ?")
+            params.append(calendar_id)
+        where = " AND ".join(clauses)
+        cur = conn.execute(f"SELECT * FROM calendar_events WHERE {where} ORDER BY start ASC, rowid ASC", tuple(params))
+        rows = []
+        for r in cur.fetchall():
+            item = dict(r)
+            try:
+                item["attendees"] = json.loads(item.pop("attendees_json", "[]") or "[]")
+            except Exception:
+                item["attendees"] = []
+            rows.append(item)
+        return rows
+
+
+def db_add_calendar_event(
+    title: str,
+    start: str,
+    end: str,
+    attendees: Optional[List[str]] = None,
+    user_id: Optional[str] = None,
+    calendar_id: str = "primary",
+    event_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    evt_id = event_id or f"evt-{uuid.uuid4().hex[:6]}"
+    eff_uid = (user_id or "guest").strip() or "guest"
+    now = datetime.now(timezone.utc).isoformat()
+    att_list = attendees or []
+    with get_db_connection() as conn:
+        conn.execute(
+            """INSERT OR REPLACE INTO calendar_events
+               (id, user_id, title, start, end, attendees_json, calendar_id, status, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmed', ?)""",
+            (evt_id, eff_uid, title, start, end, json.dumps(att_list), calendar_id or "primary", now),
+        )
+        conn.commit()
+    return {
+        "id": evt_id,
+        "user_id": eff_uid,
+        "title": title,
+        "start": start,
+        "end": end,
+        "attendees": att_list,
+        "calendar_id": calendar_id or "primary",
+        "status": "confirmed",
+        "created_at": now,
+    }
 
 
 # --- Tool Call Audit Logging ---
@@ -301,12 +506,16 @@ def db_create_user(username: str, password: str, email: Optional[str] = None) ->
     clean_e = (email or "").strip().lower() or None
     try:
         with get_db_connection() as conn:
+            if clean_e:
+                dup_email = conn.execute("SELECT 1 FROM users WHERE email = ? LIMIT 1", (clean_e,)).fetchone()
+                if dup_email:
+                    return None
             conn.execute(
                 "INSERT INTO users (id, username, email, password_hash, created_at) VALUES (?, ?, ?, ?, ?)",
                 (user_id, clean_u, clean_e, pwd_hash, now),
             )
             conn.commit()
-        return {"id": user_id, "username": username.strip(), "email": clean_e or "", "created_at": now}
+        return {"id": user_id, "username": clean_u, "email": clean_e or "", "created_at": now}
     except sqlite3.IntegrityError:
         return None
 
@@ -463,42 +672,42 @@ def db_delete_chat_turn(turn_id: str, user_id: str) -> bool:
 
 
 def db_list_chat_sessions(user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
-    """Retrieve chat conversations grouped by session_id for a user."""
+    """Retrieve chat conversations grouped by session_id for a user in a single query."""
     with get_db_connection() as conn:
         cur = conn.execute(
-            """SELECT 
+            """WITH ranked AS (
+                SELECT
+                    session_id,
+                    user_message,
+                    spoken_reply,
+                    created_at,
+                    rowid,
+                    ROW_NUMBER() OVER (PARTITION BY session_id ORDER BY created_at ASC, rowid ASC) AS rn_first,
+                    ROW_NUMBER() OVER (PARTITION BY session_id ORDER BY created_at DESC, rowid DESC) AS rn_last
+                FROM chat_history
+                WHERE user_id = ?
+            )
+            SELECT
                 session_id,
-                COUNT(*) as turn_count,
-                MIN(created_at) as created_at,
-                MAX(created_at) as last_active
-               FROM chat_history 
-               WHERE user_id = ? 
-               GROUP BY session_id 
-               ORDER BY last_active DESC 
-               LIMIT ?""",
+                COUNT(*) AS turn_count,
+                MIN(created_at) AS created_at,
+                MAX(created_at) AS last_active,
+                MAX(rowid) AS last_rowid,
+                MAX(CASE WHEN rn_first = 1 THEN user_message ELSE '' END) AS title,
+                MAX(CASE WHEN rn_last = 1 THEN spoken_reply ELSE '' END) AS last_message
+            FROM ranked
+            GROUP BY session_id
+            ORDER BY last_active DESC, last_rowid DESC
+            LIMIT ?""",
             (user_id, limit),
         )
-        sessions = [dict(r) for r in cur.fetchall()]
-
-        for s in sessions:
-            cur_first = conn.execute(
-                """SELECT user_message FROM chat_history 
-                   WHERE user_id = ? AND session_id = ? 
-                   ORDER BY created_at ASC LIMIT 1""",
-                (user_id, s["session_id"]),
-            )
-            row_first = cur_first.fetchone()
-            s["title"] = row_first["user_message"] if row_first else "Conversation"
-
-            cur_last = conn.execute(
-                """SELECT spoken_reply FROM chat_history 
-                   WHERE user_id = ? AND session_id = ? 
-                   ORDER BY created_at DESC LIMIT 1""",
-                (user_id, s["session_id"]),
-            )
-            row_last = cur_last.fetchone()
-            s["last_message"] = row_last["spoken_reply"] if row_last else ""
-
+        sessions = []
+        for r in cur.fetchall():
+            item = dict(r)
+            item.pop("last_rowid", None)
+            if not item.get("title"):
+                item["title"] = "Conversation"
+            sessions.append(item)
         return sessions
 
 
@@ -519,21 +728,21 @@ def db_get_session_turns(user_id: Optional[str] = None, session_id: Optional[str
             cur = conn.execute(
                 """SELECT * FROM chat_history 
                    WHERE user_id = ? AND session_id = ? 
-                   ORDER BY created_at ASC""",
+                   ORDER BY created_at ASC, rowid ASC""",
                 (user_id, session_id),
             )
         elif session_id:
             cur = conn.execute(
                 """SELECT * FROM chat_history 
                    WHERE session_id = ? 
-                   ORDER BY created_at ASC""",
+                   ORDER BY created_at ASC, rowid ASC""",
                 (session_id,),
             )
         elif user_id:
             cur = conn.execute(
                 """SELECT * FROM chat_history 
                    WHERE user_id = ? 
-                   ORDER BY created_at ASC""",
+                   ORDER BY created_at ASC, rowid ASC""",
                 (user_id,),
             )
         else:
@@ -613,17 +822,15 @@ def db_save_user_oauth(
 
 
 def db_get_user_oauth(user_id: Optional[str] = None, provider: str = "google") -> Optional[Dict[str, Any]]:
-    """Retrieve stored OAuth credentials for a user.
+    """Retrieve stored OAuth credentials strictly scoped to the requested user (no cross-user fallback).
     
     Resolution order:
     1. Exact user_id match
-    2. Stripped prefix (e.g. 'user-1' -> '1')
+    2. Stripped legacy prefix (e.g. 'user-1' -> '1')
     3. User email match
-    4. Fallback to 'guest' user_id
-    5. Fallback to latest connected account for this provider
+    4. 'guest' row ONLY when user_id is None, '', or 'guest'
     """
     with get_db_connection() as conn:
-        # 1. Exact user_id match
         if user_id:
             uid_str = str(user_id).strip()
             cur = conn.execute(
@@ -634,7 +841,6 @@ def db_get_user_oauth(user_id: Optional[str] = None, provider: str = "google") -
             if row:
                 return dict(row)
 
-            # 2. Stripped prefix (e.g. 'user-1' -> '1', 'guest-abc' -> 'guest')
             if uid_str.startswith("user-"):
                 clean_uid = uid_str.replace("user-", "", 1)
                 cur = conn.execute(
@@ -645,7 +851,6 @@ def db_get_user_oauth(user_id: Optional[str] = None, provider: str = "google") -
                 if row:
                     return dict(row)
 
-            # 3. User email match
             if "@" in uid_str:
                 cur = conn.execute(
                     "SELECT * FROM user_oauth_tokens WHERE email = ? AND provider = ? ORDER BY updated_at DESC LIMIT 1",
@@ -655,22 +860,11 @@ def db_get_user_oauth(user_id: Optional[str] = None, provider: str = "google") -
                 if row:
                     return dict(row)
 
-            # If an explicit non-guest user_id was queried and not found, do not leak other users' tokens
             if uid_str not in ("guest", ""):
                 return None
 
-        # 4. Fallback to 'guest' user_id
         cur = conn.execute(
             "SELECT * FROM user_oauth_tokens WHERE user_id = 'guest' AND provider = ? ORDER BY updated_at DESC LIMIT 1",
-            (provider,),
-        )
-        row = cur.fetchone()
-        if row:
-            return dict(row)
-
-        # 5. Fallback to latest connected account for this provider
-        cur = conn.execute(
-            "SELECT * FROM user_oauth_tokens WHERE provider = ? ORDER BY updated_at DESC LIMIT 1",
             (provider,),
         )
         row = cur.fetchone()
@@ -678,7 +872,7 @@ def db_get_user_oauth(user_id: Optional[str] = None, provider: str = "google") -
 
 
 def db_delete_user_oauth(user_id: Optional[str] = None, provider: str = "google") -> bool:
-    """Disconnect / delete OAuth credentials for a user."""
+    """Disconnect / delete OAuth credentials strictly for the given user_id."""
     with get_db_connection() as conn:
         deleted = False
         if user_id:
@@ -696,11 +890,9 @@ def db_delete_user_oauth(user_id: Optional[str] = None, provider: str = "google"
                 )
                 if cur.rowcount > 0:
                     deleted = True
-
-        # If not deleted by specific user_id, clear provider tokens
-        if not deleted:
+        else:
             cur = conn.execute(
-                "DELETE FROM user_oauth_tokens WHERE provider = ?",
+                "DELETE FROM user_oauth_tokens WHERE user_id = 'guest' AND provider = ?",
                 (provider,),
             )
             deleted = cur.rowcount > 0
@@ -764,8 +956,8 @@ def db_save_user_email_profile(
 
 
 def db_get_user_email_profile(user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
-    """Retrieve stored personal email sender profile for Krish or specified user."""
-    uid = user_id or "krish"
+    """Retrieve stored personal email sender profile strictly scoped to user (guest may read default owner profile)."""
+    uid = (user_id or "guest").strip() or "guest"
     with get_db_connection() as conn:
         conn.execute(
             """CREATE TABLE IF NOT EXISTS user_email_profiles (
@@ -781,11 +973,8 @@ def db_get_user_email_profile(user_id: Optional[str] = None) -> Optional[Dict[st
         )
         cur = conn.execute("SELECT * FROM user_email_profiles WHERE user_id = ? LIMIT 1", (uid,))
         row = cur.fetchone()
-        if not row and uid != "krish":
+        if not row and uid in ("guest", ""):
             cur = conn.execute("SELECT * FROM user_email_profiles WHERE user_id = 'krish' LIMIT 1")
-            row = cur.fetchone()
-        if not row:
-            cur = conn.execute("SELECT * FROM user_email_profiles ORDER BY updated_at DESC LIMIT 1")
             row = cur.fetchone()
         return dict(row) if row else None
 

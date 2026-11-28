@@ -9,6 +9,7 @@ def add_task(
     due_date: Optional[str] = None,
     priority: Optional[str] = None,
     due_at: Optional[str] = None,
+    user_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Add a new to-do item or task.
     
@@ -21,22 +22,33 @@ def add_task(
         }
     clean_title = str(title).strip()
     effective_due = due_date or due_at
-    task = db_add_task(title=clean_title, due_at=effective_due)
+    effective_prio = (priority or "medium").strip().lower()
+    task = db_add_task(
+        title=clean_title,
+        due_at=effective_due,
+        priority=effective_prio,
+        user_id=user_id,
+    )
     due_str = f" due on {effective_due}" if effective_due else ""
     return {
         "success": True,
         "task": task,
         "task_id": task.get("id"),
+        "priority": task.get("priority", effective_prio),
         "spoken": f"Added task: '{clean_title}'{due_str}.",
     }
 
 
-def list_tasks(status: Optional[str] = "pending", limit: Optional[int] = None) -> Dict[str, Any]:
+def list_tasks(
+    status: Optional[str] = "pending",
+    limit: Optional[int] = None,
+    user_id: Optional[str] = None,
+) -> Dict[str, Any]:
     """List to-do tasks from the task database.
     
     Filter by status: 'pending' or 'completed'.
     """
-    tasks = db_list_tasks(status=status)
+    tasks = db_list_tasks(status=status, user_id=user_id)
     if limit and isinstance(limit, int) and limit > 0:
         tasks = tasks[:limit]
 
@@ -54,16 +66,17 @@ def list_tasks(status: Optional[str] = "pending", limit: Optional[int] = None) -
 def complete_task(
     id: Optional[Union[str, int]] = None,
     task_id: Optional[Union[str, int]] = None,
+    user_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Mark a task done by ID or title keyword."""
     target = str(id if id is not None else (task_id if task_id is not None else "")).strip()
-    if not target or target == "99999":
+    if not target:
         return {
             "success": False,
             "task_id": target,
-            "spoken": f"Task '{target}' was not found. No task exists with that ID.",
+            "spoken": "Please specify which task ID or title to mark as completed.",
         }
-    ok = db_complete_task(task_id=target)
+    ok = db_complete_task(task_id=target, user_id=user_id)
     if ok:
         return {"success": True, "task_id": target, "spoken": f"Marked task '{target}' as completed."}
     return {"success": False, "task_id": target, "spoken": f"Task '{target}' was not found. No task exists with that ID."}
@@ -72,16 +85,17 @@ def complete_task(
 def delete_task(
     id: Optional[Union[str, int]] = None,
     task_id: Optional[Union[str, int]] = None,
+    user_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Permanently delete a task by ID or title keyword."""
     target = str(id if id is not None else (task_id if task_id is not None else "")).strip()
-    if not target or target == "99999":
+    if not target:
         return {
             "success": False,
             "task_id": target,
-            "spoken": f"Could not find task '{target}' to delete.",
+            "spoken": "Please specify which task ID or title to delete.",
         }
-    ok = db_delete_task(task_id=target)
+    ok = db_delete_task(task_id=target, user_id=user_id)
     if ok:
         return {"success": True, "task_id": target, "spoken": f"Deleted task '{target}'."}
     return {"success": False, "task_id": target, "spoken": f"Could not find task '{target}' to delete."}

@@ -33,8 +33,13 @@ cp .env.example .env
 
 | Variable | Default | Description |
 |---|---|---|
-| `OPENAI_API_KEY` | *(required)* | OpenAI API key for conversational intelligence and function calling |
-| `OPENAI_MODEL` | `gpt-4o` | Model identifier (`gpt-4o`, `gpt-4o-mini`) |
+| `OPENAI_API_KEY` | *(required for cloud)* | OpenAI API key (`sk-...`), or `ollama` for 100% free local Ollama mode |
+| `OPENAI_BASE_URL` | *(empty)* | Set to `http://localhost:11434/v1` for local Ollama inference |
+| `OPENAI_MODEL` | `qwen2.5:1.5b` | Model identifier (`qwen2.5:1.5b` local, or `gpt-4o` cloud) |
+| `FALLBACK_LLM_MODEL` | `qwen3:1.7b` | Optional secondary LLM model for LiveKit `FallbackAdapter` |
+| `WHISPER_MODEL_SIZE` | `base.en` | Local `faster-whisper` speech recognition model (`tiny.en`, `base.en`) |
+| `PIPER_VOICE` | `en_US-lessac-medium` | Offline neural Piper ONNX voice stored under `models/piper/` |
+| `PIPER_MODEL_PATH` | *(empty)* | Optional explicit filesystem path to a `.onnx` Piper voice model |
 | `HOST` | `0.0.0.0` | Network binding interface |
 | `PORT` | `8000` | Port for the HTTP and WebSocket server |
 | `WORKERS` | `1` | Uvicorn worker count (keep at 1 for SQLite consistency or scale with distributed DB) |

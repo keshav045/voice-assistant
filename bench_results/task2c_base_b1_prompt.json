@@ -1,0 +1,569 @@
+{
+  "hardware": {
+    "os": "Windows-11-10.0.26300-SP0",
+    "python": "3.13.7",
+    "cpu": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+    "cpu_cores": 12,
+    "ram_total_gb": 7.342,
+    "ram_available_gb": 1.061,
+    "ram_used_pct": 85,
+    "commit_total_gb": 25.174,
+    "commit_used_gb": 16.761,
+    "process_rss_mb": 129.2,
+    "process_peak_rss_mb": 129.2,
+    "process_pagefile_mb": 464.8,
+    "cuda_devices": 1,
+    "cuda_runtime_ready": false,
+    "hardware_tier": "C_MODEST_CPU_8GB",
+    "stt_config": {
+      "model_size": "base.en",
+      "language": "en",
+      "beam_size": 1,
+      "cpu_threads": 4,
+      "vad_filter": true,
+      "device": "cpu"
+    },
+    "piper_model": "en_US-lessac-medium.onnx",
+    "packages": {
+      "livekit-agents": "1.9.0",
+      "livekit-plugins-silero": "1.9.0",
+      "livekit-plugins-turn-detector": null,
+      "faster-whisper": "1.2.1",
+      "ctranslate2": "4.9.1",
+      "piper-tts": "1.8.0",
+      "edge-tts": "7.3.1",
+      "sherpa-onnx": null
+    }
+  },
+  "experiment": {
+    "ollama_state_label": "stopped",
+    "ollama_status_at_start": {
+      "running": false,
+      "models": []
+    },
+    "concurrent_ollama_gen": false,
+    "concurrent_ollama_stats": null,
+    "whisper_model": "base.en",
+    "language": "en",
+    "beam_size": 1,
+    "cpu_threads": 4,
+    "vad_filter": true,
+    "initial_prompt": "GST, rupees, Gmail, calendar, Nexus",
+    "repeats": 3,
+    "manifest": "bench_clips\\synthetic\\manifest.jsonl"
+  },
+  "resources": {
+    "before": {
+      "ram_total_gb": 7.342,
+      "ram_available_gb": 1.061,
+      "ram_used_pct": 85,
+      "commit_total_gb": 25.174,
+      "commit_used_gb": 16.762,
+      "process_rss_mb": 128.1,
+      "process_peak_rss_mb": 128.1,
+      "process_pagefile_mb": 464.4,
+      "cpu_load_pct": 4.1
+    },
+    "during": {
+      "ram_total_gb": 7.342,
+      "ram_available_gb": 0.799,
+      "ram_used_pct": 89,
+      "commit_total_gb": 25.174,
+      "commit_used_gb": 17.154,
+      "process_rss_mb": 454.1,
+      "process_peak_rss_mb": 546.4,
+      "process_pagefile_mb": 864.6,
+      "cpu_load_pct": 45.6
+    },
+    "after": {
+      "ram_total_gb": 7.342,
+      "ram_available_gb": 0.593,
+      "ram_used_pct": 91,
+      "commit_total_gb": 25.174,
+      "commit_used_gb": 17.216,
+      "process_rss_mb": 376.0,
+      "process_peak_rss_mb": 546.4,
+      "process_pagefile_mb": 864.5,
+      "cpu_load_pct": 61.7
+    },
+    "peak_process_rss_mb": 546.4,
+    "min_available_ram_gb": 0.593,
+    "during_cpu_load_pct": 36.5
+  },
+  "models_loaded": {
+    "piper_ready": true,
+    "whisper_ready": true,
+    "whisper_model": "base.en"
+  },
+  "cold_load_ms": {
+    "piper_ms": 1731.8,
+    "whisper_ms": 1796.6
+  },
+  "cold_first_call": {
+    "clip": "synth_P01.wav",
+    "audio_duration_s": 2.5426,
+    "cold_stt_ms": 1379.7,
+    "cold_rtf": 0.5426,
+    "hypothesis": "Open Gmail and check my latest emails",
+    "synthetic": true
+  },
+  "tts_latency_ms": {
+    "count": 3,
+    "avg_ms": 267.9,
+    "p50_ms": 290.9,
+    "p95_ms": 305.1
+  },
+  "stt_warm_latency_ms": {
+    "count": 45,
+    "avg_ms": 1328.6,
+    "p50_ms": 1320.9,
+    "p95_ms": 1529.3
+  },
+  "stt_latency_ms": {
+    "count": 45,
+    "avg_ms": 1328.6,
+    "p50_ms": 1320.9,
+    "p95_ms": 1529.3
+  },
+  "warm_rtf": {
+    "avg": 0.474,
+    "p50": 0.4598,
+    "p95": 0.6808
+  },
+  "human_accuracy": {
+    "clip_count": 0,
+    "avg_wer": null,
+    "avg_cer": null,
+    "entities_expected": 0,
+    "entities_matched": 0,
+    "entity_accuracy": null
+  },
+  "synthetic_accuracy": {
+    "clip_count": 15,
+    "avg_wer": 0.2751,
+    "avg_cer": 0.1091,
+    "entities_expected": 30,
+    "entities_matched": 24,
+    "entity_accuracy": 0.8
+  },
+  "accuracy": {
+    "clip_count": 15,
+    "avg_wer": 0.2751,
+    "avg_cer": 0.1091,
+    "entities_expected": 30,
+    "entities_matched": 24,
+    "entity_accuracy": 0.8
+  },
+  "clips": [
+    {
+      "clip": "synth_P01.wav",
+      "category": "clean_english",
+      "speaker": "piper_en_US-lessac-medium",
+      "synthetic": true,
+      "audio_duration_s": 2.5426,
+      "warm_runs_ms": [
+        1222.5,
+        1235.7,
+        1259.6
+      ],
+      "warm_p50_ms": 1235.7,
+      "warm_p95_ms": 1259.6,
+      "warm_rtf_p50": 0.486,
+      "hypothesis": "Open Gmail and check my latest emails",
+      "reference": "Open Gmail and check my latest emails.",
+      "wer": 0.0,
+      "cer": 0.0,
+      "entities_expected": [
+        "name:gmail"
+      ],
+      "entities_matched": [
+        "name:gmail"
+      ],
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P02.wav",
+      "category": "clean_english",
+      "speaker": "piper_en_US-lessac-medium",
+      "synthetic": true,
+      "audio_duration_s": 2.8096,
+      "warm_runs_ms": [
+        1305.0,
+        1252.6,
+        1395.1
+      ],
+      "warm_p50_ms": 1305.0,
+      "warm_p95_ms": 1395.1,
+      "warm_rtf_p50": 0.4645,
+      "hypothesis": "What are the side effects of DOLO 650?",
+      "reference": "What are the side effects of Dolo 650?",
+      "wer": 0.0,
+      "cer": 0.0,
+      "entities_expected": [
+        "num:650",
+        "name:dolo 650"
+      ],
+      "entities_matched": [
+        "num:650",
+        "name:dolo 650"
+      ],
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P03.wav",
+      "category": "clean_english",
+      "speaker": "piper_en_US-lessac-medium",
+      "synthetic": true,
+      "audio_duration_s": 2.8445,
+      "warm_runs_ms": [
+        1320.9,
+        1229.8,
+        1235.8
+      ],
+      "warm_p50_ms": 1235.8,
+      "warm_p95_ms": 1320.9,
+      "warm_rtf_p50": 0.4345,
+      "hypothesis": "Schedule a teen sync meeting tomorrow at 4pm",
+      "reference": "Schedule a team sync meeting tomorrow at 4 PM.",
+      "wer": 0.3333,
+      "cer": 0.0667,
+      "entities_expected": [
+        "num:4",
+        "unit:pm"
+      ],
+      "entities_matched": [
+        "num:4",
+        "unit:pm"
+      ],
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P04.wav",
+      "category": "indian_english_accent",
+      "speaker": "piper_en_US-lessac-medium",
+      "synthetic": true,
+      "audio_duration_s": 3.0186,
+      "warm_runs_ms": [
+        1286.3,
+        1220.3,
+        1297.2
+      ],
+      "warm_p50_ms": 1286.3,
+      "warm_p95_ms": 1297.2,
+      "warm_rtf_p50": 0.4261,
+      "hypothesis": "Open Calculator and Compute 25 into 12",
+      "reference": "Open calculator and compute twenty five into twelve.",
+      "wer": 0.375,
+      "cer": 0.3333,
+      "entities_expected": [
+        "num:25",
+        "num:12"
+      ],
+      "entities_matched": [
+        "num:25",
+        "num:12"
+      ],
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P05.wav",
+      "category": "indian_english_accent",
+      "speaker": "piper_en_US-lessac-medium",
+      "synthetic": true,
+      "audio_duration_s": 2.1479,
+      "warm_runs_ms": [
+        1272.3,
+        1289.2,
+        1327.6
+      ],
+      "warm_p50_ms": 1289.2,
+      "warm_p95_ms": 1327.6,
+      "warm_rtf_p50": 0.6002,
+      "hypothesis": "What time is it in New York right now?",
+      "reference": "What time is it in New York right now?",
+      "wer": 0.0,
+      "cer": 0.0,
+      "entities_expected": [
+        "name:new york"
+      ],
+      "entities_matched": [
+        "name:new york"
+      ],
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P06.wav",
+      "category": "numbers_amounts_emails",
+      "speaker": "piper_en_US-lessac-medium",
+      "synthetic": true,
+      "audio_duration_s": 3.5991,
+      "warm_runs_ms": [
+        1399.7,
+        1227.1,
+        1318.4
+      ],
+      "warm_p50_ms": 1318.4,
+      "warm_p95_ms": 1399.7,
+      "warm_rtf_p50": 0.3663,
+      "hypothesis": "Calculate 18% GST on 1000 rupees",
+      "reference": "Calculate 18 percent GST on 1000 rupees.",
+      "wer": 0.1429,
+      "cer": 0.2051,
+      "entities_expected": [
+        "num:18",
+        "num:1000",
+        "unit:rupees",
+        "unit:gst"
+      ],
+      "entities_matched": [
+        "num:18",
+        "num:1000",
+        "unit:rupees",
+        "unit:gst"
+      ],
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P07.wav",
+      "category": "numbers_amounts_emails",
+      "speaker": "piper_en_US-lessac-medium",
+      "synthetic": true,
+      "audio_duration_s": 4.0635,
+      "warm_runs_ms": [
+        1339.1,
+        1353.6,
+        1323.9
+      ],
+      "warm_p50_ms": 1339.1,
+      "warm_p95_ms": 1353.6,
+      "warm_rtf_p50": 0.3295,
+      "hypothesis": "sent an email to Rohit at gmail.com saying review was ready.",
+      "reference": "Send an email to rohit at gmail dot com saying review is ready.",
+      "wer": 0.2308,
+      "cer": 0.1129,
+      "entities_expected": [
+        "email:rohit@gmail.com",
+        "name:gmail",
+        "name:rohit"
+      ],
+      "entities_matched": [
+        "name:gmail",
+        "name:rohit"
+      ],
+      "entity_accuracy": 0.6667
+    },
+    {
+      "clip": "synth_P08.wav",
+      "category": "numbers_amounts_emails",
+      "speaker": "piper_en_US-lessac-medium",
+      "synthetic": true,
+      "audio_duration_s": 4.7601,
+      "warm_runs_ms": [
+        1390.5,
+        1352.6,
+        1339.8
+      ],
+      "warm_p50_ms": 1352.6,
+      "warm_p95_ms": 1390.5,
+      "warm_rtf_p50": 0.2842,
+      "hypothesis": "at a task to pay 2,500 rupees electricity bill by Monday.",
+      "reference": "Add a task to pay 2500 rupees electricity bill by Monday.",
+      "wer": 0.2727,
+      "cer": 0.0536,
+      "entities_expected": [
+        "num:2500",
+        "unit:rupees",
+        "name:monday"
+      ],
+      "entities_matched": [
+        "unit:rupees",
+        "name:monday"
+      ],
+      "entity_accuracy": 0.6667
+    },
+    {
+      "clip": "synth_P09.wav",
+      "category": "names",
+      "speaker": "piper_en_US-lessac-medium",
+      "synthetic": true,
+      "audio_duration_s": 1.9157,
+      "warm_runs_ms": [
+        1262.3,
+        1228.7,
+        1248.3
+      ],
+      "warm_p50_ms": 1248.3,
+      "warm_p95_ms": 1262.3,
+      "warm_rtf_p50": 0.6516,
+      "hypothesis": "Open WhatsApp chat with ROHOL",
+      "reference": "Open WhatsApp chat with Rahul.",
+      "wer": 0.2,
+      "cer": 0.069,
+      "entities_expected": [
+        "name:whatsapp",
+        "name:rahul"
+      ],
+      "entities_matched": [
+        "name:whatsapp"
+      ],
+      "entity_accuracy": 0.5
+    },
+    {
+      "clip": "synth_P10.wav",
+      "category": "names",
+      "speaker": "piper_en_US-lessac-medium",
+      "synthetic": true,
+      "audio_duration_s": 3.3901,
+      "warm_runs_ms": [
+        1499.4,
+        1377.8,
+        1410.0
+      ],
+      "warm_p50_ms": 1410.0,
+      "warm_p95_ms": 1499.4,
+      "warm_rtf_p50": 0.4159,
+      "hypothesis": "Tell me uses of PantoPristle Pan40 and Peracetamol",
+      "reference": "Tell me uses of Pantoprazole Pan 40 and Paracetamol.",
+      "wer": 0.4444,
+      "cer": 0.098,
+      "entities_expected": [
+        "num:40",
+        "name:paracetamol",
+        "name:pantoprazole",
+        "name:pan 40"
+      ],
+      "entities_matched": [
+        "num:40"
+      ],
+      "entity_accuracy": 0.25
+    },
+    {
+      "clip": "synth_P11.wav",
+      "category": "hinglish",
+      "speaker": "piper_en_US-lessac-medium",
+      "synthetic": true,
+      "audio_duration_s": 2.7981,
+      "warm_runs_ms": [
+        1347.7,
+        1365.2,
+        1529.3
+      ],
+      "warm_p50_ms": 1365.2,
+      "warm_p95_ms": 1529.3,
+      "warm_rtf_p50": 0.4879,
+      "hypothesis": "Kelsoba Mudge 8, Beige Remind Cardina",
+      "reference": "Kal subah mujhe 8 baje remind kar dena.",
+      "wer": 0.75,
+      "cer": 0.3158,
+      "entities_expected": [
+        "num:8"
+      ],
+      "entities_matched": [
+        "num:8"
+      ],
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P12.wav",
+      "category": "hinglish",
+      "speaker": "piper_en_US-lessac-medium",
+      "synthetic": true,
+      "audio_duration_s": 3.0303,
+      "warm_runs_ms": [
+        1374.7,
+        1350.7,
+        1604.2
+      ],
+      "warm_p50_ms": 1374.7,
+      "warm_p95_ms": 1604.2,
+      "warm_rtf_p50": 0.4537,
+      "hypothesis": "Ajkah, Tain Kaya Hai or Hwether Chek Karo",
+      "reference": "Aaj ka time kya hai aur weather check karo.",
+      "wer": 0.7778,
+      "cer": 0.2857,
+      "entities_expected": [],
+      "entities_matched": [],
+      "entity_accuracy": null
+    },
+    {
+      "clip": "synth_P13.wav",
+      "category": "noisy_far_mic",
+      "speaker": "piper_en_US-lessac-medium",
+      "synthetic": true,
+      "audio_duration_s": 2.4962,
+      "warm_runs_ms": [
+        1469.0,
+        1261.6,
+        1330.1
+      ],
+      "warm_p50_ms": 1330.1,
+      "warm_p95_ms": 1469.0,
+      "warm_rtf_p50": 0.5328,
+      "hypothesis": "Search for latest technology news headlines",
+      "reference": "Search for latest technology news headlines.",
+      "wer": 0.0,
+      "cer": 0.0,
+      "entities_expected": [],
+      "entities_matched": [],
+      "entity_accuracy": null
+    },
+    {
+      "clip": "synth_P14.wav",
+      "category": "noisy_far_mic",
+      "speaker": "piper_en_US-lessac-medium",
+      "synthetic": true,
+      "audio_duration_s": 1.8228,
+      "warm_runs_ms": [
+        1244.0,
+        1240.9,
+        1405.5
+      ],
+      "warm_p50_ms": 1244.0,
+      "warm_p95_ms": 1405.5,
+      "warm_rtf_p50": 0.6825,
+      "hypothesis": "Play low-fi music on YouTube",
+      "reference": "Play lofi music on YouTube.",
+      "wer": 0.4,
+      "cer": 0.0769,
+      "entities_expected": [
+        "name:youtube"
+      ],
+      "entities_matched": [
+        "name:youtube"
+      ],
+      "entity_accuracy": 1.0
+    },
+    {
+      "clip": "synth_P15.wav",
+      "category": "pauses_corrections",
+      "speaker": "piper_en_US-lessac-medium",
+      "synthetic": true,
+      "audio_duration_s": 3.3901,
+      "warm_runs_ms": [
+        1229.8,
+        1253.7,
+        1558.9
+      ],
+      "warm_p50_ms": 1253.7,
+      "warm_p95_ms": 1558.9,
+      "warm_rtf_p50": 0.3698,
+      "hypothesis": "Schedule it for Friday actually make it Saturday 5pm",
+      "reference": "Schedule it for Friday actually make it Saturday 5 PM.",
+      "wer": 0.2,
+      "cer": 0.0189,
+      "entities_expected": [
+        "num:5",
+        "unit:pm",
+        "name:friday",
+        "name:saturday"
+      ],
+      "entities_matched": [
+        "num:5",
+        "unit:pm",
+        "name:friday",
+        "name:saturday"
+      ],
+      "entity_accuracy": 1.0
+    }
+  ]
+}

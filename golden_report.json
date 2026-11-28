@@ -13,7 +13,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "{\"name\": \"searchmydocs\", \"arguments\": {\"query\": \"latest AI news\"}}",
+    "spoken": "India Emerges as AI Haven, Seeks Boost From New US Chip Curbs - Bloomberg.com: India Emerges as AI Haven, Seeks Boost From New US Chip Curbs Bloomberg.com AI News: Artificial Intelligence Trends And Top AI Stocks To Watch - Investor's Business Daily: AI News: Artificial Intelligence Trends And Top AI Stocks To Watch Investor's Business Daily",
     "tools": [
       {
         "name": "web_search",
@@ -23,39 +23,54 @@
         "result": {
           "success": true,
           "query": "latest AI news",
-          "count": 8,
+          "count": 5,
           "results": [
             {
-              "title": "Microsoft unveils Copilot Workspaces, new AI models and Azure plans at Ignite - EdTech Innovation Hub",
-              "snippet": "Microsoft unveils Copilot Workspaces, new AI models and Azure plans at Ignite EdTech Innovation Hub",
-              "source": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxOWFVVSWNSNVloczlpVURrcHBfUElVZUkwaWV2TGgxNEs4QTFBMlZyVndUT3YzYTdLZ3NUTV9zTHlwenRvTGZFeXFsT0tYbkgycHpXMTh4VHR6RnVqbFlTdm1vOWo0MDVWcUxrcHVReHpMakdqUENTVTNrUDljOE04TG5NTC1WTC1hbVJFYmZwZWVCZEtyY01kSGlTRzFYV3dRMkM4NTNVTl9sbVZ3VUYza0lMWjJ2RHMy?oc=5"
+              "title": "India Emerges as AI Haven, Seeks Boost From New US Chip Curbs - Bloomberg.com",
+              "snippet": "India Emerges as AI Haven, Seeks Boost From New US Chip Curbs Bloomberg.com",
+              "source": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxPUGR5Q0NKeS1ELXBSSWNndVdxTTVWczlpSUplOWxaNEY0ZmNCdFVQMUg1bzlDVEozcVlRY2M0QTl0bFZjREEwNFFFMWlsM1BubzVCREFoa1pDMllpMmpSTUN2RWphelphY0VxT19BR0dSdVJrMEQ1ZXJ5ZXF4UVJsTmdTQXliSklnU3RtTVNBVmF6UlVPbVg4SkxPc21ZMmdJMHNPZi1tUXdlZVBWVHViV2NxeDF5bDRFX2dQUUVyTHAxd2ZSOFFKaw?oc=5",
+              "publisher": "Bloomberg.com",
+              "published_at": "Sat, 28 Nov 2026 06:01:30 GMT",
+              "relative_time": "33m ago"
             },
             {
               "title": "AI News: Artificial Intelligence Trends And Top AI Stocks To Watch - Investor's Business Daily",
               "snippet": "AI News: Artificial Intelligence Trends And Top AI Stocks To Watch Investor's Business Daily",
-              "source": "https://news.google.com/rss/articles/CBMilwFBVV95cUxQMTVTWnJlZkpsVU9ZV0g1WHdKQVBKOFFvcUpPeTJuMW9iT2FTMWI1N2hMYk1ud1cwQlBEVlJObDFVTnpoNnBhejJrZnVFelQ5V3NNRklrM2RlaHUtc2NsbmxWcVV1MWVzd082RUdTYmtJVW9MUmJRTG5sV1dJN3JCd1JNX2Z4VnZtV3VpbzdrNXdKNTVSc3FB?oc=5"
+              "source": "https://news.google.com/rss/articles/CBMilwFBVV95cUxQMTVTWnJlZkpsVU9ZV0g1WHdKQVBKOFFvcUpPeTJuMW9iT2FTMWI1N2hMYk1ud1cwQlBEVlJObDFVTnpoNnBhejJrZnVFelQ5V3NNRklrM2RlaHUtc2NsbmxWcVV1MWVzd082RUdTYmtJVW9MUmJRTG5sV1dJN3JCd1JNX2Z4VnZtV3VpbzdrNXdKNTVSc3FB?oc=5",
+              "publisher": "Investor's Business Daily",
+              "published_at": "Fri, 27 Nov 2026 18:56:00 GMT",
+              "relative_time": "11h ago"
             },
             {
-              "title": "Oil Prices Slide as AI Bubble Fears Rattle Global Markets - Crude Oil Prices Today | OilPrice.com",
-              "snippet": "Oil Prices Slide as AI Bubble Fears Rattle Global Markets Crude Oil Prices Today | OilPrice.com",
-              "source": "https://news.google.com/rss/articles/CBMiswFBVV95cUxNWHFpaDhkd0NXUHA1MWpDSzVZZzUtN3A5Xy1sMXZBNEZ3TGdSUklBTlgxR1o3YVgzM2pRbjRKcmdqSmlyX2pvYVJzUHhqRVczN29oUGo3Y0hCRkl3ZTFHSXNPVDNjNkZIVXJpcUNTTDBNYl9oTzV6em1QT0FaVFpDZG1UTlJsTUpEcHlPNFZxRVY5NndyT3dKMDJLa3lBUnZqQUxzc3IzMGZ1ck1mUHc1bGFEUdIBuAFBVV95cUxNU29rRW1Nakh1b3FCXzViX1JYTXFlcGVpekFsVXdvQTVhejRDcklGMElENHFDYVFXeHBlS2czdzJhWmpKZU5fVlE3MVZZOHFYcGt5aTlINlpEdlY5bVQ4Si10Rm1ZT1ViZmNCQ0luQkFvT3pvOE92eUU1NUZEWVd0Smd5M01SWmZFTTBTdE94ajl0NU9aQ1pyY3ZyVmFRUnItUlpHOGJzR1o5dm16b3AzRzNSYm5VZ09S?oc=5"
+              "title": "PartnerRe and New York Life expand AI use in insurance underwriting - Beinsure",
+              "snippet": "PartnerRe and New York Life expand AI use in insurance underwriting Beinsure",
+              "source": "https://news.google.com/rss/articles/CBMimgFBVV95cUxNeG5OVHpURHZQUjB0YTl6QkRWNGp6cmExSl90aExGVTEyY0xtLWM5THViRk5ZR2lxR3RVWmZxMWFyS0NTT2hwQjU3dGFmTGJaWDRwRy0tdUtVZUM2eVoyWTNnY0FaN19tSkk3eVpucEpUVVN3OXVOWExwYkg3YlhoalNRRE9qbGZmYVNENkQ3MnBSNW5rRG5xdENB?oc=5",
+              "publisher": "Beinsure",
+              "published_at": "Fri, 27 Nov 2026 17:19:19 GMT",
+              "relative_time": "13h ago"
             },
             {
-              "title": "Amazon to buy Decart's AI chip optimization tech in latest AI talent grab - CNA",
-              "snippet": "Amazon to buy Decart's AI chip optimization tech in latest AI talent grab CNA",
-              "source": "https://news.google.com/rss/articles/CBMiugFBVV95cUxOR3o1NVgtemN5RHU5Qi16cTY0RGQ0cWRyQlg2cEdnYzVDbTFHQVlUVE5KcGZyQW93NWxzN1gzLXQydHVxemNZVXFwUk1MTzJiN2NFeUFZbXdVM1c0NHVyVUc1bFJ1Y0NQbVhUb0hiUzBkWF8wVEd0Qk1QSGlYX2pvclJhYmJfa2ZsbDk0dE0yZjBEM0F1ckRZRWF2cDJWMS12cjZ0UmN3OUFHRnMzUUxqNWdMcWoxWkI4S1E?oc=5"
+              "title": "Report links U.S. curbs to delays at China\u2019s top AI labs - The Rundown AI",
+              "snippet": "Report links U.S. curbs to delays at China\u2019s top AI labs The Rundown AI",
+              "source": "https://news.google.com/rss/articles/CBMibkFVX3lxTE50Y2RhemMycGtTVzJOckxGS21DOGdJZ0lyeVFSMzg0Vk85WlVLWEx3MVk2RnBERlFpcHlpRm1sNG9oczFoem9wb3Y5UXVFczFuZGJ3ajl4aERDMF8yaUhSdGpwdUxtcGw0Sy1KVC1B?oc=5",
+              "publisher": "The Rundown AI",
+              "published_at": "Fri, 27 Nov 2026 14:50:26 GMT",
+              "relative_time": "15h ago"
             },
             {
-              "title": "What are Meta AI chief's latest warnings on 'Superintelligence'? | 'AI to be more capable than us in every field' | Inshorts - Inshorts",
-              "snippet": "What are Meta AI chief's latest warnings on 'Superintelligence'? | 'AI to be more capable than us in every field' | Inshorts Inshorts",
-              "source": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxOZkJzRHJSQTV2emxKNllHSWJ0NXp6aVJPMHdqTFhnc2VFRl9JTFQ1UzFkMThFd2doVHdiNU5nbml6THBKYVpTSzVDVVhWODFkQ0RQQ1YyNXppTjRYTnJSOU5kRzlMY3p5V0VMRGM3SFBSOG5hREZzZXZjSnVIVVBFakp4dHJUU1dLS053VFFaQ2dHUDdIaXpkRWxCZkJETGltLVJBb2pScDFfMVXSAbABQVVfeXFMT2ZpOC1Mb2QyNTNoSklQd1hCRng5TVlhVWFkd29nMC1GSlkzUUdNVmFiVzYxdEFRUkx3VXZVeGlqWVZyZDNpOTF2S0I2ZmMxeS1lVW5mSjhvODM1RnBabVJXMDkxMFZGMEJZQjZsdGlQWngybEQyRUoyUFVBWVMxUGRoM2E2RlJuTnJ4eWRVUzNZcENXTlJ4dkJOV2JiZldpQnFMbUhFQXVjZENvNloydGg?oc=5"
+              "title": "This New AI Platform Wants To Take Stories From Script To Screen. Can It Change How Movies Are Made? - NDTV",
+              "snippet": "This New AI Platform Wants To Take Stories From Script To Screen. Can It Change How Movies Are Made? NDTV",
+              "source": "https://news.google.com/rss/articles/CBMi2gFBVV95cUxQVkFvallwUGRoRUF6Q0Z0WmhlSE1oYllvSnE1MGVsYXZ2YWF3SHMyanRvRXUzU2hNZ2J4Y19LVXJlVlJaTmJOVmFTcjlKTTFCQ1JuakFVU214NTIzb0MtMGdJZ0VIeU5wYWhObkJkSGtSM1U1M3ZJeDJ1ek1SRlBkR3U0NlQxeHBfd2w4Q21jaGFkS2NXbXpqQ2YxcUdHZm1vaU5NMzBwandqVk1aRHc3NUFZWmZwaGhQMTg2RGprVDNibXBGZFBQNjlHeDNzNzhrTGx1YXE5Q1JnUdIB4gFBVV95cUxPcXZHWTVKclNfVHh5dVI3eHRfN0Q3cVlYYTlCczh4cXoxQ3phN2ZBc0N1ZlgySnpnSUtfaHpkUGVlZlRhYTNSS3NmV0NxQ1M5cGpXVllraU9Ra2wwNDFNNl8tbjk2SkFLcHA2UkNGZDZzTmt5MURuMTJ0UFNpMG5oQTE3ZUhmc3Mxemlzdi1jU0FYUjhoNWpKc1dCNEFtQmJvWkVzbG9zdGc3alpFbEtiTl9PVkp4cnNUZHpRMDRTX0lHek5LQk9peEY5ejBUNDYyVi1KcHIxX1dDSHVTRkdSMmN3?oc=5",
+              "publisher": "NDTV",
+              "published_at": "Fri, 27 Nov 2026 09:45:09 GMT",
+              "relative_time": "20h ago"
             }
           ],
-          "spoken": "Microsoft unveils Copilot Workspaces, new AI models and Azure plans at Ignite - EdTech Innovation Hub: Microsoft unveils Copilot Workspaces, new AI models and Azure plans at Ignite EdTech Innovation Hub AI News: Artificial Intelligence Trends And Top AI Stocks To Watch - Investor's Business Daily: AI News: Artificial Intelligence Trends And Top AI Stocks To Watch Investor's Business Daily"
+          "spoken": "India Emerges as AI Haven, Seeks Boost From New US Chip Curbs - Bloomberg.com: India Emerges as AI Haven, Seeks Boost From New US Chip Curbs Bloomberg.com AI News: Artificial Intelligence Trends And Top AI Stocks To Watch - Investor's Business Daily: AI News: Artificial Intelligence Trends And Top AI Stocks To Watch Investor's Business Daily"
         }
       }
     ],
-    "seconds": 19.47
+    "seconds": 2.46
   },
   {
     "id": "T002",
@@ -71,7 +86,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "Live Cricket Score: New South Wales 195/7 v Queensland 278/10 Live Cricket Score: Western Australia v Tasmania 295/6",
+    "spoken": "Live Cricket Score: New Zealand 356/10 v India 116/6 Live Cricket Score: Sudur Paschim Province Under-19s 68/10 v Karnali Province Under-19s 62/7",
     "tools": [
       {
         "name": "web_search",
@@ -81,68 +96,97 @@
         "result": {
           "success": true,
           "query": "What is the cricket score today?",
-          "count": 16,
+          "count": 5,
           "results": [
             {
-              "title": "New South Wales 195/7 * v Queensland 278/10",
-              "snippet": "Live Cricket Score: New South Wales 195/7 * v Queensland 278/10",
-              "source": "http://www.cricinfo.com/ci/engine/match/1544876.html?CMP=OTC-RSS"
+              "title": "New Zealand 356/10 v India 116/6 *",
+              "snippet": "Live Cricket Score: New Zealand 356/10 v India 116/6 *",
+              "source": "http://www.cricinfo.com/ci/engine/match/1539443.html?CMP=OTC-RSS"
             },
             {
-              "title": "Western Australia v Tasmania 295/6 *",
-              "snippet": "Live Cricket Score: Western Australia v Tasmania 295/6 *",
-              "source": "http://www.cricinfo.com/ci/engine/match/1544877.html?CMP=OTC-RSS"
+              "title": "Sudur Paschim Province Under-19s 68/10 v Karnali Province Under-19s 62/7 *",
+              "snippet": "Live Cricket Score: Sudur Paschim Province Under-19s 68/10 v Karnali Province Under-19s 62/7 *",
+              "source": "http://www.cricinfo.com/ci/engine/match/1564160.html?CMP=OTC-RSS"
             },
             {
-              "title": "Pakistan Women 136/9 * v Sri Lanka Women 140/6",
-              "snippet": "Live Cricket Score: Pakistan Women 136/9 * v Sri Lanka Women 140/6",
-              "source": "http://www.cricinfo.com/ci/engine/match/1557569.html?CMP=OTC-RSS"
+              "title": "Gandaki Province Under-19s 190/9 * v Koshi Province Under-19s",
+              "snippet": "Live Cricket Score: Gandaki Province Under-19s 190/9 * v Koshi Province Under-19s",
+              "source": "http://www.cricinfo.com/ci/engine/match/1564161.html?CMP=OTC-RSS"
             },
             {
-              "title": "Afghanistan A 72/3 * v Hong Kong 66/10",
-              "snippet": "Live Cricket Score: Afghanistan A 72/3 * v Hong Kong 66/10",
-              "source": "http://www.cricinfo.com/ci/engine/match/1562350.html?CMP=OTC-RSS"
+              "title": "Melbourne Renegades Women v Melbourne Stars Women 75 *",
+              "snippet": "Live Cricket Score: Melbourne Renegades Women v Melbourne Stars Women 75 *",
+              "source": "http://www.cricinfo.com/ci/engine/match/1543980.html?CMP=OTC-RSS"
             },
             {
-              "title": "South Africa 74/1 * v Bangladesh 91/10",
-              "snippet": "Live Cricket Score: South Africa 74/1 * v Bangladesh 91/10",
-              "source": "http://www.cricinfo.com/ci/engine/match/1525663.html?CMP=OTC-RSS"
+              "title": "Matabeleland Tuskers v Southern Rocks",
+              "snippet": "Live Cricket Score: Matabeleland Tuskers v Southern Rocks",
+              "source": "http://www.cricinfo.com/ci/engine/match/1559700.html?CMP=OTC-RSS"
             }
           ],
-          "spoken": "Live Cricket Score: New South Wales 195/7 * v Queensland 278/10 Live Cricket Score: Western Australia v Tasmania 295/6 *"
+          "spoken": "Live Cricket Score: New Zealand 356/10 v India 116/6 * Live Cricket Score: Sudur Paschim Province Under-19s 68/10 v Karnali Province Under-19s 62/7 *"
         }
       }
     ],
-    "seconds": 3.72
+    "seconds": 0.91
   },
   {
     "id": "T003",
     "category": "web_search",
     "prompt": "Search for Python 3.13 features, give me 3 results",
-    "pass": false,
+    "pass": true,
     "checks": {
       "no_crash": true,
-      "tool": false,
-      "args": false,
+      "tool": true,
+      "args": true,
+      "success": true,
       "spoken_ok": true
     },
     "error": null,
     "notes": "results list length must be 3",
-    "spoken": "Sorry, but I can't help with that.",
+    "spoken": "Upgrade AWS Glue jobs to Glue 6.0 with AI-powered Spark upgrades - Amazon Web Services (AWS): Upgrade AWS Glue jobs to Glue 6.0 with AI-powered Spark upgrades Amazon Web Services (AWS) Python 3.14 and its New JIT Compiler - Towards Data Science: Python 3.14 and its New JIT Compiler Towards Data Science",
     "tools": [
       {
-        "name": "run_python_code",
+        "name": "web_search",
         "args": {
-          "code": "import sys; print(sys.version_info.major, sys.version_info.minor, sys.version_info.micro)"
+          "query": "Python 3.13 features, give me 3 results",
+          "max_results": 3
         },
         "result": {
-          "success": false,
-          "error": "Security restriction: module 'sys' is blocked by AST check.",
-          "spoken": "Security restriction: module 'sys' is blocked."
+          "success": true,
+          "query": "Python 3.13 features, give me 3 results",
+          "count": 3,
+          "results": [
+            {
+              "title": "Upgrade AWS Glue jobs to Glue 6.0 with AI-powered Spark upgrades - Amazon Web Services (AWS)",
+              "snippet": "Upgrade AWS Glue jobs to Glue 6.0 with AI-powered Spark upgrades Amazon Web Services (AWS)",
+              "source": "https://news.google.com/rss/articles/CBMipgFBVV95cUxPZG51TTBURTN2SWNqUzFVZ3FOVnNHU3IzOTFoR0xpS3huaGlLSUZpY0RsbU5YWkgwUUY5MWlSblFnZFMtZ0FyRUxDYmV6eHJRTllvZ2RIc2VLUlpSYU1xaGdtR0V1eFRDRzZxUGdUbDBNVEkwbE5JR1E3QXRJQ0puY1lveHMxVmtFcHVvbmZqZmZPbnlJRWdfdUVNU0wxOV9oMldnYWVR?oc=5",
+              "publisher": "Amazon Web Services (AWS)",
+              "published_at": "Mon, 24 Aug 2026 07:00:00 GMT",
+              "relative_time": "95d ago"
+            },
+            {
+              "title": "Python 3.14 and its New JIT Compiler - Towards Data Science",
+              "snippet": "Python 3.14 and its New JIT Compiler Towards Data Science",
+              "source": "https://news.google.com/rss/articles/CBMid0FVX3lxTE9RU1l2UThGR1NHSDRzSXlhTnBKQUY4aXNST3U2U1lBb24yYWt1Ymtkc0RTVFV5WEV3UXo4M0liRDZuY1F4WlpuQ0tjSkpnOTREUGxLNldWWFJTTFNRalRXWnB0Sy14bF81NTBlNE9nOEl3ZXZ2N0JB?oc=5",
+              "publisher": "Towards Data Science",
+              "published_at": "Fri, 19 Jun 2026 19:21:09 GMT",
+              "relative_time": "161d ago"
+            },
+            {
+              "title": "Announcing Oracle Autonomous Database Select AI for Python - Oracle Blogs",
+              "snippet": "Announcing Oracle Autonomous Database Select AI for Python Oracle Blogs",
+              "source": "https://news.google.com/rss/articles/CBMirAFBVV95cUxPYXVnSG9PNlFlY3gyRWNzM2hvM1EtQUc0dXlodDZNVWpMOXVhZ1Z5TDdqVHRNVHNhNElUN3VYVjdxTXBpQjdUcHVxS0FhakthLURJN3hnQXBIMzRic3YzbVUzc3hmQVhlSkJJR0hvV0c5VmMyZlZJa21tWmNDYTdtZkxqV1RJTkNfVmR6MnNoU3htUDV6eUNRdkIxRng4MGJpeTlDOWxxRUFZbDU4?oc=5",
+              "publisher": "Oracle Blogs",
+              "published_at": "Wed, 03 Sep 2025 07:00:00 GMT",
+              "relative_time": "450d ago"
+            }
+          ],
+          "spoken": "Upgrade AWS Glue jobs to Glue 6.0 with AI-powered Spark upgrades - Amazon Web Services (AWS): Upgrade AWS Glue jobs to Glue 6.0 with AI-powered Spark upgrades Amazon Web Services (AWS) Python 3.14 and its New JIT Compiler - Towards Data Science: Python 3.14 and its New JIT Compiler Towards Data Science"
         }
       }
     ],
-    "seconds": 2.06
+    "seconds": 1.68
   },
   {
     "id": "T004",
@@ -157,39 +201,23 @@
     },
     "error": null,
     "notes": "no crash; empty or 'nothing found' is fine",
-    "spoken": "Here are three results for your query: 1. 12345 - Wikipedia: This disambiguation page lists articles associated with the same number. If an internal link led you here, you may wish to change the link to point directly to the intended article. 2. 12345 song for kids | 12345 678910 counting song for baby l ...12345 | D Billions Kids Songs - YouTube: Nov 30, 2022 \\u00b7 12345 song for kids | 12345 678910 counting song for baby l nursery rhymes for kids Primary Books Academy 9.",
+    "spoken": "I searched for asdkjhqwe zxcmnb 12345 but found no matching results right now.",
     "tools": [
       {
         "name": "web_search",
         "args": {
-          "query": "search asdkjhqwe zxcmnb 12345"
+          "query": "asdkjhqwe zxcmnb 12345"
         },
         "result": {
           "success": true,
-          "query": "search asdkjhqwe zxcmnb 12345",
-          "count": 3,
-          "results": [
-            {
-              "title": "12345 - Wikipedia",
-              "snippet": "This disambiguation page lists articles associated with the same number. If an internal link led you here, you may wish to change the link to point directly to the intended article.",
-              "source": "https://en.wikipedia.org/wiki/12345"
-            },
-            {
-              "title": "12345 song for kids | 12345 678910 counting song for baby l ...12345 | D Billions Kids Songs - YouTubeSearch - Microsoft BingGoogle Search - A new kind of helpDuckDuckGo - Protection. Privacy. Peace of mind.12345 - Wikipedia",
-              "snippet": "Nov 30, 2022 \u00b7 12345 song for kids | 12345 678910 counting song for baby l nursery rhymes for kids Primary Books Academy 9.83K subscribers 34 Mar 22, 2021 \u00b7 Let's learn to count from 1 to 5. Lyrics: Boom-Boom-Boom-Boom-Boom! Cha-Cha! Chiki-Chiki! One, Two, Three, Four, Five! Also available on other music platforms:... Search with Microsoft Bing and use the power of AI to find information, explore webpages, images, videos, maps, and more. A smart search engine for the forever curious. Ask Search to find exactly what you need, including checking for pricing and availability with direct links to finish booking. Now across more tasks including local experiences and services. DuckDuckGo Search gives you truly private search results without tradeoffs in result quality. We have everything you\u2019ve come to expect in an online search experience (images, maps, answers, etc.), and because there\u2019s no search history on DuckDuckGo, you escape the filter bubble of manipulated results. This disambiguation page lists articles associated with the same number. If an internal link led you here, you may wish to change the link to point directly to the intended article.",
-              "source": "https://www.youtube.com/watch?v=G9Q_L421Dxk"
-            },
-            {
-              "title": "12345 | D Billions Kids Songs - YouTubeSearch - Microsoft BingGoogle Search - A new kind of helpDuckDuckGo - Protection. Privacy. Peace of mind.12345 - Wikipedia",
-              "snippet": "Mar 22, 2021 \u00b7 Let's learn to count from 1 to 5. Lyrics: Boom-Boom-Boom-Boom-Boom! Cha-Cha! Chiki-Chiki! One, Two, Three, Four, Five! Also available on other music platforms:... Search with Microsoft Bing and use the power of AI to find information, explore webpages, images, videos, maps, and more. A smart search engine for the forever curious. Ask Search to find exactly what you need, including checking for pricing and availability with direct links to finish booking. Now across more tasks including local experiences and services. DuckDuckGo Search gives you truly private search results without tradeoffs in result quality. We have everything you\u2019ve come to expect in an online search experience (images, maps, answers, etc.), and because there\u2019s no search history on DuckDuckGo, you escape the filter bubble of manipulated results. This disambiguation page lists articles associated with the same number. If an internal link led you here, you may wish to change the link to point directly to the intended article.",
-              "source": "https://www.youtube.com/watch?v=LRXDfJh9ZKc"
-            }
-          ],
-          "spoken": "12345 - Wikipedia: This disambiguation page lists articles associated with the same number. If an internal link led you here, you may wish to change the link to point directly to the intended article. 12345 song for kids | 12345 678910 counting song for baby l ...12345 | D Billions Kids Songs - YouTubeSearch - Microsoft BingGoogle Search - A new kind of helpDuckDuckGo - Protection. Privacy. Peace of mind.12345 - Wikipedia: Nov 30, 2022 \u00b7 12345 song for kids | 12345 678910 counting song for baby l nursery rhymes for kids Primary Books Academy 9.83K subscribers 34 Mar 22, 2021 \u00b7 Let's learn to count from 1 to 5. Lyrics: Boom-Boom-Boom-Boom-Boom! Cha-Cha! Chiki-Chiki! One, Two, Three, Four, Five! Also available on other music platforms:... Search with Microsoft Bing and use the power of AI to find information, explore webpages, images, videos, maps, and more. A smart search engine for the forever curious. Ask Search to find exactly what you need, including checking for pricing and availability with direct links to finish booking. Now across more tasks including local experiences and services. DuckDuckGo Search gives you truly private search results without tradeoffs in result quality. We have everything you\u2019ve come to expect in an online search experience (images, maps, answers, etc.), and because there\u2019s no search history on DuckDuckGo, you escape the filter bubble of manipulated results. This disambiguation page lists articles associated with the same number. If an internal link led you here, you may wish to change the link to point directly to the intended article."
+          "query": "asdkjhqwe zxcmnb 12345",
+          "count": 0,
+          "results": [],
+          "spoken": "I searched for asdkjhqwe zxcmnb 12345 but found no matching results right now."
         }
       }
     ],
-    "seconds": 16.16
+    "seconds": 0.89
   },
   {
     "id": "T005",
@@ -222,7 +250,7 @@
         }
       }
     ],
-    "seconds": 9.3
+    "seconds": 0.29
   },
   {
     "id": "T006",
@@ -254,7 +282,7 @@
         }
       }
     ],
-    "seconds": 0.73
+    "seconds": 0.18
   },
   {
     "id": "T007",
@@ -286,7 +314,7 @@
         }
       }
     ],
-    "seconds": 0.65
+    "seconds": 0.17
   },
   {
     "id": "T008",
@@ -318,7 +346,7 @@
         }
       }
     ],
-    "seconds": 0.6
+    "seconds": 0.16
   },
   {
     "id": "T009",
@@ -333,9 +361,9 @@
     },
     "error": null,
     "notes": "polite error, no crash",
-    "spoken": "Division by zero is undefined.",
+    "spoken": "The answer is undefined.",
     "tools": [],
-    "seconds": 0.5
+    "seconds": 0.12
   },
   {
     "id": "T010",
@@ -350,9 +378,22 @@
     },
     "error": null,
     "notes": "must be rejected by AST check",
-    "spoken": "The answer is the system directory.",
-    "tools": [],
-    "seconds": 0.53
+    "spoken": "I could not calculate that expression. Only simple function calls are allowed",
+    "tools": [
+      {
+        "name": "calculator",
+        "args": {
+          "expression": "__import__('os').system('dir')"
+        },
+        "result": {
+          "success": false,
+          "expression": "__import__('os').system('dir')",
+          "error": "Only simple function calls are allowed",
+          "spoken": "I could not calculate that expression. Only simple function calls are allowed"
+        }
+      }
+    ],
+    "seconds": 0.12
   },
   {
     "id": "T011",
@@ -368,20 +409,20 @@
     },
     "error": null,
     "notes": "dynamic; verify manually against clock",
-    "spoken": "The current time is Monday, November 23, 2026 at 09:37 PM (Asia/Kolkata).",
+    "spoken": "The current time is Saturday, November 28, 2026 at 12:05 PM (Asia/Kolkata).",
     "tools": [
       {
         "name": "get_current_time",
         "args": {},
         "result": {
           "success": true,
-          "spoken": "The current time is Monday, November 23, 2026 at 09:37 PM (Asia/Kolkata).",
-          "iso": "2026-11-23T21:37:53.914409+05:30",
+          "spoken": "The current time is Saturday, November 28, 2026 at 12:05 PM (Asia/Kolkata).",
+          "iso": "2026-11-28T12:05:18.312489+05:30",
           "timezone": "Asia/Kolkata"
         }
       }
     ],
-    "seconds": 0.62
+    "seconds": 0.37
   },
   {
     "id": "T012",
@@ -397,7 +438,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "The current time is Monday, November 23, 2026 at 11:08 AM (America/New_York).",
+    "spoken": "The current time is Saturday, November 28, 2026 at 01:35 AM (America/New_York).",
     "tools": [
       {
         "name": "get_current_time",
@@ -406,13 +447,13 @@
         },
         "result": {
           "success": true,
-          "spoken": "The current time is Monday, November 23, 2026 at 11:08 AM (America/New_York).",
-          "iso": "2026-11-23T11:08:02.843070-05:00",
+          "spoken": "The current time is Saturday, November 28, 2026 at 01:35 AM (America/New_York).",
+          "iso": "2026-11-28T01:35:19.573766-05:00",
           "timezone": "America/New_York"
         }
       }
     ],
-    "seconds": 8.72
+    "seconds": 1.21
   },
   {
     "id": "T013",
@@ -428,7 +469,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "The current time is Tuesday, November 24, 2026 at 01:08 AM (Asia/Tokyo).",
+    "spoken": "The current time is Saturday, November 28, 2026 at 03:35 PM (Asia/Tokyo).",
     "tools": [
       {
         "name": "get_current_time",
@@ -437,13 +478,13 @@
         },
         "result": {
           "success": true,
-          "spoken": "The current time is Tuesday, November 24, 2026 at 01:08 AM (Asia/Tokyo).",
-          "iso": "2026-11-24T01:08:04.147211+09:00",
+          "spoken": "The current time is Saturday, November 28, 2026 at 03:35 PM (Asia/Tokyo).",
+          "iso": "2026-11-28T15:35:20.022131+09:00",
           "timezone": "Asia/Tokyo"
         }
       }
     ],
-    "seconds": 1.09
+    "seconds": 0.38
   },
   {
     "id": "T014",
@@ -473,7 +514,7 @@
         }
       }
     ],
-    "seconds": 1.13
+    "seconds": 0.36
   },
   {
     "id": "T015",
@@ -504,7 +545,7 @@
         }
       }
     ],
-    "seconds": 0.68
+    "seconds": 0.16
   },
   {
     "id": "T016",
@@ -535,7 +576,7 @@
         }
       }
     ],
-    "seconds": 0.55
+    "seconds": 0.19
   },
   {
     "id": "T017",
@@ -568,7 +609,7 @@
         }
       }
     ],
-    "seconds": 8.62
+    "seconds": 1.55
   },
   {
     "id": "T018",
@@ -601,7 +642,7 @@
         }
       }
     ],
-    "seconds": 0.7
+    "seconds": 0.58
   },
   {
     "id": "T019",
@@ -634,7 +675,7 @@
         }
       }
     ],
-    "seconds": 0.67
+    "seconds": 0.48
   },
   {
     "id": "T020",
@@ -667,7 +708,7 @@
         }
       }
     ],
-    "seconds": 0.68
+    "seconds": 0.31
   },
   {
     "id": "T021",
@@ -700,7 +741,7 @@
         }
       }
     ],
-    "seconds": 0.69
+    "seconds": 1.52
   },
   {
     "id": "T022",
@@ -733,7 +774,7 @@
         }
       }
     ],
-    "seconds": 8.71
+    "seconds": 2.65
   },
   {
     "id": "T023",
@@ -766,7 +807,7 @@
         }
       }
     ],
-    "seconds": 0.66
+    "seconds": 0.94
   },
   {
     "id": "T024",
@@ -795,7 +836,7 @@
         }
       }
     ],
-    "seconds": 0.65
+    "seconds": 0.68
   },
   {
     "id": "T025",
@@ -829,7 +870,7 @@
         }
       }
     ],
-    "seconds": 0.98
+    "seconds": 0.85
   },
   {
     "id": "T026",
@@ -857,12 +898,12 @@
           "contact": "Rahul",
           "url": "https://web.whatsapp.com",
           "message": "",
-          "action": "search_and_send",
+          "action": "open_chat",
           "spoken": "Opening WhatsApp and finding Rahul's chat for you."
         }
       }
     ],
-    "seconds": 0.73
+    "seconds": 0.42
   },
   {
     "id": "T027",
@@ -889,7 +930,7 @@
         }
       }
     ],
-    "seconds": 8.64
+    "seconds": 1.27
   },
   {
     "id": "T028",
@@ -938,7 +979,7 @@
         }
       }
     ],
-    "seconds": 6.01
+    "seconds": 2.65
   },
   {
     "id": "T029",
@@ -954,7 +995,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "Potential side effects of Ibuprofen include: Stomach upset, heartburn, nausea, dizziness. Long-term use may cause gastric ulcers or increase cardiovascular risk. If you experience any severe or persistent symptoms, seek medical attention immediately.",
+    "spoken": "Potential side effects of Ibuprofen include: Stomach upset, heartburn, nausea, dizziness. Long-term use may cause gastric ulcers or increase cardiovascular risk. Consult a doctor, or seek immediate medical attention if severe symptoms occur.",
     "tools": [
       {
         "name": "medical_search",
@@ -980,12 +1021,12 @@
           "side_effects": "Stomach upset, heartburn, nausea, dizziness. Long-term use may cause gastric ulcers or increase cardiovascular risk.",
           "precautions": "Always take with food or milk to protect stomach lining. Avoid if you have active stomach ulcers, severe kidney disease, or asthma.",
           "interactions": "Do not take concurrently with aspirin, other NSAIDs, or oral anticoagulants without medical supervision.",
-          "spoken": "Potential side effects of Ibuprofen include: Stomach upset, heartburn, nausea, dizziness. Long-term use may cause gastric ulcers or increase cardiovascular risk. If you experience any severe or persistent symptoms, seek medical attention immediately.",
+          "spoken": "Potential side effects of Ibuprofen include: Stomach upset, heartburn, nausea, dizziness. Long-term use may cause gastric ulcers or increase cardiovascular risk. Consult a doctor, or seek immediate medical attention if severe symptoms occur.",
           "disclaimer": "Disclaimer: This information is for educational purposes only. Always consult a qualified doctor, physician, or pharmacist before taking, changing, or stopping any medication."
         }
       }
     ],
-    "seconds": 3.39
+    "seconds": 1.38
   },
   {
     "id": "T030",
@@ -1001,7 +1042,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "Metformin Hydrochloride is a Biguanide Antidiabetic Agent. Commonly known as Glucophage, Glycomet, Fortamet. It is primarily used for First-line oral medication for controlling blood glucose levels in Type 2 Diabetes Mellitus and managing polycystic ovary syndrome (PCOS). Please remember to consult a healthcare provider for personalized medical advice.",
+    "spoken": "Metformin Hydrochloride is a Biguanide Antidiabetic Agent. Commonly known as Glucophage, Glycomet, Fortamet. It is primarily used for First-line oral medication for controlling blood glucose levels in Type 2 Diabetes Mellitus and managing polycystic ovary syndrome (PCOS). Always consult a licensed doctor or physician for personalized medical advice.",
     "tools": [
       {
         "name": "medical_search",
@@ -1026,12 +1067,12 @@
           "side_effects": "Gastrointestinal disturbances (diarrhea, bloating, nausea, metallic taste). These usually subside within a few weeks.",
           "precautions": "Take with meals to minimize stomach upset. Contraindicated in severe renal failure. Monitor kidney function and vitamin B12 levels regularly.",
           "interactions": "Avoid excessive alcohol due to heightened risk of lactic acidosis. Temporarily withhold before contrast dye imaging procedures.",
-          "spoken": "Metformin Hydrochloride is a Biguanide Antidiabetic Agent. Commonly known as Glucophage, Glycomet, Fortamet. It is primarily used for First-line oral medication for controlling blood glucose levels in Type 2 Diabetes Mellitus and managing polycystic ovary syndrome (PCOS). Please remember to consult a healthcare provider for personalized medical advice.",
+          "spoken": "Metformin Hydrochloride is a Biguanide Antidiabetic Agent. Commonly known as Glucophage, Glycomet, Fortamet. It is primarily used for First-line oral medication for controlling blood glucose levels in Type 2 Diabetes Mellitus and managing polycystic ovary syndrome (PCOS). Always consult a licensed doctor or physician for personalized medical advice.",
           "disclaimer": "Disclaimer: This information is for educational purposes only. Always consult a qualified doctor, physician, or pharmacist before taking, changing, or stopping any medication."
         }
       }
     ],
-    "seconds": 2.61
+    "seconds": 1.3
   },
   {
     "id": "T031",
@@ -1064,7 +1105,7 @@
         }
       }
     ],
-    "seconds": 7.33
+    "seconds": 2.78
   },
   {
     "id": "T032",
@@ -1113,23 +1154,23 @@
         }
       }
     ],
-    "seconds": 12.13
+    "seconds": 2.08
   },
   {
     "id": "T033",
     "category": "send_email",
     "prompt": "Send an email to keshavagarwal7793@gmail.com with subject Golden Test saying this is a test",
-    "pass": true,
+    "pass": false,
     "checks": {
       "no_crash": true,
       "tool": true,
       "args": true,
-      "success": true,
+      "success": false,
       "spoken_ok": true
     },
     "error": null,
     "notes": "check inbox",
-    "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Golden Test\".",
+    "spoken": "Email is not configured yet. Please configure your email and 16-character Gmail App Password in the sidebar Sender Profile (or set SENDER_EMAIL and SENDER_APP_PASSWORD in your dot-env file).",
     "tools": [
       {
         "name": "send_email",
@@ -1139,34 +1180,29 @@
           "description": "this is a test"
         },
         "result": {
-          "success": true,
-          "to": "keshavagarwal7793@gmail.com",
-          "subject": "Golden Test",
-          "from": "keshavagarwal7793@gmail.com",
-          "provider": "google_gmail_api",
-          "sender_name": "Keshav",
-          "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Golden Test\".",
-          "body": "Hello Keshav,\n\nThis is a test email to ensure proper functioning. Please let me know if there are any issues or concerns.\n\nBest regards,\nKeshav"
+          "success": false,
+          "error": "SMTP not configured",
+          "spoken": "Email is not configured yet. Please configure your email and 16-character Gmail App Password in the sidebar Sender Profile (or set SENDER_EMAIL and SENDER_APP_PASSWORD in your dot-env file)."
         }
       }
     ],
-    "seconds": 7.25
+    "seconds": 3.57
   },
   {
     "id": "T034",
     "category": "send_email",
     "prompt": "Email keshavagarwal7793@gmail.com asking for leave tomorrow",
-    "pass": true,
+    "pass": false,
     "checks": {
       "no_crash": true,
       "tool": true,
       "args": true,
-      "success": true,
+      "success": false,
       "spoken_ok": true
     },
     "error": null,
     "notes": "AI drafts body",
-    "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Request for Leave\".",
+    "spoken": "Email is not configured yet. Please configure your email and 16-character Gmail App Password in the sidebar Sender Profile (or set SENDER_EMAIL and SENDER_APP_PASSWORD in your dot-env file).",
     "tools": [
       {
         "name": "send_email",
@@ -1175,18 +1211,13 @@
           "description": "for leave tomorrow"
         },
         "result": {
-          "success": true,
-          "to": "keshavagarwal7793@gmail.com",
-          "subject": "Request for Leave",
-          "from": "keshavagarwal7793@gmail.com",
-          "provider": "google_gmail_api",
-          "sender_name": "Keshav",
-          "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Request for Leave\".",
-          "body": "Hello Keshav,\n\nI am writing to request a leave of absence tomorrow. I will be out of the office for the entire day and will be available for urgent matters via email or phone. Please let me know if there are any specific tasks or meetings I should be aware of.\n\nThank you for your understanding and support.\n\nBest regards,\nKeshav"
+          "success": false,
+          "error": "SMTP not configured",
+          "spoken": "Email is not configured yet. Please configure your email and 16-character Gmail App Password in the sidebar Sender Profile (or set SENDER_EMAIL and SENDER_APP_PASSWORD in your dot-env file)."
         }
       }
     ],
-    "seconds": 7.71
+    "seconds": 4.32
   },
   {
     "id": "T035",
@@ -1201,22 +1232,22 @@
     },
     "error": null,
     "notes": "invalid address",
-    "spoken": "'email to' is not a valid email address. Please provide a valid email or CSV file.",
+    "spoken": "'notanemail' is not a valid email address. Please provide a valid email or CSV file.",
     "tools": [
       {
         "name": "send_email",
         "args": {
-          "to": "email to",
+          "to": "notanemail",
           "description": "hi"
         },
         "result": {
           "success": false,
-          "error": "'email to' is not a valid email address. Please provide a valid email or CSV file.",
-          "spoken": "'email to' is not a valid email address. Please provide a valid email or CSV file."
+          "error": "'notanemail' is not a valid email address. Please provide a valid email or CSV file.",
+          "spoken": "'notanemail' is not a valid email address. Please provide a valid email or CSV file."
         }
       }
     ],
-    "seconds": 1.41
+    "seconds": 1.45
   },
   {
     "id": "T036",
@@ -1243,7 +1274,7 @@
         }
       }
     ],
-    "seconds": 0.82
+    "seconds": 1.28
   },
   {
     "id": "T037",
@@ -1284,7 +1315,7 @@
         }
       }
     ],
-    "seconds": 10.45
+    "seconds": 1.12
   },
   {
     "id": "T038",
@@ -1300,7 +1331,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "Found 2 email. The latest is from sarah.chen@company.com about Launch blockers for v2.4.",
+    "spoken": "Found 2 emails. The latest is from sarah.chen@company.com about Launch blockers for v2.4.",
     "tools": [
       {
         "name": "search_emails",
@@ -1329,11 +1360,11 @@
               "unread": true
             }
           ],
-          "spoken": "Found 2 email. The latest is from sarah.chen@company.com about Launch blockers for v2.4."
+          "spoken": "Found 2 emails. The latest is from sarah.chen@company.com about Launch blockers for v2.4."
         }
       }
     ],
-    "seconds": 2.18
+    "seconds": 0.47
   },
   {
     "id": "T039",
@@ -1364,7 +1395,7 @@
         }
       }
     ],
-    "seconds": 1.03
+    "seconds": 0.3
   },
   {
     "id": "T040",
@@ -1398,7 +1429,7 @@
         }
       }
     ],
-    "seconds": 1.02
+    "seconds": 0.45
   },
   {
     "id": "T041",
@@ -1423,9 +1454,9 @@
         },
         "result": {
           "success": true,
-          "draft_id": "draft-b138c8",
+          "draft_id": "draft-76bc4f",
           "draft": {
-            "id": "draft-b138c8",
+            "id": "draft-76bc4f",
             "reply_to": "recipient@example.com",
             "subject": "Re: Golden Test Update",
             "body": "Draft a reply to the Golden Test email saying I will respond tomorrow",
@@ -1435,7 +1466,7 @@
         }
       }
     ],
-    "seconds": 1.14
+    "seconds": 0.38
   },
   {
     "id": "T042",
@@ -1460,9 +1491,9 @@
         },
         "result": {
           "success": true,
-          "draft_id": "draft-1b25c0",
+          "draft_id": "draft-108087",
           "draft": {
-            "id": "draft-1b25c0",
+            "id": "draft-108087",
             "reply_to": "recipient@example.com",
             "subject": "Re: Golden Test Update",
             "body": "Draft a formal reply to the Golden Test email thanking them",
@@ -1472,7 +1503,7 @@
         }
       }
     ],
-    "seconds": 9.59
+    "seconds": 0.65
   },
   {
     "id": "T043",
@@ -1488,7 +1519,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "You have 2 events: Project Architecture Review at 10:00, Sprint Sync with Rahul at 16:00.",
+    "spoken": "You have no scheduled events on your calendar for today.",
     "tools": [
       {
         "name": "list_events",
@@ -1497,35 +1528,14 @@
         },
         "result": {
           "success": true,
-          "count": 2,
+          "count": 0,
           "date": "today",
-          "events": [
-            {
-              "id": "evt-1",
-              "title": "Project Architecture Review",
-              "start": "2026-11-01T10:00:00+05:30",
-              "end": "2026-11-01T11:00:00+05:30",
-              "attendees": [
-                "alex@example.com"
-              ],
-              "status": "confirmed"
-            },
-            {
-              "id": "evt-2",
-              "title": "Sprint Sync with Rahul",
-              "start": "2026-11-01T16:00:00+05:30",
-              "end": "2026-11-01T16:30:00+05:30",
-              "attendees": [
-                "rahul@example.com"
-              ],
-              "status": "confirmed"
-            }
-          ],
-          "spoken": "You have 2 events: Project Architecture Review at 10:00, Sprint Sync with Rahul at 16:00."
+          "events": [],
+          "spoken": "You have no scheduled events on your calendar for today."
         }
       }
     ],
-    "seconds": 0.9
+    "seconds": 0.32
   },
   {
     "id": "T044",
@@ -1541,7 +1551,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "You have 2 events: Project Architecture Review at 10:00, Sprint Sync with Rahul at 16:00.",
+    "spoken": "You have no scheduled events on your calendar for tomorrow.",
     "tools": [
       {
         "name": "list_events",
@@ -1550,35 +1560,14 @@
         },
         "result": {
           "success": true,
-          "count": 2,
+          "count": 0,
           "date": "tomorrow",
-          "events": [
-            {
-              "id": "evt-1",
-              "title": "Project Architecture Review",
-              "start": "2026-11-01T10:00:00+05:30",
-              "end": "2026-11-01T11:00:00+05:30",
-              "attendees": [
-                "alex@example.com"
-              ],
-              "status": "confirmed"
-            },
-            {
-              "id": "evt-2",
-              "title": "Sprint Sync with Rahul",
-              "start": "2026-11-01T16:00:00+05:30",
-              "end": "2026-11-01T16:30:00+05:30",
-              "attendees": [
-                "rahul@example.com"
-              ],
-              "status": "confirmed"
-            }
-          ],
-          "spoken": "You have 2 events: Project Architecture Review at 10:00, Sprint Sync with Rahul at 16:00."
+          "events": [],
+          "spoken": "You have no scheduled events on your calendar for tomorrow."
         }
       }
     ],
-    "seconds": 0.92
+    "seconds": 0.19
   },
   {
     "id": "T045",
@@ -1593,7 +1582,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "You have 2 events: Project Architecture Review at 10:00, Sprint Sync with Rahul at 16:00.",
+    "spoken": "You have no scheduled events on your calendar for today.",
     "tools": [
       {
         "name": "list_events",
@@ -1602,35 +1591,14 @@
         },
         "result": {
           "success": true,
-          "count": 2,
+          "count": 0,
           "date": "today",
-          "events": [
-            {
-              "id": "evt-1",
-              "title": "Project Architecture Review",
-              "start": "2026-11-01T10:00:00+05:30",
-              "end": "2026-11-01T11:00:00+05:30",
-              "attendees": [
-                "alex@example.com"
-              ],
-              "status": "confirmed"
-            },
-            {
-              "id": "evt-2",
-              "title": "Sprint Sync with Rahul",
-              "start": "2026-11-01T16:00:00+05:30",
-              "end": "2026-11-01T16:30:00+05:30",
-              "attendees": [
-                "rahul@example.com"
-              ],
-              "status": "confirmed"
-            }
-          ],
-          "spoken": "You have 2 events: Project Architecture Review at 10:00, Sprint Sync with Rahul at 16:00."
+          "events": [],
+          "spoken": "You have no scheduled events on your calendar for today."
         }
       }
     ],
-    "seconds": 0.98
+    "seconds": 0.19
   },
   {
     "id": "T046",
@@ -1646,26 +1614,30 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "You are free between 14:00 and 14:30 for a 30 minute meeting.",
+    "spoken": "You are free between 09:00 and 09:30 for a 30 minute meeting.",
     "tools": [
       {
         "name": "find_free_slot",
         "args": {
-          "duration_minutes": 30
+          "duration_minutes": 30,
+          "window": "today"
         },
         "result": {
           "success": true,
           "duration_minutes": 30,
           "window": "today",
+          "date": "2026-11-28",
           "slot": {
-            "start": "14:00",
-            "end": "14:30"
+            "start": "09:00",
+            "end": "09:30",
+            "start_iso": "2026-11-28T09:00:00+05:30",
+            "end_iso": "2026-11-28T09:30:00+05:30"
           },
-          "spoken": "You are free between 14:00 and 14:30 for a 30 minute meeting."
+          "spoken": "You are free between 09:00 and 09:30 for a 30 minute meeting."
         }
       }
     ],
-    "seconds": 1.04
+    "seconds": 0.32
   },
   {
     "id": "T047",
@@ -1681,26 +1653,30 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "You are free between 14:00 and 14:30 for a 120 minute meeting.",
+    "spoken": "You are free between 09:00 and 11:00 for a 120 minute meeting.",
     "tools": [
       {
         "name": "find_free_slot",
         "args": {
-          "duration_minutes": 120
+          "duration_minutes": 120,
+          "window": "tomorrow"
         },
         "result": {
           "success": true,
           "duration_minutes": 120,
-          "window": "today",
+          "window": "tomorrow",
+          "date": "2026-11-29",
           "slot": {
-            "start": "14:00",
-            "end": "14:30"
+            "start": "09:00",
+            "end": "11:00",
+            "start_iso": "2026-11-29T09:00:00+05:30",
+            "end_iso": "2026-11-29T11:00:00+05:30"
           },
-          "spoken": "You are free between 14:00 and 14:30 for a 120 minute meeting."
+          "spoken": "You are free between 09:00 and 11:00 for a 120 minute meeting."
         }
       }
     ],
-    "seconds": 10.06
+    "seconds": 0.65
   },
   {
     "id": "T048",
@@ -1724,23 +1700,23 @@
         "args": {
           "title": "Golden Sync",
           "start": "tomorrow 4 PM",
-          "end": "5 PM"
+          "end": "tomorrow 5 PM"
         },
         "result": {
           "success": true,
+          "pending_confirmation": true,
           "event": {
-            "id": "evt-e3b145",
             "title": "Golden Sync",
-            "start": "tomorrow 4 PM",
-            "end": "5 PM",
+            "start": "2026-11-29T16:00:00+05:30",
+            "end": "2026-11-29T17:00:00+05:30",
             "attendees": [],
-            "status": "confirmed"
+            "status": "pending_confirmation"
           },
-          "spoken": "Scheduled 'Golden Sync' for tomorrow 4 PM."
+          "spoken": "I am ready to schedule 'Golden Sync' for tomorrow 4 PM. Shall I confirm this booking?"
         }
       }
     ],
-    "seconds": 10.87
+    "seconds": 0.33
   },
   {
     "id": "T049",
@@ -1762,7 +1738,7 @@
         "args": {
           "title": "from 5 PM to 4 PM tomorrow",
           "start": "tomorrow 5 PM",
-          "end": "4 PM"
+          "end": "tomorrow 4 PM"
         },
         "result": {
           "success": false,
@@ -1771,7 +1747,7 @@
         }
       }
     ],
-    "seconds": 1.03
+    "seconds": 0.27
   },
   {
     "id": "T050",
@@ -1798,18 +1774,21 @@
         "result": {
           "success": true,
           "task": {
-            "id": "task-2c429f55",
+            "id": "task-c4ccf408",
+            "user_id": "keshav",
             "title": "buy milk",
+            "priority": "medium",
             "due_at": null,
             "status": "pending",
-            "created_at": "2026-11-23T16:10:26.667443+00:00"
+            "created_at": "2026-11-28T06:36:00.795927+00:00"
           },
-          "task_id": "task-2c429f55",
+          "task_id": "task-c4ccf408",
+          "priority": "medium",
           "spoken": "Added task: 'buy milk'."
         }
       }
     ],
-    "seconds": 0.84
+    "seconds": 0.2
   },
   {
     "id": "T051",
@@ -1836,18 +1815,21 @@
         "result": {
           "success": true,
           "task": {
-            "id": "task-0abc16d6",
+            "id": "task-700aea39",
+            "user_id": "keshav",
             "title": "submit report due Friday",
+            "priority": "high",
             "due_at": null,
             "status": "pending",
-            "created_at": "2026-11-23T16:10:27.648575+00:00"
+            "created_at": "2026-11-28T06:36:01.042317+00:00"
           },
-          "task_id": "task-0abc16d6",
+          "task_id": "task-700aea39",
+          "priority": "high",
           "spoken": "Added task: 'submit report due Friday'."
         }
       }
     ],
-    "seconds": 0.77
+    "seconds": 0.2
   },
   {
     "id": "T052",
@@ -1875,7 +1857,7 @@
         }
       }
     ],
-    "seconds": 9.85
+    "seconds": 1.32
   },
   {
     "id": "T053",
@@ -1891,7 +1873,7 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "You have 18 pending tasks: submit report due Friday, buy milk, Task: 900.0 and 15 more.",
+    "spoken": "You have 2 pending tasks: submit report due Friday, buy milk.",
     "tools": [
       {
         "name": "list_tasks",
@@ -1900,158 +1882,34 @@
         },
         "result": {
           "success": true,
-          "count": 18,
+          "count": 2,
           "tasks": [
             {
-              "id": "task-0abc16d6",
+              "id": "task-700aea39",
+              "user_id": "keshav",
               "title": "submit report due Friday",
+              "priority": "high",
               "due_at": null,
               "status": "pending",
-              "created_at": "2026-11-23T16:10:27.648575+00:00",
+              "created_at": "2026-11-28T06:36:01.042317+00:00",
               "completed_at": null
             },
             {
-              "id": "task-2c429f55",
+              "id": "task-c4ccf408",
+              "user_id": "keshav",
               "title": "buy milk",
+              "priority": "medium",
               "due_at": null,
               "status": "pending",
-              "created_at": "2026-11-23T16:10:26.667443+00:00",
-              "completed_at": null
-            },
-            {
-              "id": "task-ad26909a",
-              "title": "Task: 900.0",
-              "due_at": null,
-              "status": "pending",
-              "created_at": "2026-11-23T06:43:17.731518+00:00",
-              "completed_at": null
-            },
-            {
-              "id": "task-a3fcff6a",
-              "title": "buy milk",
-              "due_at": null,
-              "status": "pending",
-              "created_at": "2026-11-23T06:41:49.250064+00:00",
-              "completed_at": null
-            },
-            {
-              "id": "task-31f5f5ff",
-              "title": "Task: 900.0",
-              "due_at": null,
-              "status": "pending",
-              "created_at": "2026-11-22T10:16:19.880589+00:00",
-              "completed_at": null
-            },
-            {
-              "id": "task-53e10ebf",
-              "title": "buy milk",
-              "due_at": null,
-              "status": "pending",
-              "created_at": "2026-11-22T10:14:50.520095+00:00",
-              "completed_at": null
-            },
-            {
-              "id": "task-39804c66",
-              "title": "Task: 900.0",
-              "due_at": null,
-              "status": "pending",
-              "created_at": "2026-11-22T09:29:56.662928+00:00",
-              "completed_at": null
-            },
-            {
-              "id": "task-9f280860",
-              "title": "buy milk",
-              "due_at": null,
-              "status": "pending",
-              "created_at": "2026-11-22T09:28:27.761912+00:00",
-              "completed_at": null
-            },
-            {
-              "id": "task-e355825e",
-              "title": "Task: 900.0",
-              "due_at": null,
-              "status": "pending",
-              "created_at": "2026-11-22T09:23:19.669533+00:00",
-              "completed_at": null
-            },
-            {
-              "id": "task-3c9cef97",
-              "title": "buy milk",
-              "due_at": null,
-              "status": "pending",
-              "created_at": "2026-11-22T09:22:08.962443+00:00",
-              "completed_at": null
-            },
-            {
-              "id": "task-faf03c7c",
-              "title": "Task: 900.0",
-              "due_at": null,
-              "status": "pending",
-              "created_at": "2026-11-22T09:11:16.339844+00:00",
-              "completed_at": null
-            },
-            {
-              "id": "task-08fff7b5",
-              "title": "buy milk",
-              "due_at": null,
-              "status": "pending",
-              "created_at": "2026-11-22T09:10:06.611303+00:00",
-              "completed_at": null
-            },
-            {
-              "id": "task-e1984fa1",
-              "title": "Task: 900.0",
-              "due_at": null,
-              "status": "pending",
-              "created_at": "2026-11-22T09:05:21.096950+00:00",
-              "completed_at": null
-            },
-            {
-              "id": "task-b176cd68",
-              "title": "buy milk",
-              "due_at": null,
-              "status": "pending",
-              "created_at": "2026-11-22T09:04:03.553352+00:00",
-              "completed_at": null
-            },
-            {
-              "id": "task-a868ad5a",
-              "title": "Task: 900.0",
-              "due_at": null,
-              "status": "pending",
-              "created_at": "2026-11-22T09:01:17.399659+00:00",
-              "completed_at": null
-            },
-            {
-              "id": "task-b1dcf526",
-              "title": "Task: 900.0",
-              "due_at": null,
-              "status": "pending",
-              "created_at": "2026-11-22T08:59:22.293581+00:00",
-              "completed_at": null
-            },
-            {
-              "id": "task-e0a842db",
-              "title": "submit report due Friday",
-              "due_at": null,
-              "status": "pending",
-              "created_at": "2026-11-22T08:53:15.785396+00:00",
-              "completed_at": null
-            },
-            {
-              "id": "task-6bcd894d",
-              "title": "buy milk",
-              "due_at": null,
-              "status": "pending",
-              "created_at": "2026-11-22T08:53:15.018381+00:00",
+              "created_at": "2026-11-28T06:36:00.795927+00:00",
               "completed_at": null
             }
           ],
-          "spoken": "You have 18 pending tasks: submit report due Friday, buy milk, Task: 900.0 and 15 more."
+          "spoken": "You have 2 pending tasks: submit report due Friday, buy milk."
         }
       }
     ],
-    "seconds": 0.83
+    "seconds": 0.14
   },
   {
     "id": "T054",
@@ -2080,11 +1938,13 @@
           "count": 1,
           "tasks": [
             {
-              "id": "task-0abc16d6",
+              "id": "task-700aea39",
+              "user_id": "keshav",
               "title": "submit report due Friday",
+              "priority": "high",
               "due_at": null,
               "status": "pending",
-              "created_at": "2026-11-23T16:10:27.648575+00:00",
+              "created_at": "2026-11-28T06:36:01.042317+00:00",
               "completed_at": null
             }
           ],
@@ -2092,12 +1952,12 @@
         }
       }
     ],
-    "seconds": 0.78
+    "seconds": 0.21
   },
   {
     "id": "T055",
     "category": "complete_task",
-    "prompt": "Mark task task-0abc16d6 as done",
+    "prompt": "Mark task task-700aea39 as done",
     "pass": true,
     "checks": {
       "no_crash": true,
@@ -2108,22 +1968,22 @@
     },
     "error": null,
     "notes": "",
-    "spoken": "Marked task 'task-0abc16d6' as completed.",
+    "spoken": "Marked task 'task-700aea39' as completed.",
     "tools": [
       {
         "name": "complete_task",
         "args": {
-          "task_id": "task-0abc16d6",
-          "id": "task-0abc16d6"
+          "task_id": "task-700aea39",
+          "id": "task-700aea39"
         },
         "result": {
           "success": true,
-          "task_id": "task-0abc16d6",
-          "spoken": "Marked task 'task-0abc16d6' as completed."
+          "task_id": "task-700aea39",
+          "spoken": "Marked task 'task-700aea39' as completed."
         }
       }
     ],
-    "seconds": 0.83
+    "seconds": 0.28
   },
   {
     "id": "T056",
@@ -2151,19 +2011,21 @@
           "count": 1,
           "tasks": [
             {
-              "id": "task-0abc16d6",
+              "id": "task-700aea39",
+              "user_id": "keshav",
               "title": "submit report due Friday",
+              "priority": "high",
               "due_at": null,
               "status": "completed",
-              "created_at": "2026-11-23T16:10:27.648575+00:00",
-              "completed_at": "2026-11-23T16:10:40.759741+00:00"
+              "created_at": "2026-11-28T06:36:01.042317+00:00",
+              "completed_at": "2026-11-28T06:36:03.235864+00:00"
             }
           ],
           "spoken": "You have 1 completed task: submit report due Friday."
         }
       }
     ],
-    "seconds": 0.7
+    "seconds": 0.19
   },
   {
     "id": "T057",
@@ -2195,12 +2057,12 @@
         }
       }
     ],
-    "seconds": 9.67
+    "seconds": 0.97
   },
   {
     "id": "T058",
     "category": "delete_task",
-    "prompt": "Delete task task-0abc16d6",
+    "prompt": "Delete task task-700aea39",
     "pass": true,
     "checks": {
       "no_crash": true,
@@ -2212,22 +2074,23 @@
     },
     "error": null,
     "notes": "must ask confirmation (HITL)",
-    "spoken": "Are you sure you want me to permanently delete task 'task-0abc16d6'?",
+    "spoken": "Are you sure you want me to permanently delete task 'task-700aea39'?",
     "tools": [
       {
         "name": "delete_task",
         "args": {
-          "task_id": "task-0abc16d6",
-          "id": "task-0abc16d6"
+          "task_id": "task-700aea39",
+          "id": "task-700aea39"
         },
         "result": {
           "success": true,
-          "task_id": "task-0abc16d6",
-          "spoken": "Deleted task 'task-0abc16d6'."
+          "pending_confirmation": true,
+          "task_id": "task-700aea39",
+          "spoken": "Are you sure you want me to permanently delete task 'task-700aea39'?"
         }
       }
     ],
-    "seconds": 0.82
+    "seconds": 0.32
   },
   {
     "id": "T059",
@@ -2258,7 +2121,7 @@
         }
       }
     ],
-    "seconds": 0.92
+    "seconds": 0.29
   },
   {
     "id": "T060",
@@ -2289,7 +2152,7 @@
         }
       }
     ],
-    "seconds": 0.24
+    "seconds": 0.15
   },
   {
     "id": "T061",
@@ -2320,7 +2183,7 @@
         }
       }
     ],
-    "seconds": 0.19
+    "seconds": 0.07
   },
   {
     "id": "T062",
@@ -2351,7 +2214,7 @@
         }
       }
     ],
-    "seconds": 0.19
+    "seconds": 0.17
   },
   {
     "id": "T063",
@@ -2382,7 +2245,7 @@
         }
       }
     ],
-    "seconds": 2.53
+    "seconds": 2.55
   },
   {
     "id": "T064",
@@ -2411,7 +2274,7 @@
         }
       }
     ],
-    "seconds": 0.0
+    "seconds": 0.02
   },
   {
     "id": "T065",
@@ -2440,7 +2303,7 @@
         }
       }
     ],
-    "seconds": 0.0
+    "seconds": 0.01
   },
   {
     "id": "T066",
@@ -2469,7 +2332,7 @@
         }
       }
     ],
-    "seconds": 0.0
+    "seconds": 0.01
   },
   {
     "id": "T067",
@@ -2486,7 +2349,7 @@
     },
     "error": null,
     "notes": "needs test note: 'My WiFi password hint is blue-tiger'",
-    "spoken": "Here is the WiFi hint: My WiFi password hint is blue-tiger.",
+    "spoken": "According to personal_notes.txt (notes): My WiFi password hint is blue-tiger.",
     "tools": [
       {
         "name": "search_my_docs",
@@ -2498,19 +2361,19 @@
           "count": 1,
           "chunks": [
             {
-              "id": "chunk-82ea5a3f",
-              "file": "wifi_notes.txt",
-              "section": "WiFi",
-              "text": "My WiFi password hint is blue-tiger",
+              "id": "chunk-3341ebac",
+              "file": "personal_notes.txt",
+              "section": "notes",
+              "text": "My WiFi password hint is blue-tiger.",
               "score": 1.1573,
-              "modified_at": "2026-11-22T08:57:24.926158+00:00"
+              "modified_at": "2026-11-28T06:35:10.359287+00:00"
             }
           ],
-          "spoken": "According to wifi_notes.txt (WiFi): My WiFi password hint is blue-tiger"
+          "spoken": "According to personal_notes.txt (notes): My WiFi password hint is blue-tiger."
         }
       }
     ],
-    "seconds": 11.36
+    "seconds": 1.24
   },
   {
     "id": "T068",
@@ -2540,7 +2403,7 @@
         }
       }
     ],
-    "seconds": 0.76
+    "seconds": 0.27
   },
   {
     "id": "T069",
@@ -2565,16 +2428,17 @@
         "result": {
           "success": true,
           "fact": {
-            "id": "fact-bd647412",
+            "id": "fact-6ed76824",
+            "user_id": "keshav",
             "fact": "my favourite colour is blue",
             "category": "general",
-            "created_at": "2026-11-23T16:11:11.808640+00:00"
+            "created_at": "2026-11-28T06:36:10.581120+00:00"
           },
           "spoken": "I will remember that: my favourite colour is blue."
         }
       }
     ],
-    "seconds": 0.74
+    "seconds": 0.27
   },
   {
     "id": "T070",
@@ -2591,7 +2455,7 @@
     "notes": "answers from memory; tool optional",
     "spoken": "Your favourite colour is blue.",
     "tools": [],
-    "seconds": 0.02
+    "seconds": 0.01
   },
   {
     "id": "T071",
@@ -2619,7 +2483,7 @@
         }
       }
     ],
-    "seconds": 10.37
+    "seconds": 1.03
   },
   {
     "id": "T072",
@@ -2633,9 +2497,9 @@
     },
     "error": null,
     "notes": "no tool should be called",
-    "spoken": "Why don't scientists trust atoms? Because they can't account for them!",
+    "spoken": "Why don't scientists trust atoms? Because they make up everything!",
     "tools": [],
-    "seconds": 9.88
+    "seconds": 1.01
   },
   {
     "id": "T073",
@@ -2667,7 +2531,7 @@
     },
     "error": null,
     "notes": "typo tolerance",
-    "spoken": "Google Cloud latest news and announcements - Google Cloud: Google Cloud latest news and announcements Google Cloud Cognition in talks for new funding at $75 billion valuation, Bloomberg News reports - Reuters: Cognition in talks for new funding at $75 billion valuation, Bloomberg News reports Reuters",
+    "spoken": "Treasury FinCEN systems latest to be hit by cyber incident - Federal News Network: Treasury FinCEN systems latest to be hit by cyber incident Federal News Network Google Cloud latest news and announcements - Google Cloud: Google Cloud latest news and announcements Google Cloud",
     "tools": [
       {
         "name": "web_search",
@@ -2680,36 +2544,51 @@
           "count": 5,
           "results": [
             {
-              "title": "Google Cloud latest news and announcements - Google Cloud",
-              "snippet": "Google Cloud latest news and announcements Google Cloud",
-              "source": "https://news.google.com/rss/articles/CBMihgFBVV95cUxNREwxdGg2aXlreXo5blo4WENaSFZEV2NGckE3MzBTbk1WeDQ5eVJsMkdjdlNnVUx5R1QxbHJSMmVRUmRHbkZWeV9PY2ExYXhxZ19tQnpjTFlPTWtPZy1VWmdxUFBKV2dFZmt2WHR0NmQtUlR6bzRVUVZpcHpVOGVuYnR5UHBUdw?oc=5"
+              "title": "Treasury FinCEN systems latest to be hit by cyber incident - Federal News Network",
+              "snippet": "Treasury FinCEN systems latest to be hit by cyber incident Federal News Network",
+              "source": "https://news.google.com/rss/articles/CBMisgFBVV95cUxQSHY0a1FET0JHekw5TW82cFFTQkNfMGNPYU9oQ3EtMEFsYmVQQWRRbW02NTJKSEtrVG5PVUp4ZXhnOWNqVkxza3RkbmlMdWpBcE8wWjJBNklPSWNvaWlTdW9WWU5VSzcxU21YTWhySTNuc2E4dXpjZkVIUzdkRE5zWi0yaE1mTXZLT3N0NkJzMUJES3lkV2RRdlRDTEN0M3ptNHZmMHlOMWlUUGFfa3haa2R3?oc=5",
+              "publisher": "Federal News Network",
+              "published_at": "Thu, 26 Nov 2026 17:41:43 GMT",
+              "relative_time": "1d ago"
             },
             {
-              "title": "Cognition in talks for new funding at $75 billion valuation, Bloomberg News reports - Reuters",
-              "snippet": "Cognition in talks for new funding at $75 billion valuation, Bloomberg News reports Reuters",
-              "source": "https://news.google.com/rss/articles/CBMivwFBVV95cUxOcWhpaU9neVJMd3hnYmh2YlYzbl9DMF8yWjFqQ2k4LWZVazFRTHdLNmh6alVaM29vaTIwUjFHX1FWWksyX3k4Y1ZmRHk0V21mcldQa29vUXR1QWQyX2xaT1NRaTVHaW1UZGRXQllFM0ticDU1S2lxSG5kMGNLdE1SRnFCNzFGMnd1TW1tVlRWcTZrQVlBVVI5UWx0M29xR2gyckhhTmxKVHVxWllDZlQ3WkJoS1V0VW0tVFpoS0JRTQ?oc=5"
+              "title": "Google Cloud latest news and announcements - Google Cloud",
+              "snippet": "Google Cloud latest news and announcements Google Cloud",
+              "source": "https://news.google.com/rss/articles/CBMihgFBVV95cUxNREwxdGg2aXlreXo5blo4WENaSFZEV2NGckE3MzBTbk1WeDQ5eVJsMkdjdlNnVUx5R1QxbHJSMmVRUmRHbkZWeV9PY2ExYXhxZ19tQnpjTFlPTWtPZy1VWmdxUFBKV2dFZmt2WHR0NmQtUlR6bzRVUVZpcHpVOGVuYnR5UHBUdw?oc=5",
+              "publisher": "Google Cloud",
+              "published_at": "Fri, 20 Nov 2026 08:00:00 GMT",
+              "relative_time": "7d ago"
             },
             {
               "title": "The latest AI news we announced in October 2026 - blog.google",
               "snippet": "The latest AI news we announced in October 2026 blog.google",
-              "source": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxNVzhIaGZmbzJ0NEFDSzlhcG93cXczNlNoTWtpYXFuWjR0MjBwRWppUGdKTjZSYUVrQXAyc0RQck1CQmZaMHg4XzNXRlpPOXlPYi04T2V5TllPYnFNQWc5b0w1UEhreGp1TGRZR05NWEVlX25sVzhsSEFUcVRjQzVQREhzRHVPVjlGTjl3?oc=5"
+              "source": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxNVzhIaGZmbzJ0NEFDSzlhcG93cXczNlNoTWtpYXFuWjR0MjBwRWppUGdKTjZSYUVrQXAyc0RQck1CQmZaMHg4XzNXRlpPOXlPYi04T2V5TllPYnFNQWc5b0w1UEhreGp1TGRZR05NWEVlX25sVzhsSEFUcVRjQzVQREhzRHVPVjlGTjl3?oc=5",
+              "publisher": "blog.google",
+              "published_at": "Mon, 02 Nov 2026 08:00:00 GMT",
+              "relative_time": "25d ago"
             },
             {
               "title": "Before - Microsoft's latest custom chip: Maia 300 - Microsoft Source",
               "snippet": "Before - Microsoft's latest custom chip: Maia 300 Microsoft Source",
-              "source": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE1tWUJXcEE5b0haaGRtb2NjNjlrOHJrb2IyYm1qXy1BUG5GekxqUnZ2Y3AtWEtTZEdPR2k3WG5rc3ZFcmdrcWdBMlhMYjUtZw?oc=5"
+              "source": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE1tWUJXcEE5b0haaGRtb2NjNjlrOHJrb2IyYm1qXy1BUG5GekxqUnZ2Y3AtWEtTZEdPR2k3WG5rc3ZFcmdrcWdBMlhMYjUtZw?oc=5",
+              "publisher": "Microsoft Source",
+              "published_at": "Mon, 12 Oct 2026 13:19:24 GMT",
+              "relative_time": "46d ago"
             },
             {
-              "title": "The Entertainment Industry\u2019s Biggest Names Back Stability AI in Latest Funding Round - Stability AI",
-              "snippet": "The Entertainment Industry\u2019s Biggest Names Back Stability AI in Latest Funding Round Stability AI",
-              "source": "https://news.google.com/rss/articles/CBMirAFBVV95cUxOV3pBSEo3YmZLblVfcWtubXZVQUloeGZYMW0yMVVKR1JHQV9BVnRLaHJkdXg3QmhXZWpFU1lwcjVkQmIyS2tGZnFnMXVvT2tEd1hfeWVmZXFWTzdZc0Z3VG5idkZKdnJ4cDhkU3lyV3ZzS05WVUYwN2R1UUJQbkppd1Q1NHJWWVhHQWw5SDB6LWN2d0RZc2FKZ25KMnRuZHRUQ21sYVF2T25DU1l5?oc=5"
+              "title": "The latest AI news we announced in September 2026 - blog.google",
+              "snippet": "The latest AI news we announced in September 2026 blog.google",
+              "source": "https://news.google.com/rss/articles/CBMijgFBVV95cUxNXzhIUnNPaFVfR0U3TGVCM1AwRnY0Rk15UnVkM1Y5ajNPYUtXWE1mOE5OMjNNM1ZsN2czZS1iOUY5VVRkTnc3ZWhVVUdPUFZHTngtTFl0VjZjREpFbGRWV2VhV19ucVZhN2hra21IcFZISHNZcF81bHQ1Ti1kbnhhcll5a3dzNTl2aGpuZDhB?oc=5",
+              "publisher": "blog.google",
+              "published_at": "Fri, 02 Oct 2026 07:00:00 GMT",
+              "relative_time": "56d ago"
             }
           ],
-          "spoken": "Google Cloud latest news and announcements - Google Cloud: Google Cloud latest news and announcements Google Cloud Cognition in talks for new funding at $75 billion valuation, Bloomberg News reports - Reuters: Cognition in talks for new funding at $75 billion valuation, Bloomberg News reports Reuters"
+          "spoken": "Treasury FinCEN systems latest to be hit by cyber incident - Federal News Network: Treasury FinCEN systems latest to be hit by cyber incident Federal News Network Google Cloud latest news and announcements - Google Cloud: Google Cloud latest news and announcements Google Cloud"
         }
       }
     ],
-    "seconds": 5.29
+    "seconds": 0.96
   },
   {
     "id": "T075",
@@ -2725,30 +2604,29 @@
     },
     "error": null,
     "notes": "Hinglish",
-    "spoken": "I am ready to schedule '5 baje' for 5 PM. Shall I confirm this booking?",
+    "spoken": "I am ready to schedule '5 baje' for tomorrow 5 PM. Shall I confirm this booking?",
     "tools": [
       {
         "name": "create_event",
         "args": {
           "title": "5 baje",
-          "start": "5 PM",
-          "end": "tomorrow 5 PM"
+          "start": "tomorrow 5 PM"
         },
         "result": {
           "success": true,
+          "pending_confirmation": true,
           "event": {
-            "id": "evt-6e3c2b",
             "title": "5 baje",
-            "start": "5 PM",
-            "end": "tomorrow 5 PM",
+            "start": "2026-11-29T17:00:00+05:30",
+            "end": "2026-11-29T17:30:00+05:30",
             "attendees": [],
-            "status": "confirmed"
+            "status": "pending_confirmation"
           },
-          "spoken": "Scheduled '5 baje' for 5 PM."
+          "spoken": "I am ready to schedule '5 baje' for tomorrow 5 PM. Shall I confirm this booking?"
         }
       }
     ],
-    "seconds": 1.33
+    "seconds": 0.31
   },
   {
     "id": "T076",
@@ -2763,20 +2641,20 @@
     },
     "error": null,
     "notes": "Hinglish",
-    "spoken": "The current time is Monday, November 23, 2026 at 09:41 PM (Asia/Kolkata).",
+    "spoken": "The current time is Saturday, November 28, 2026 at 12:06 PM (Asia/Kolkata).",
     "tools": [
       {
         "name": "get_current_time",
         "args": {},
         "result": {
           "success": true,
-          "spoken": "The current time is Monday, November 23, 2026 at 09:41 PM (Asia/Kolkata).",
-          "iso": "2026-11-23T21:41:40.977210+05:30",
+          "spoken": "The current time is Saturday, November 28, 2026 at 12:06 PM (Asia/Kolkata).",
+          "iso": "2026-11-28T12:06:14.638820+05:30",
           "timezone": "Asia/Kolkata"
         }
       }
     ],
-    "seconds": 0.81
+    "seconds": 0.34
   },
   {
     "id": "T077",
@@ -2790,7 +2668,7 @@
     },
     "error": null,
     "notes": "multi-step; both tools in order",
-    "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Tech News Summary\".",
+    "spoken": "Email is not configured yet. Please configure your email and 16-character Gmail App Password in the sidebar Sender Profile (or set SENDER_EMAIL and SENDER_APP_PASSWORD in your dot-env file).",
     "tools": [
       {
         "name": "web_search",
@@ -2803,32 +2681,47 @@
           "count": 5,
           "results": [
             {
-              "title": "Elon Musk Predicts Massive Leap in AI Capabilities That Will Make Today\u2019s Tech Look Like \u2018Caveman Playing - Benzinga",
-              "snippet": "Elon Musk Predicts Massive Leap in AI Capabilities That Will Make Today\u2019s Tech Look Like \u2018Caveman Playing Benzinga",
-              "source": "https://news.google.com/rss/articles/CBMitAJBVV95cUxQLWs1d1V0OHA2SXFkUHBDLWFnNG1jMDhnSzNXREFSQzJDMTNkYUZxNXZYR1pSRmQzZGtmWnRiRWNweHRzU3J6UEFCVXllZjVQbEhxU3dSOTFVd2pHNkloTTB5QWtrSTFDa1lpTGJDRzhyRTBrZVZzVW5DdVBlOVRfbWFaVkJ5S1poLUdnczVPdUtGVndNTXFiYzB2RUVDbi03dmpuazNnR29wZkJRdVQ2NzlUZVotQmIwZkJVR0p2dkhOV2tzeDdISUdHMlhZRnZlUFA4WHljUU9mQUg1TWlhTF9wNXQwdDlWbDZNVkxNZDVfazk2Rno2MkhIZVRnNEUzRHZka0kwWDNBWnhjeXBocjVpTU1uTS1UQ21VbDllUFRhaTFIZDctWVhGbmRyVzJQNTQ5cw?oc=5"
+              "title": "Wordle today: The answer and hints for November 27, 2026 - Mashable",
+              "snippet": "Wordle today: The answer and hints for November 27, 2026 Mashable Wordle today: The answer and hints for November 28, 2026 Mashable Today\u2019s NYT Wordle Hints, Answer and Help for Saturday, Nov. 28, #1988 CNET Today's Wordle hints: How to solve the Wordle puzzle for November 28 (#1988) and what's the answer? The Economic Times Today\u2019s Wordle answer, hints, and clues for November 26 (puzzle #1986) PC Guide",
+              "source": "https://news.google.com/rss/articles/CBMie0FVX3lxTFBYVHB3Z2dZYVBBakxZS1ZHZndjYjk2b3RXQ09IcVkxUmFhZVNCZXpFdzByZjNtUU5ha0lkTjJaLUZFSU1XT1RySmlvUDRwUUxMakc1dEpvYXFDUl9aWUhTOFFyRW81QllBN0pzeDdqM0VsZGxMZG93YmNSRQ?oc=5",
+              "publisher": "Mashable",
+              "published_at": "Sat, 28 Nov 2026 03:06:24 GMT",
+              "relative_time": "3h ago"
             },
             {
-              "title": "Meta\u2019s Muse AI agent has unsettled Meta\u2019s own employees - Fortune",
-              "snippet": "Meta\u2019s Muse AI agent has unsettled Meta\u2019s own employees Fortune",
-              "source": "https://news.google.com/rss/articles/CBMihgFBVV95cUxOeFZQS0QxN2R6ZDBhN2tyLVZVUlVnei1PRTh6NVFUaFVTaVhWamxBUDktbktxbkRfSkpIdlpoQVJNOEx0ZmQ4emNBY3hWZWdpdzluS1lqa1ZjUkJYaTdoeEF1VmEwekVRWFg4ck5Xc1lWbVBxWTJsR19hS1Vubld3ZnFReXo5UQ?oc=5"
+              "title": "\u2018GTA VI\u2019 release has swept PlayStation 5 off the shelves worldwide - The Washington Post",
+              "snippet": "\u2018GTA VI\u2019 release has swept PlayStation 5 off the shelves worldwide The Washington Post See more headlines and perspectives on Google News",
+              "source": "https://news.google.com/rss/articles/CBMirgFBVV95cUxQSFBJSlcySmFjbUdaNDJpYXUtX1N1ZXNtSFFWaEFpUkdIUms0ME1QSm8wV2Z0YWRoM0lYb2hITnpuTXMyMDVXVDVRQVd2RVhlYmljdWRGTVlpNTUzZmlGZHF6V2RVZ3E3ZkM0aV9vUldabDJJcDRxZ2dHcWRIVThpUG9KekI0bXFqWlpLVUNnVU8xaS1QYWtaSFRQRDdzVFFGTmRzYXh6Wl9NaHRpNFE?oc=5",
+              "publisher": "The Washington Post",
+              "published_at": "Sat, 28 Nov 2026 02:57:17 GMT",
+              "relative_time": "3h ago"
             },
             {
-              "title": "Stock Market Today: Stock Market News And Analysis - Investor's Business Daily",
-              "snippet": "Stock Market Today: Stock Market News And Analysis Investor's Business Daily",
-              "source": "https://news.google.com/rss/articles/CBMid0FVX3lxTE8zdGl1MmxTM2JJa2pLNlFSWVhuZUd1ekRIeVpDcGVqckVJcloxaWlnRHJ3b0hqb291NXk4dlo0SmRQNlhDaGpubDh6ZWNTUHZiYVhjOVJINUxSYXE0NHRiNVE2OW51R2h4N1daaXRIdzVBR1UxT0g4?oc=5"
+              "title": "Samsung Galaxy S26 Ultra Drops to $1,050 on Amazon, a Record Low for the Flagship - BigGo Finance",
+              "snippet": "Samsung Galaxy S26 Ultra Drops to $1,050 on Amazon, a Record Low for the Flagship BigGo Finance Black Friday deals from Samsung are live: Shop gaming monitors, TVs, and unlocked phones on sale Mashable Deal: Amazon Germany drops the Galaxy S26 Ultra price even further - GSMArena.com news GSMArena.com Black Friday Deals \u2013 Save Big on Samsung Favourites samsung.com Grab an Awesome Samsung Galaxy Phone on Black Friday for Up to $500 Off PCMag Australia",
+              "source": "https://news.google.com/rss/articles/CBMidkFVX3lxTE5DMTRjR0NuVlNVa0I3Yk44WV96Z2VRT2FUU01ya0lfU0RhdlB1MERnRWE5RkNkSERjQWpjNHRObUdvaThNSkpNT3JZblIwRHRUN0JEaHJOZ1IyaExleUVkYVNvZ21weXZCT0NIbkQySmZ4N2RJSkE?oc=5",
+              "publisher": "BigGo Finance",
+              "published_at": "Fri, 27 Nov 2026 18:35:00 GMT",
+              "relative_time": "12h ago"
             },
             {
-              "title": "Nasdaq wipes out 2026 gains, TSX, Dow and S&P 500 fall into correction territory - CBC",
-              "snippet": "Nasdaq wipes out 2026 gains, TSX, Dow and S&P 500 fall into correction territory CBC",
-              "source": "https://news.google.com/rss/articles/CBMiekFVX3lxTE1QbmRPWjN5dEh4eGkwYXcwdkZRVmFZZjZiTWJqeTZ3cGJJcXdER1pqVDJobUV3R09wT0dQd0hWTlYtVGtpc0wwNnRiSkxOc0FuSHZQRkFYN3FTRmdDU21mUEtZYms5NGktX3o3UzVPMS1QTmJfcTlscWxn?oc=5"
+              "title": "Dell's Black Friday Deals Are Here, Including $1,000 Off the XPS 16 We Loved - PCMag",
+              "snippet": "Dell's Black Friday Deals Are Here, Including $1,000 Off the XPS 16 We Loved PCMag I\u2019ve been testing laptops for 25 years, and these Black Friday deals on the impressive and fun MacBook Neo and the ultra-light Dell XPS are making my head spin TechRadar I never used to recommend 8GB laptops, but this Dell XPS 13 deal is making me rethink it Windows Central Premium Dell XPS 14 laptop with 120Hz OLED display, 32GB RAM, and 1TB storage gets rare 23% price drop in Black Friday deal PC Guide The best Dell XPS 13 in years is cheaper than a MacBook Neo right now Stuff",
+              "source": "https://news.google.com/rss/articles/CBMifEFVX3lxTE5hWldBLTR4N3U0ZHFRLUlKdnljM0hKTVFJSjEteHBVc0o5QWw0eEJNU0p0bDUzdGpEYlVJdDgza1hVM1BvaGFqNFJJMFdUZGJpTHpuSkVLTVdlLU0tWkc3V2R4U3dqS01yeE1LSVJ0YXRMVWN4T0V5WGRob3Y?oc=5",
+              "publisher": "PCMag",
+              "published_at": "Fri, 27 Nov 2026 16:00:55 GMT",
+              "relative_time": "14h ago"
             },
             {
-              "title": "20 New Technology Trends for 2027 | Emerging Technologies 2027 - Simplilearn.com",
-              "snippet": "20 New Technology Trends for 2027 | Emerging Technologies 2027 Simplilearn.com",
-              "source": "https://news.google.com/rss/articles/CBMidEFVX3lxTE96Qlh1S3htejlyck9TZjZacklqZ0dpMUpwRWJxMWtkQkVpSUl6c0I0S0M5MWdfV0JQOU0yZkpfVVFUN3kwZGFyMHFlWWdaYnIwWmpDOGxIOG96NFNYS2JfWi1VcjJxTGVzSEppUVpScGlqTksy?oc=5"
+              "title": "Radiomics Shows Promise in Distinguishing Bone Tumours - EMJ",
+              "snippet": "Radiomics Shows Promise in Distinguishing Bone Tumours EMJ",
+              "source": "https://news.google.com/rss/articles/CBMingFBVV95cUxOamVmZzdUY3RkNTcxbTYwWUlaa3lUN2xCN3podDgtYkxZbWdPWHhVcXJVYVRpcjZ3cFR6bGkzTndOVzRyenFUbkJockEzT3hnLXFWVVNYNWRia09ickN3SkxoazltUzJBY182QlZNam5jSklVQUJjeS1SeEd4Vk1BRGNVSG5ycFdxc3RnQV9XQTc4Nnd1VWNoVXJsWEVlZw?oc=5",
+              "publisher": "EMJ",
+              "published_at": "Fri, 27 Nov 2026 10:27:01 GMT",
+              "relative_time": "20h ago"
             }
           ],
-          "spoken": "Elon Musk Predicts Massive Leap in AI Capabilities That Will Make Today\u2019s Tech Look Like \u2018Caveman Playing - Benzinga: Elon Musk Predicts Massive Leap in AI Capabilities That Will Make Today\u2019s Tech Look Like \u2018Caveman Playing Benzinga Meta\u2019s Muse AI agent has unsettled Meta\u2019s own employees - Fortune: Meta\u2019s Muse AI agent has unsettled Meta\u2019s own employees Fortune"
+          "spoken": "Wordle today: The answer and hints for November 27, 2026 - Mashable: Wordle today: The answer and hints for November 27, 2026 Mashable Wordle today: The answer and hints for November 28, 2026 Mashable Today\u2019s NYT Wordle Hints, Answer and Help for Saturday, Nov. 28, #1988 CNET Today's Wordle hints: How to solve the Wordle puzzle for November 28 (#1988) and what's the answer? The Economic Times Today\u2019s Wordle answer, hints, and clues for November 26 (puzzle #1986) PC Guide \u2018GTA VI\u2019 release has swept PlayStation 5 off the shelves worldwide - The Washington Post: \u2018GTA VI\u2019 release has swept PlayStation 5 off the shelves worldwide The Washington Post See more headlines and perspectives on Google News"
         }
       },
       {
@@ -2836,21 +2729,16 @@
         "args": {
           "to": "keshavagarwal7793@gmail.com",
           "subject": "Tech News Summary",
-          "description": "Summary of today's tech news"
+          "description": "Wordle today: The answer and hints for November 27, 2026 - Mashable: Wordle today: The answer and hints for November 27, 2026 Mashable Wordle today: The answer and hints for November 28, 2026 Mashable Today\u2019s NYT Wordle Hints, Answer and Help for Saturday, Nov. 28, #1988 CNET Today's Wordle hints: How to solve the Wordle puzzle for November 28 (#1988) and what's the answer? The Economic Times Today\u2019s Wordle answer, hints, and clues for November 26 (puzzle #1986) PC Guide \u2018GTA VI\u2019 release has swept PlayStation 5 off the shelves worldwide - The Washington Post: \u2018GTA VI\u2019 release has swept PlayStation 5 off the shelves worldwide The Washington Post See more headlines and perspectives on Google News"
         },
         "result": {
-          "success": true,
-          "to": "keshavagarwal7793@gmail.com",
-          "subject": "Tech News Summary",
-          "from": "keshavagarwal7793@gmail.com",
-          "provider": "google_gmail_api",
-          "sender_name": "Keshav",
-          "spoken": "Done! I've sent the email to Keshav (keshavagarwal7793@gmail.com) from Keshav (keshavagarwal7793@gmail.com) with the subject \"Tech News Summary\".",
-          "body": "Hello Keshav,\n\nToday's tech news highlights include the latest advancements in artificial intelligence, the release of a new operating system, and the breakthrough in quantum computing. These developments are expected to have significant impacts on various industries. Please find the detailed summaries below.\n\n1. Artificial Intelligence: New breakthroughs in machine learning algorithms have been published, promising improved accuracy in image recognition and natural language processing.\n\n2. Operating System: A new version of the operating system is set to be released, featuring enhanced security features and a more user-friendly interface.\n\n3. Quantum Computing: A significant milestone in quantum computing research has been achieved, potentially leading to faster and more efficient data processing in the future.\n\nPlease let me know if you need any further information or have any questions.\n\nBest regards,\nKeshav"
+          "success": false,
+          "error": "SMTP not configured",
+          "spoken": "Email is not configured yet. Please configure your email and 16-character Gmail App Password in the sidebar Sender Profile (or set SENDER_EMAIL and SENDER_APP_PASSWORD in your dot-env file)."
         }
       }
     ],
-    "seconds": 24.0
+    "seconds": 6.08
   },
   {
     "id": "T078",
@@ -2884,23 +2772,27 @@
         "name": "add_task",
         "args": {
           "title": "Task: 900.0",
-          "priority": "medium"
+          "priority": "medium",
+          "user_id": "keshav"
         },
         "result": {
           "success": true,
           "task": {
-            "id": "task-3caf724b",
+            "id": "task-dd000d29",
+            "user_id": "keshav",
             "title": "Task: 900.0",
+            "priority": "medium",
             "due_at": null,
             "status": "pending",
-            "created_at": "2026-11-23T16:12:07.006568+00:00"
+            "created_at": "2026-11-28T06:36:21.816590+00:00"
           },
-          "task_id": "task-3caf724b",
+          "task_id": "task-dd000d29",
+          "priority": "medium",
           "spoken": "Added task: 'Task: 900.0'."
         }
       }
     ],
-    "seconds": 1.61
+    "seconds": 1.02
   },
   {
     "id": "T079",
@@ -2915,46 +2807,51 @@
     },
     "error": null,
     "notes": "multi-step",
-    "spoken": "I am ready to schedule 'Meeting' for tomorrow 14:00. Shall I confirm this booking?",
+    "spoken": "I am ready to schedule 'Meeting' for 2026-11-29T09:00:00+05:30. Shall I confirm this booking?",
     "tools": [
       {
         "name": "find_free_slot",
         "args": {
           "duration_minutes": 30,
-          "window": "tomorrow"
+          "window": "tomorrow",
+          "user_id": "keshav"
         },
         "result": {
           "success": true,
           "duration_minutes": 30,
           "window": "tomorrow",
+          "date": "2026-11-29",
           "slot": {
-            "start": "14:00",
-            "end": "14:30"
+            "start": "09:00",
+            "end": "09:30",
+            "start_iso": "2026-11-29T09:00:00+05:30",
+            "end_iso": "2026-11-29T09:30:00+05:30"
           },
-          "spoken": "You are free between 14:00 and 14:30 for a 30 minute meeting."
+          "spoken": "You are free between 09:00 and 09:30 for a 30 minute meeting."
         }
       },
       {
         "name": "create_event",
         "args": {
           "title": "Meeting",
-          "start": "tomorrow 14:00",
-          "end": "tomorrow 14:30"
+          "start": "2026-11-29T09:00:00+05:30",
+          "end": "2026-11-29T09:30:00+05:30",
+          "user_id": "keshav"
         },
         "result": {
           "success": true,
+          "pending_confirmation": true,
           "event": {
-            "id": "evt-aeb71b",
             "title": "Meeting",
-            "start": "tomorrow 14:00",
-            "end": "tomorrow 14:30",
+            "start": "2026-11-29T09:00:00+05:30",
+            "end": "2026-11-29T09:30:00+05:30",
             "attendees": [],
-            "status": "confirmed"
+            "status": "pending_confirmation"
           },
-          "spoken": "Scheduled 'Meeting' for tomorrow 14:00."
+          "spoken": "I am ready to schedule 'Meeting' for 2026-11-29T09:00:00+05:30. Shall I confirm this booking?"
         }
       }
     ],
-    "seconds": 1.09
+    "seconds": 0.32
   }
 ]

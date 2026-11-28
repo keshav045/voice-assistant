@@ -1,0 +1,23 @@
+{
+  "ctranslate2": "4.9.1",
+  "faster_whisper": "1.2.1",
+  "cuda_device_count": 1,
+  "cuda_compute_types": [
+    "bfloat16",
+    "float16",
+    "float32",
+    "int8",
+    "int8_bfloat16",
+    "int8_float16",
+    "int8_float32"
+  ],
+  "dll_status": {
+    "cublas64_12.dll": "MISSING (Could not find module 'cublas64_12.dll' (or one of its dependencies). Try using the full path with constructor syntax.)",
+    "cublasLt64_12.dll": "MISSING (Could not find module 'cublasLt64_12.dll' (or one of its dependencies). Try using the full path with constructor syntax.)",
+    "cudnn_ops64_9.dll": "MISSING (Could not find module 'cudnn_ops64_9.dll' (or one of its dependencies). Try using the full path with constructor syntax.)",
+    "cudnn64_9.dll": "PRESENT",
+    "cudnn_ops_infer64_8.dll": "MISSING (Could not find module 'cudnn_ops_infer64_8.dll' (or one of its dependencies). Try using the full path with constructor syntax.)",
+    "cudart64_12.dll": "MISSING (Could not find module 'cudart64_12.dll' (or one of its dependencies). Try using the full path with constructor syntax.)"
+  },
+  "cuda_transcribe_error": "RuntimeError: Library cublas64_12.dll is not found or cannot be loaded"
+}

@@ -28,13 +28,17 @@ RUN useradd -m -u 1000 appuser && \
     mkdir -p /app/data && \
     chown -R appuser:appuser /app
 
-# Copy application source code
+# Copy application source code & bundled offline voice/contact assets
 COPY --chown=appuser:appuser agent/ ./agent/
 COPY --chown=appuser:appuser db/ ./db/
 COPY --chown=appuser:appuser web/ ./web/
 COPY --chown=appuser:appuser rag/ ./rag/
+COPY --chown=appuser:appuser models/ ./models/
 COPY --chown=appuser:appuser tests/ ./tests/
 COPY --chown=appuser:appuser run_server.py ./
+COPY --chown=appuser:appuser run_livekit.py ./
+COPY --chown=appuser:appuser run_voice.py ./
+COPY --chown=appuser:appuser contacts.csv ./
 COPY --chown=appuser:appuser pytest.ini ./
 COPY --chown=appuser:appuser .env.example ./
 

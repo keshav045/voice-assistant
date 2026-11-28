@@ -34,11 +34,14 @@ def run_application_eval(harness: EvalHarness) -> Dict[str, Any]:
     turns = db_get_session_turns(user_id="guest", session_id=test_session)
     history_intact = len(turns) == 2 and turns[0]["user_message"] == "Hello, can you help me prepare for my Thermodynamics exam?"
 
-    # Clean up
+    # Clean up and verify actual deletion + user isolation
     db_clear_chat_history(user_id="guest", session_id=test_session)
+    turns_after = db_get_session_turns(user_id="guest", session_id=test_session)
+    other_user_turns = db_get_session_turns(user_id="other_isolated_user", session_id=test_session)
+    cleanup_ok = (len(turns_after) == 0) and (len(other_user_turns) == 0)
 
     harness.record_test("eval_application", "Session History Persistence", history_intact, len(turns), f"{len(turns)} turns accurately stored and retrieved")
-    harness.record_test("eval_application", "Session Cleanup & Isolation", True, True, "Session history cleanly cleared after run")
+    harness.record_test("eval_application", "Session Cleanup & Isolation", cleanup_ok, cleanup_ok, "Session history cleanly cleared and isolated")
 
     return {
         "multi_turn_history_intact": history_intact,

@@ -1,0 +1,99 @@
+{
+  "synthetic": true,
+  "note": "Synthetic digital pauses; must be confirmed on human recordings.",
+  "results": [
+    {
+      "min_silence_duration_s": 0.65,
+      "synthetic": true,
+      "clean_trailing_trials": 6,
+      "endpoint_ms_p50": 547.0,
+      "endpoint_ms_p95": 609.4,
+      "endpoint_ms_min": 531.7,
+      "endpoint_ms_max": 609.4,
+      "paused_clips_tested": 3,
+      "premature_cutoffs": 1,
+      "pause_details": [
+        {
+          "clip": "pause_450ms",
+          "pause_s": 0.45,
+          "premature_cutoff": false,
+          "mid_pause_eou_events": 0
+        },
+        {
+          "clip": "pause_550ms",
+          "pause_s": 0.55,
+          "premature_cutoff": false,
+          "mid_pause_eou_events": 0
+        },
+        {
+          "clip": "pause_600ms",
+          "pause_s": 0.6,
+          "premature_cutoff": true,
+          "mid_pause_eou_events": 1
+        }
+      ]
+    },
+    {
+      "min_silence_duration_s": 0.5,
+      "synthetic": true,
+      "clean_trailing_trials": 6,
+      "endpoint_ms_p50": 391.2,
+      "endpoint_ms_p95": 455.2,
+      "endpoint_ms_min": 374.2,
+      "endpoint_ms_max": 455.2,
+      "paused_clips_tested": 3,
+      "premature_cutoffs": 3,
+      "pause_details": [
+        {
+          "clip": "pause_450ms",
+          "pause_s": 0.45,
+          "premature_cutoff": true,
+          "mid_pause_eou_events": 1
+        },
+        {
+          "clip": "pause_550ms",
+          "pause_s": 0.55,
+          "premature_cutoff": true,
+          "mid_pause_eou_events": 1
+        },
+        {
+          "clip": "pause_600ms",
+          "pause_s": 0.6,
+          "premature_cutoff": true,
+          "mid_pause_eou_events": 1
+        }
+      ]
+    },
+    {
+      "min_silence_duration_s": 0.4,
+      "synthetic": true,
+      "clean_trailing_trials": 6,
+      "endpoint_ms_p50": 281.5,
+      "endpoint_ms_p95": 363.3,
+      "endpoint_ms_min": 267.1,
+      "endpoint_ms_max": 363.3,
+      "paused_clips_tested": 3,
+      "premature_cutoffs": 3,
+      "pause_details": [
+        {
+          "clip": "pause_450ms",
+          "pause_s": 0.45,
+          "premature_cutoff": true,
+          "mid_pause_eou_events": 1
+        },
+        {
+          "clip": "pause_550ms",
+          "pause_s": 0.55,
+          "premature_cutoff": true,
+          "mid_pause_eou_events": 1
+        },
+        {
+          "clip": "pause_600ms",
+          "pause_s": 0.6,
+          "premature_cutoff": true,
+          "mid_pause_eou_events": 1
+        }
+      ]
+    }
+  ]
+}

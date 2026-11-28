@@ -3,7 +3,9 @@
 
 CREATE TABLE IF NOT EXISTS tasks (
     id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT 'guest',
     title TEXT NOT NULL,
+    priority TEXT NOT NULL DEFAULT 'medium',
     due_at TEXT,
     status TEXT NOT NULL DEFAULT 'pending',
     created_at TEXT NOT NULL,
@@ -12,6 +14,7 @@ CREATE TABLE IF NOT EXISTS tasks (
 
 CREATE TABLE IF NOT EXISTS memory_facts (
     id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT 'guest',
     fact TEXT NOT NULL,
     category TEXT NOT NULL DEFAULT 'general',
     created_at TEXT NOT NULL,
@@ -40,6 +43,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 CREATE TABLE IF NOT EXISTS doc_chunks (
     id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT 'guest',
     file TEXT NOT NULL,
     section TEXT,
     text TEXT NOT NULL,
@@ -81,6 +85,7 @@ CREATE TABLE IF NOT EXISTS reports (
 
 CREATE TABLE IF NOT EXISTS reminders (
     id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT 'guest',
     text TEXT NOT NULL,
     due_at TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending',
@@ -89,6 +94,7 @@ CREATE TABLE IF NOT EXISTS reminders (
 
 CREATE TABLE IF NOT EXISTS notes (
     id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT 'guest',
     text TEXT NOT NULL,
     tags TEXT,
     created_at TEXT NOT NULL
@@ -113,7 +119,7 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
-    email TEXT,
+    email TEXT UNIQUE,
     password_hash TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
@@ -165,6 +171,34 @@ CREATE TABLE IF NOT EXISTS execution_traces (
     metadata_json TEXT,
     created_at TEXT NOT NULL
 );
+
+-- Custom Email Sender Profiles
+CREATE TABLE IF NOT EXISTS user_email_profiles (
+    user_id TEXT PRIMARY KEY,
+    sender_name TEXT NOT NULL,
+    sender_email TEXT NOT NULL,
+    sender_password TEXT,
+    smtp_host TEXT DEFAULT 'smtp.gmail.com',
+    smtp_port INTEGER DEFAULT 587,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+-- Persistent Calendar Events
+CREATE TABLE IF NOT EXISTS calendar_events (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT 'guest',
+    title TEXT NOT NULL,
+    start TEXT NOT NULL,
+    end TEXT NOT NULL,
+    attendees_json TEXT NOT NULL DEFAULT '[]',
+    calendar_id TEXT NOT NULL DEFAULT 'primary',
+    status TEXT NOT NULL DEFAULT 'confirmed',
+    created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_history_user_session ON chat_history(user_id, session_id);
+
 
 
 

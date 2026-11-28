@@ -22,7 +22,97 @@ document.addEventListener("DOMContentLoaded", () => {
   checkAuthStatus();
   loadHistory();
   checkGmailStatus();
+  initRealtimeStream();
 });
+
+// --- Real-Time SSE Updates & Telemetry ---
+let realtimeEventSource = null;
+
+function initRealtimeStream() {
+  if (typeof EventSource === "undefined") return;
+  if (realtimeEventSource) {
+    try { realtimeEventSource.close(); } catch (e) {}
+  }
+
+  realtimeEventSource = new EventSource("/api/updates/stream");
+  realtimeEventSource.addEventListener("connected", (ev) => {
+    try {
+      const payload = JSON.parse(ev.data);
+      const latLabel = document.getElementById("turn-latency-label");
+      if (latLabel && payload.model) {
+        latLabel.innerText = `Model: ${payload.model} • Live Stream Connected`;
+      }
+      if (Array.isArray(payload.recent_updates)) {
+        for (const item of payload.recent_updates) {
+          handleRealtimeUpdateEvent(item);
+        }
+      }
+    } catch (e) {}
+  });
+
+  realtimeEventSource.addEventListener("update", (ev) => {
+    try {
+      const item = JSON.parse(ev.data);
+      handleRealtimeUpdateEvent(item);
+    } catch (e) {}
+  });
+}
+
+const _seenNewsUpdateKeys = new Set();
+
+function handleRealtimeUpdateEvent(eventObj) {
+  if (!eventObj || !eventObj.type) return;
+  const data = eventObj.data || {};
+  if (eventObj.type === "METRICS_UPDATE") {
+    updateLiveKitMetricsUI(data);
+  } else if (eventObj.type === "AGENT_STATE") {
+    updateRealtimeAgentState(data.state);
+  } else if (eventObj.type === "NEWS_UPDATE") {
+    const items = Array.isArray(data.news_items) ? data.news_items : [];
+    const dedupKey = `${data.topic || "top"}::${data.fetched_at || ""}::${items.length}`;
+    if (items.length > 0 && !_seenNewsUpdateKeys.has(dedupKey)) {
+      _seenNewsUpdateKeys.add(dedupKey);
+      if (data.spoken) {
+        appendAssistantBubble(data.spoken, [{ tool: "get_live_news", args: { topic: data.topic || "top" }, result: data }]);
+      }
+    }
+  } else if (eventObj.type === "ESCALATION_EVENT") {
+    appendAssistantBubble(
+      data.status === "ticket_logged"
+        ? `Escalation ticket logged (${data.priority || "high"}): ${data.summary || ""}`
+        : `Escalation active: ${data.reason || "Transferred to specialist."}`,
+      [{ tool: "escalation", result: data }]
+    );
+  }
+}
+
+function updateRealtimeAgentState(state) {
+  const pill = document.getElementById("realtime-agent-pill");
+  if (!pill || !state) return;
+  const labels = {
+    listening: ["Listening", "bg-emerald-100 text-emerald-800 border-emerald-200"],
+    thinking: ["Thinking", "bg-amber-100 text-amber-800 border-amber-200"],
+    speaking: ["Speaking", "bg-primary/15 text-primary border-primary/30"],
+    initializing: ["Starting", "bg-surface-container text-on-surface-variant border-surface-container"],
+    news_anchor: ["News Anchor", "bg-rose-100 text-rose-800 border-rose-200"],
+  };
+  const key = String(state).toLowerCase();
+  const [text, cls] = labels[key] || [String(state), "bg-surface-container-low text-on-surface-variant border-surface-container"];
+  pill.innerText = text;
+  pill.className = `text-[10px] px-2 py-0.5 rounded-full font-semibold border ${cls}`;
+}
+
+function updateLiveKitMetricsUI(data) {
+  const rttEl = document.getElementById("livekit-rtt");
+  const latLabel = document.getElementById("turn-latency-label");
+  if (rttEl && typeof data.turn_latency_ms === "number" && data.turn_latency_ms > 0) {
+    rttEl.innerText = `${data.turn_latency_ms}ms`;
+  }
+  if (latLabel && typeof data.turn_latency_ms === "number" && data.turn_latency_ms > 0) {
+    const sttPart = typeof data.stt_ms === "number" && data.stt_ms > 0 ? `STT ${data.stt_ms}ms • ` : "";
+    latLabel.innerText = `Voice Turn: ${data.turn_latency_ms}ms (EOU ${data.eou_ms || 0}ms • ${sttPart}LLM ${data.llm_ttft_ms || 0}ms • TTS ${data.tts_ttfb_ms || 0}ms)`;
+  }
+}
 
 // --- User Authentication ---
 async function checkAuthStatus() {
@@ -182,10 +272,6 @@ async function logoutUser() {
         headers: { "Authorization": `Bearer ${authToken}` }
       });
     }
-    await fetch("/api/auth/google/disconnect", {
-      method: "POST",
-      headers: authToken ? { "Authorization": `Bearer ${authToken}` } : {}
-    });
   } catch (e) {
     // Continue
   }
@@ -474,6 +560,9 @@ function toggleAudioOutput() {
   if (!audioOutputEnabled) {
     stopSpeaking();
   }
+  document.querySelectorAll('audio[id^="audio-"]').forEach((el) => {
+    el.muted = !audioOutputEnabled;
+  });
   const label = document.getElementById("audio-toggle-label");
   const icon = document.getElementById("audio-toggle-icon");
   if (label) label.innerText = audioOutputEnabled ? "Voice: ON" : "Voice: OFF";
@@ -579,12 +668,11 @@ async function submitChatTurn(textOverride) {
 
   appendUserBubble(userText);
 
-  // Synchronously capture window handle during the user's keystroke/click event
-  // This prevents Google Chrome and Microsoft Edge from blocking the tab as an unprompted popup
+  // Capture synchronous window handle only for explicit app-opening commands (never for informational/email turns)
   let pendingWindow = null;
   const cleanLower = userText.toLowerCase().trim();
-  const isOpenIntent = /(?:^|\b)(?:open|launch|start|play|goto|visit)\b/i.test(cleanLower) ||
-                       /(?:youtube|whatsapp|linkedin|gmail|mail|spotify|github)/i.test(cleanLower);
+  const isOpenIntent = /(?:^|\b)(?:open|launch|start|play|goto|visit)\b.*\b(?:youtube|whatsapp|linkedin|gmail|spotify|github|google|website|browser)\b/i.test(cleanLower) &&
+                       !/\b(?:send\s+an?\s+email|send\s+mail)\b/i.test(cleanLower);
 
   if (isOpenIntent) {
     try {
@@ -698,7 +786,8 @@ async function playSpokenAudio(text) {
     });
     const data = await res.json();
     if (data.success && data.audio_base64) {
-      const audio = new Audio("data:audio/mp3;base64," + data.audio_base64);
+      const audioFmt = data.format || "mp3";
+      const audio = new Audio(`data:audio/${audioFmt};base64,` + data.audio_base64);
       currentAudio = audio;
 
       audio.onplay = () => {
@@ -774,7 +863,9 @@ function appendAssistantBubble(text, toolCalls, requiresConfirmation = false) {
         const tgt = tc.result?.target || (tc.args && tc.args.name) || "App";
         return `Launched: ${tgt}`;
       }
+      if (tc.tool === "get_live_news") return `Live News: ${tc.args?.topic || tc.result?.topic || "Top"}`;
       if (tc.tool === "web_search") return "Live Cricket & Web Search";
+      if (tc.tool === "escalation") return "Specialist Escalation";
       if (tc.tool === "calculator") return "Math Calculator";
       if (tc.tool === "medical_search") return `Medical: ${tc.result?.medicine_name || tc.args?.medicine_name || "Clinical Info"}`;
       if (tc.tool === "send_email") return `Email Sent: ${tc.result?.to || tc.args?.to || "Recipient"}`;
@@ -793,19 +884,48 @@ function appendAssistantBubble(text, toolCalls, requiresConfirmation = false) {
   let richCardHtml = "";
   if (toolCalls && toolCalls.length > 0) {
     for (const tc of toolCalls) {
-      if (tc.tool === "medical_search" && tc.result && tc.result.medicine_name) {
+      if ((tc.tool === "get_live_news" || tc.tool === "web_search") && tc.result) {
+        const newsList = tc.result.news_items || tc.result.results || [];
+        if (newsList.length > 0) {
+          const rows = newsList.slice(0, 4).map(item => `
+            <a href="${escapeHtml(item.source || '#')}" target="_blank" rel="noopener noreferrer" class="block p-2 rounded-lg bg-surface-container-low/70 hover:bg-surface-container transition-colors border border-surface-container">
+              <div class="text-xs font-semibold text-on-surface leading-snug">${escapeHtml(item.title || "")}</div>
+              <div class="flex items-center justify-between gap-2 mt-1 text-[10px] text-on-surface-variant">
+                <span>${escapeHtml(item.publisher || "Source")}</span>
+                <span>${escapeHtml(item.relative_time || tc.result.fetched_at || "Live")}</span>
+              </div>
+            </a>
+          `).join("");
+          richCardHtml += `
+            <div class="mt-2 p-3 rounded-xl bg-surface-container-lowest border border-surface-container-high shadow-xs flex flex-col gap-2 max-w-md">
+              <div class="flex items-center justify-between border-b border-surface-container pb-1.5">
+                <span class="font-bold text-xs text-primary flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[15px]">newspaper</span>
+                  Real-Time Updates (${escapeHtml(tc.result.topic || tc.args?.query || "Live")})
+                </span>
+                <span class="text-[10px] text-on-surface-variant">${escapeHtml(tc.result.fetched_at || "Live")}</span>
+              </div>
+              <div class="flex flex-col gap-1.5">${rows}</div>
+            </div>
+          `;
+        }
+      }
+      if (tc.tool === "medical_search" && tc.result && tc.result.success && (tc.result.medicine || tc.result.medicine_name || tc.result.generic_name)) {
         const m = tc.result;
+        const medTitle = m.medicine || m.medicine_name || m.generic_name;
+        const medDosage = m.dosage_guidelines || m.dosage || "";
         richCardHtml += `
           <div class="mt-2 p-3.5 rounded-xl bg-surface-container-lowest border border-surface-container-high shadow-xs flex flex-col gap-2 max-w-md">
             <div class="flex items-center justify-between border-b border-surface-container pb-2">
-              <span class="font-bold text-sm text-primary">${escapeHtml(m.medicine_name)}</span>
+              <span class="font-bold text-sm text-primary">${escapeHtml(medTitle)}</span>
               <span class="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">${escapeHtml(m.drug_class || "Medication")}</span>
             </div>
+            ${m.generic_name && m.generic_name !== medTitle ? `<div class="text-xs text-on-surface"><strong class="text-on-surface-variant">Generic:</strong> ${escapeHtml(m.generic_name)}</div>` : ''}
             ${m.uses ? `<div class="text-xs text-on-surface"><strong class="text-on-surface-variant">Uses:</strong> ${escapeHtml(m.uses)}</div>` : ''}
-            ${m.dosage ? `<div class="text-xs text-on-surface"><strong class="text-on-surface-variant">Dosage:</strong> ${escapeHtml(m.dosage)}</div>` : ''}
+            ${medDosage ? `<div class="text-xs text-on-surface"><strong class="text-on-surface-variant">Dosage:</strong> ${escapeHtml(medDosage)}</div>` : ''}
             ${m.side_effects ? `<div class="text-xs text-on-surface"><strong class="text-on-surface-variant">Side Effects:</strong> ${escapeHtml(m.side_effects)}</div>` : ''}
             ${m.precautions ? `<div class="text-xs text-on-surface"><strong class="text-on-surface-variant">Precautions:</strong> ${escapeHtml(m.precautions)}</div>` : ''}
-            <div class="text-[10px] text-on-surface-variant/70 italic mt-1">${escapeHtml(m.disclaimer || "Consult a healthcare provider.")}</div>
+            <div class="text-[10px] text-on-surface-variant/70 italic mt-1">${escapeHtml(m.disclaimer || "Please consult a licensed physician or doctor.")}</div>
           </div>
         `;
       }
@@ -840,7 +960,6 @@ function appendAssistantBubble(text, toolCalls, requiresConfirmation = false) {
             <span class="material-symbols-outlined text-[14px]">open_in_new</span>
           </a>
         `;
-        triggerOpenUrl(tc.result.url, tc.result.target || "App");
       }
     }
   }
@@ -947,10 +1066,8 @@ function escapeHtml(str) {
 
 // --- Google OAuth (Connect Gmail) Client Handlers ---
 async function checkGmailStatus() {
-  const pill = document.getElementById("gmail-status-pill");
-  const unlinkedBox = document.getElementById("gmail-unlinked-state");
-  const linkedBox = document.getElementById("gmail-linked-state");
-  const emailSpan = document.getElementById("gmail-linked-email");
+  const googleBadge = document.getElementById("user-google-badge");
+  const displayEmail = document.getElementById("user-display-email");
 
   try {
     const res = await fetch("/api/auth/google/status", {
@@ -959,23 +1076,15 @@ async function checkGmailStatus() {
     const data = await res.json();
 
     if (data.connected && data.email) {
-      if (pill) {
-        pill.innerText = "Linked";
-        pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800";
+      if (googleBadge) googleBadge.classList.remove("hidden");
+      if (displayEmail && (!displayEmail.innerText || displayEmail.innerText === "user@gmail.com")) {
+        displayEmail.innerText = data.email;
       }
-      if (unlinkedBox) unlinkedBox.classList.add("hidden");
-      if (linkedBox) linkedBox.classList.remove("hidden");
-      if (emailSpan) emailSpan.innerText = data.email;
       if (!currentUser) {
         checkAuthStatus();
       }
     } else {
-      if (pill) {
-        pill.innerText = data.oauth_configured ? "Not Linked" : "Ready";
-        pill.className = "text-[9px] px-2 py-0.5 rounded-full font-semibold bg-surface-container text-on-surface-variant";
-      }
-      if (unlinkedBox) unlinkedBox.classList.remove("hidden");
-      if (linkedBox) linkedBox.classList.add("hidden");
+      if (googleBadge) googleBadge.classList.add("hidden");
     }
   } catch (err) {
     console.warn("Could not check Gmail status:", err);
@@ -1022,8 +1131,9 @@ async function disconnectGmailAccount() {
   }
 }
 
-// Window listener for OAuth popup completion
+// Window listener for OAuth popup completion (strict same-origin verification)
 window.addEventListener("message", (event) => {
+  if (event.origin !== window.location.origin) return;
   if (event.data && (event.data.type === "GOOGLE_AUTH_SUCCESS" || event.data.type === "GMAIL_CONNECTED")) {
     if (event.data.token) {
       authToken = event.data.token;
@@ -1127,8 +1237,22 @@ async function connectLiveKit() {
         const audioElement = track.attach();
         audioElement.id = `audio-${participant.identity}`;
         audioElement.autoplay = true;
+        audioElement.playsInline = true;
+        audioElement.muted = !audioOutputEnabled;
+        audioElement.volume = 1.0;
         document.body.appendChild(audioElement);
-        audioElement.play().catch(e => console.warn("LiveKit audio playback notice:", e));
+        audioElement.play().catch(e => {
+          console.warn("LiveKit audio playback blocked, retrying startAudio:", e);
+          if (livekitRoom && typeof livekitRoom.startAudio === "function") {
+            livekitRoom.startAudio().catch(() => {});
+          }
+        });
+      }
+    });
+
+    livekitRoom.on(LivekitClient.RoomEvent.AudioPlaybackStatusChanged, () => {
+      if (livekitRoom && !livekitRoom.canPlaybackAudio) {
+        livekitRoom.startAudio().catch(() => {});
       }
     });
 
@@ -1149,6 +1273,12 @@ async function connectLiveKit() {
         } else if (dataPacket.type === "EMAIL_SENT") {
           const fromDesc = dataPacket.sender ? ` from ${dataPacket.sender}` : "";
           showOpenTabToast(`[OK] Email sent to ${dataPacket.to}${fromDesc}: "${dataPacket.subject}"`, "https://mail.google.com");
+        } else if (dataPacket.type === "METRICS_UPDATE") {
+          updateLiveKitMetricsUI(dataPacket);
+        } else if (dataPacket.type === "AGENT_STATE") {
+          updateRealtimeAgentState(dataPacket.state);
+        } else if (dataPacket.type === "ESCALATION_EVENT") {
+          handleRealtimeUpdateEvent({ type: "ESCALATION_EVENT", data: dataPacket });
         }
       } catch (e) {
         console.warn("Could not process LiveKit data packet:", e);
@@ -1160,8 +1290,15 @@ async function connectLiveKit() {
       resetLiveKitUI();
     });
 
-    // 3. Connect to room & publish local microphone
+    // 3. Connect to room, unlock browser audio playback, & publish local microphone
     await livekitRoom.connect(data.url, data.token);
+    if (typeof livekitRoom.startAudio === "function") {
+      try {
+        await livekitRoom.startAudio();
+      } catch (audioErr) {
+        console.warn("Could not unlock LiveKit audio playback immediately:", audioErr);
+      }
+    }
     try {
       await livekitRoom.localParticipant.setMicrophoneEnabled(true, {
         echoCancellation: true,
@@ -1184,11 +1321,6 @@ async function connectLiveKit() {
     }
     if (latency) latency.classList.remove("hidden");
     updateMicUI("connected");
-
-    appendAssistantBubble(
-      "LiveKit WebRTC audio stream connected! Speak into your microphone for real-time full-duplex voice response.",
-      [{ tool: "livekit_webrtc", result: { status: "connected", room: data.room } }]
-    );
   } catch (err) {
     console.error("LiveKit connection error:", err);
     alert("Could not connect to LiveKit WebRTC room: " + err.message);

@@ -24,6 +24,13 @@ class TestCalculator:
         assert r["success"] is True
         assert r["result"] == pytest.approx(351.0)
 
+    def test_percentage_gst_and_standalone(self):
+        for expr in ["18% gst on 1250", "18 percent gst on 1250", "1250 * 18%"]:
+            r = calculator(expr)
+            assert r["success"] is True
+            assert r["result"] == pytest.approx(225.0)
+        assert calculator("10 % 3")["result"] == pytest.approx(1.0)
+
     def test_sqrt(self):
         r = calculator("sqrt(144)")
         assert r["success"] is True

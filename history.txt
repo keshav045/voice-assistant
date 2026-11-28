@@ -786,11 +786,127 @@ Entry 2026-11-22.12 [2026-11-22 15:00:00 +0530]
 
 
 ================================================================================
+DATE: 2026-11-27 (OFFLINE PIPER TTS, QWEN2.5/QWEN3 LOCAL ENGINE, LIVEKIT 1.9.0 & FIXES)
+================================================================================
+
+Entry 2026-11-27.1 [2026-11-28 00:08:00 +0530]
+- Commit: working-tree
+- Files Changed:
+  * .env, .env.example, .gitignore, requirements.txt
+  * agent/livekit_worker.py, agent/local_voice.py, agent/main.py, agent/lc_agent.py, agent/lc_tools.py
+  * agent/prompts.py, agent/voice.py, agent/tools/__init__.py, agent/tools/calc.py, agent/tools/email.py, agent/tools/search.py
+  * rag/store.py, web/app.js, web/index.html
+  * tests/test_calc_and_session.py, tests/test_livekit.py, evals/suite_report.json, golden_report.json
+  * README.md, DEPLOYMENT.md, GEMINI.md, history.txt
+- Change Details:
+  * Integrated offline neural Piper ONNX TTS (`en_US-lessac-medium`) as primary local TTS with Edge-TTS fallback across `agent/local_voice.py`, `agent/livekit_worker.py` (`FallbackAdapter`), `agent/main.py` (`/api/tts` WAV output), `agent/voice.py`, and `web/app.js`.
+  * Updated primary Ollama model to `qwen2.5:1.5b` and configured `FALLBACK_LLM_MODEL=qwen3:1.7b` with `think=False` disabled reasoning overhead for low-latency voice turns.
+  * Fixed LiveKit Agents 1.9.0 `RoomOptions(close_on_disconnect=False)` API, disconnect-safe participant wait, `calc.calculator` / `search.get_current_time` tool bindings, PyAV `metadata_errors` WAV decoding, and browser WebRTC audio unlock (`startAudio()`).
+  * Installed `tzdata` and fixed Windows timezone resolution, fixed offline `rag/store.py` key checks, fixed percentage/GST calculator expressions, added DDGS `duckduckgo,brave` backend, and ensured non-empty spoken replies on multi-step tool turns.
+- What was Affected:
+  * Pytest Unit Test Suite: 120/120 PASSED (100.0%).
+  * Master Evaluation Suite: 35/35 PASSED (100.0%, Production Promotion Gate APPROVED).
+  * Selective Golden Tests: calculator 6/6, get_current_time 4/4, medical_search 5/5, routing 7/8.
+  * Codebase Emoji Count: Exactly 0.
+
+
+================================================================================
+DATE: 2026-11-28 (END-TO-END 23 BUG FIXES, SECURITY/HITL HARDENING & PERFORMANCE)
+================================================================================
+
+Entry 2026-11-28.1 [2026-11-28 11:50:00 +0530]
+- Commit: working-tree
+- Files Changed:
+  * pytest.ini, tests/conftest.py, db/schema.sql, db/models.py, agent/persistence.py
+  * agent/main.py, agent/livekit_worker.py, agent/lc_tools.py, agent/lc_agent.py
+  * agent/confirm.py, agent/safety.py, agent/screening.py, agent/voice.py, agent/local_voice.py
+  * agent/tools/__init__.py, agent/tools/tasks.py, agent/tools/calendar.py, agent/tools/search.py
+  * agent/tools/medical.py, agent/tools/launcher.py, agent/tools/whatsapp.py, agent/tools/email.py
+  * agent/tools/calc.py, agent/tools/memory_tools.py, agent/tools/docs.py
+  * rag/store.py, rag/ingest.py, web/app.js
+  * evals/eval_leakage.py, evals/eval_scope.py, evals/eval_application.py
+  * run_golden_tests.py, dom_inspect.py, Dockerfile, docker-compose.yml
+  * tests/test_langgraph_safety.py, tests/test_bug_fixes_regression.py, GEMINI.md, history.txt
+  * Removed duplicate: tests/golden/run_golden_tests (1).py
+- Change Details:
+  * Fixed pre-mutation HITL confirmation gating in agent/main.py (_stage_or_execute_tool + _PENDING_CONFIRMATIONS + /api/chat/confirm) and aligned GATED_TOOLS / WRITE_TOOLS.
+  * Fixed 11 runtime LangGraph tool failures in agent/lc_tools.py (user_id scoping, get_current_time import, pediatric user_query propagation, added search_emails/summarize_email/draft_reply/web_search) and added Ollama optimization + tool_calls_executed extraction in agent/lc_agent.py.
+  * Closed security holes: anonymous /api/auth/me OAuth resolution, db_get_user_oauth / db_delete_user_oauth cross-user leaks, reflected XSS in /api/auth/google/callback, missing postMessage origin check in web/app.js, fake recipient@example.com fallback, and integrated screen_input/screen_output into primary chat and LiveKit pipelines.
+  * Isolated pytest (pytest.ini + tests/conftest.py) and golden runs (run_golden_tests.py) into temporary SQLite/checkpoint paths and purged test pollution from live voice_assistant.db.
+  * Replaced LiveKit worker module globals with per-room ContextVar state, added full productivity/email/memory tools to LIVEKIT_TOOLS, fixed speech launch verb/boundary guards, removed duplicate launches and Web UI triple-opens, fixed Web UI medical card fields and NEWS_UPDATE handling, and fixed calendar persistence/free-slot/time validation.
+  * Performance optimizations: pooled AsyncOpenAI clients with bounded timeouts, asyncio.to_thread offloading for blocking tool/LangGraph calls, parallel web search execution, cached is_windows_app_installed, OAuth token_expiry reuse, single-CTE db_list_chat_sessions, and single-step local Ollama spoken fast returns.
+  * Replaced hardcoded True eval assertions in eval_leakage.py, eval_scope.py, and eval_application.py with live runtime checks and added tests/test_bug_fixes_regression.py.
+- What was Affected:
+  * All 23 audited bug groups fixed cleanly with zero emojis across the codebase and live DB protected from test pollution.
+
+
+Entry 2026-11-28.2 [2026-11-28 12:15:00 +0530]
+- Commit: working-tree
+- Files Changed:
+  * agent/voice_telemetry.py, agent/local_voice.py, agent/voice.py
+  * agent/livekit_worker.py, agent/main.py, web/app.js, .env.example
+  * evals/benchmark_voice.py, tests/test_livekit.py, GEMINI.md, history.txt
+- Change Details:
+  * Audited Nexus_Voice_Upgrade_Plan_v2.pdf against actual hardware (7.34 GB RAM Tier C; RTX 3050 present without cublas64_12.dll CUDA runtime) and installed packages (no livekit-plugins-turn-detector or sherpa-onnx).
+  * Implemented per-turn TurnTimer correlated by speech_id/turn_id in agent/voice_telemetry.py and agent/livekit_worker.py (fixing cross-turn EOU+LLM+TTS sum bug and adding JSONL logging + P50/P95 in /api/metrics/livekit).
+  * Made faster-whisper settings env-configurable (WHISPER_MODEL_SIZE, STT_LANGUAGE, WHISPER_BEAM_SIZE, STT_DEVICE, STT_COMPUTE_TYPE, STT_INITIAL_PROMPT without hardcoded names) and added STRICT_LOCAL_MODE offline guard + env-tunable Silero VAD defaults.
+  * Added evals/benchmark_voice.py (hardware gate, WER/CER, P50/P95 local STT/Piper benchmark) and verified base.en accuracy beat tiny.en on entity terms while keeping verified defaults intact.
+  * Rejected premature/breaking changes from v2 PDF: kept CPU INT8 default (CUDA lacks cublas64_12.dll), kept base.en over small/medium/tiny.en, kept Silero turn_detection='vad' with preemptive_generation=False, and kept English TTS responses (only en_US-lessac-medium Piper model installed).
+- What was Affected:
+  * Pytest unit suite expanded to 127 tests; master eval suite, voice benchmark, and clean DB verified with zero emojis.
+
+
+Entry 2026-11-28.3 [2026-11-28 12:55:00 +0530]
+- Branch: voice-latency-diagnosis (no commits on main)
+- Files Changed:
+  * agent/local_voice.py, agent/voice_telemetry.py, evals/benchmark_voice.py
+  * evals/record_voice_clips.py, bench_clips/prompts.json, bench_clips/synthetic/*
+  * bench_results/*, REPORT.md, tests/test_livekit.py, GEMINI.md, history.txt
+- Change Details:
+  * Added env/benchmark hooks for WHISPER_CPU_THREADS and WHISPER_VAD_FILTER while keeping all code defaults untouched.
+  * Extended voice_telemetry.py with Windows RAM/commit/RSS/CPU snapshot tracking and endpoint_ms/stt_final_ms turn keys.
+  * Extended benchmark_voice.py with JSONL/CSV manifest loading, cold vs warm separation, audio duration RTF, critical entity accuracy, concurrent Ollama contention mode, and scripted E2E local pipeline telemetry.
+  * Added interactive human WAV recorder evals/record_voice_clips.py and 7-category prompt script bench_clips/prompts.json.
+  * Generated 15 labeled synthetic clips and saved Task 1-6 raw JSON/JSONL benchmarks under ./bench_results/ plus full analysis in ./REPORT.md.
+  * Added unit test coverage in tests/test_livekit.py.
+- What was Affected:
+  * Documented exact contention, thread, VAD, prompt/beam, CUDA, E2E telemetry, and Ollama evidence with 0 defaults changed and 0 emojis.
+
+Entry 2026-11-28.4 [2026-11-28 15:30:00 +0530]
+- Branch: voice-latency-diagnosis (no commits on main)
+- Files Changed:
+  * agent/local_voice.py, agent/livekit_worker.py, agent/voice_telemetry.py
+  * evals/benchmark_voice.py, .env.example, bench_clips/heldout_prompts.json
+  * bench_clips/durations/*, bench_clips/heldout_synthetic/*
+  * bench_results/*, REPORT_v2.md, tests/test_livekit.py, GEMINI.md, history.txt
+- Change Details:
+  * Rescored Phase 1 saved transcripts with the final entity scorer, added category breakdowns and Hinglish exclusion metrics, and recorded Phase 1 REPORT.md errata.
+  * Added opt-in CUDA DLL path registration guard (_register_cuda_dll_paths, only active when STT_DEVICE=cuda) in agent/local_voice.py without installing GPU wheels; documented exact PyPI wheel sizes (~1,290.1 MB) and marked GPU Task 1b/1c runs NOT RUN pending approval.
+  * Ran CPU duration scaling (1/2/4/8s synthetic clips), interleaved A/B/A/B threads (4 vs 6) and vad_filter (on vs off), synthetic Silero min_silence endpoint tuning (0.65/0.50/0.40), baseline top-10 + Ollama idle memory capture, and 12-prompt zero-overlap held-out prompt leakage test.
+  * Audited production StreamAdapter sentence-by-sentence streaming vs harness differences, added ram_available_gb / commit_used_gb / ram_used_pct to TurnTimer.snapshot(), and executed a 22-turn E2E telemetry trace (#1 and #12 cold LLM).
+  * Added opt-in PREWARM_OLLAMA and PREWARM_STT_DECODE startup hooks (default "false") via prewarm_ollama() and prewarm_stt_decode(), verified cold Turn 1 speedup in isolated subprocess trials, updated tests/test_livekit.py, and authored REPORT_v2.md.
+- What was Affected:
+  * Delivered complete Task 0-7 raw artifacts and REPORT_v2.md with all defaults preserved and zero emojis.
+
+Entry 2026-11-28.5 [2026-11-28 15:54:00 +0530]
+- Branch: voice-latency-diagnosis (no commits on main)
+- Files Changed:
+  * agent/local_voice.py, agent/livekit_worker.py, .env.example
+  * tests/test_livekit.py, GEMINI.md, history.txt
+- Change Details:
+  * Fixed Whisper hallucination/loop leakage caught in live LiveKit logs by adding _extract_valid_whisper_text() and _is_repetitive_hallucination() (filtering compression_ratio > 2.2, low avg_logprob, high no_speech_prob, and consecutive word/digit loops) in agent/local_voice.py.
+  * Added noise-floor RMS check and bounded quiet-mic gain normalization in _transcribe_audio_bytes().
+  * Stopped injecting _DEFAULT_STT_PROMPT implicitly when STT_INITIAL_PROMPT is unset to prevent prompt-seeded word loops ("Paracetamol" repeats), while preserving env opt-in.
+  * Raised default AEC_WARMUP_DURATION from 0.0 to 1.5s (env-tunable) alongside ALLOW_INTERRUPTIONS and MIN_INTERRUPTION_WORDS in agent/livekit_worker.py, documented in .env.example, and added unit assertions in tests/test_livekit.py.
+- What was Affected:
+  * Prevented repetitive and low-confidence Whisper junk transcripts and reduced speaker-onset self-interruptions while preserving all core STT/VAD defaults and zero emojis.
+
+
+================================================================================
 VERIFICATION SUMMARY
 ================================================================================
-- Golden Dataset Tests: 78/79 Passed (98.0%)
-- Total Pytest Unit Tests: 112/112 Passed (100.0%)
-- Total Modular Benchmarks: 35/35 Passed (100.0%)
+- Pytest Unit & Regression Suite (.\.venv\Scripts\python.exe -m pytest -v): verified post-edit (isolated temp SQLite)
+- Master Evaluation Suite (.\.venv\Scripts\python.exe -m evals.run_suite): verified post-edit (35/35 checks, Production Promotion Gate)
+- Golden Dataset Benchmark (.\.venv\Scripts\python.exe run_golden_tests.py --delay 0.05): verified post-edit
 - Codebase Emoji Count: Exactly 0
-- Git Status: Up to date with origin/main
 ================================================================================

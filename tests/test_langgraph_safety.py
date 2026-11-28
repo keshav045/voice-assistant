@@ -10,6 +10,7 @@ Verifies:
 """
 
 import sqlite3
+import uuid
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -289,24 +290,72 @@ def test_fastapi_chat_confirm_endpoints():
 
 
 def test_tool_categories_execution(memory_checkpointer):
-    """Test real calls to key LangChain tool categories: calculator, medical_search, tasks, memory."""
-    from agent.lc_tools import calculator, medical_search, add_task, list_tasks, remember
+    """Test real execution and DB persistence across key LangChain tool categories."""
+    from agent.lc_tools import (
+        calculator,
+        medical_search,
+        add_task,
+        list_tasks,
+        complete_task,
+        remember,
+        forget,
+        get_current_time,
+        list_events,
+        find_free_slot,
+        search_emails,
+        _CURRENT_USER_QUERY,
+    )
+    from db.models import db_list_tasks, db_list_facts
 
     # 1. Calculator
     calc_out = calculator.invoke({"expression": "25 * 4 + 50"})
     assert "150" in calc_out
 
-    # 2. Medical Search
+    # 2. Clock (verifies import bug fix from search_impl instead of broken agent.main)
+    time_out = get_current_time.invoke({"timezone": "Asia/Kolkata"})
+    assert "error" not in time_out.lower()
+    assert "asia/kolkata" in time_out.lower() or "current time" in time_out.lower()
+
+    # 3. Medical Search + Pediatric Query ContextVar propagation
     med_out = medical_search.invoke({"medicine_name": "Paracetamol", "topic": "uses"})
-    assert "Paracetamol" in med_out or "fever" in med_out.lower() or "pain" in med_out.lower()
+    assert "paracetamol" in med_out.lower() or "pain" in med_out.lower()
 
-    # 3. Tasks
-    task_out = add_task.invoke({"title": "Review agent plan", "priority": "high", "user_id": "test-user"})
-    assert "task" in task_out.lower() or "Review agent plan" in task_out
+    q_tok = _CURRENT_USER_QUERY.set("Paracetamol dosage for a 2 year old baby")
+    try:
+        ped_out = medical_search.invoke({"medicine_name": "Paracetamol", "topic": "dosage"})
+        assert "weight" in ped_out.lower() and "pediatric" in ped_out.lower()
+        assert "500 mg" not in ped_out.lower()
+    finally:
+        _CURRENT_USER_QUERY.reset(q_tok)
 
-    # 4. Memory
-    mem_out = remember.invoke({"fact": "User prefers concise responses", "user_id": "test-user"})
-    assert "remember" in mem_out.lower() or "concise" in mem_out.lower()
+    # 4. Tasks (must persist to isolated DB and NOT hit user_id TypeError)
+    uid = f"lg-user-{uuid.uuid4().hex[:6]}"
+    task_title = f"Review agent plan {uuid.uuid4().hex[:4]}"
+    task_out = add_task.invoke({"title": task_title, "priority": "high", "user_id": uid})
+    assert "error" not in task_out.lower()
+    persisted_tasks = db_list_tasks(user_id=uid)
+    assert any(t["title"] == task_title and t["priority"] == "high" for t in persisted_tasks)
+
+    list_out = list_tasks.invoke({"status": "pending", "user_id": uid})
+    assert task_title in list_out
+
+    comp_out = complete_task.invoke({"task_id": persisted_tasks[0]["id"], "user_id": uid})
+    assert "completed" in comp_out.lower()
+
+    # 5. Memory
+    mem_fact = f"User prefers concise responses {uuid.uuid4().hex[:4]}"
+    mem_out = remember.invoke({"fact": mem_fact, "user_id": uid})
+    assert "error" not in mem_out.lower()
+    assert any(f["fact"] == mem_fact for f in db_list_facts(user_id=uid))
+    forget.invoke({"fact": mem_fact, "user_id": uid})
+
+    # 6. Calendar & Emails
+    evt_out = list_events.invoke({"date": "today", "user_id": uid})
+    assert "error" not in evt_out.lower()
+    slot_out = find_free_slot.invoke({"duration_minutes": 60, "window": "tomorrow", "user_id": uid})
+    assert "error" not in slot_out.lower() and "free" in slot_out.lower()
+    mail_out = search_emails.invoke({"query": "Golden", "max_results": 3})
+    assert "error" not in mail_out.lower() and "found" in mail_out.lower()
 
 
 def test_sqlite_checkpointer_persistence(tmp_path):

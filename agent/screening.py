@@ -42,14 +42,14 @@ TOXIC_PATTERNS = [
 
 # Out of scope physical realm actions
 PHYSICAL_PATTERNS = [
-    r"\b(?:turn\s+on|turn\s+off|heat\s+up|ignite)\s+(?:the\s+)?(?:stove|gas|oven|furnace|car|engine)\b",
+    r"\b(?:turn\s+on|turn\s+off|heat\s+up|start|unlock|lock|ignite|adjust)\s+(?:the\s+|my\s+)?(?:\w+\s+)?(?:stove|microwave|toaster|thermostat|ac|air\s+conditioner|lights?|door|lock|heater|gas|oven|furnace|car|engine)\b",
     r"\b(?:fly|drive|teleport)\s+(?:me\s+)?(?:to\s+)?(?:paris|london|new\s+york|mumbai)\b",
-    r"\b(?:transfer|wire)\s+(?:\$|usd|inr|rs\.?|dollars|money)\s+(?:to\s+my\s+bank|without\s+approval)\b",
+    r"\b(?:transfer|wire|send\s+money)\s+(?:[\$€£₹]?\s*\d+(?:,\d{3})*(?:\.\d+)?|\$|usd|inr|rs\.?|dollars|rupees|money)\b",
 ]
 
 # Sensitive credentials & PII regex patterns
 CREDENTIAL_PATTERNS = [
-    (r"\bsk-[A-Za-z0-9]{20,}\b", "[REDACTED_API_KEY]"),
+    (r"\bsk-(?:proj-|svcacct-)?[A-Za-z0-9_\-]{20,}\b", "[REDACTED_API_KEY]"),
     (r"\b(?:Bearer\s+)[A-Za-z0-9_\-\.]{25,}\b", "Bearer [REDACTED_TOKEN]"),
     (r"\b(?:\d{4}[-\s]?){3}\d{4}\b", "[REDACTED_CARD_NUMBER]"),
     (r"\b\d{3}-\d{2}-\d{4}\b", "[REDACTED_SSN]"),
@@ -204,8 +204,19 @@ def screen_output(
         is_medical = True
 
     if is_medical:
-        disclaimer_phrase = "consult a licensed physician or doctor"
-        if disclaimer_phrase not in sanitized.lower() and "consult your doctor" not in sanitized.lower():
+        lower_s = sanitized.lower()
+        has_disclaimer = any(
+            phrase in lower_s
+            for phrase in [
+                "licensed physician",
+                "licensed doctor",
+                "consult your doctor",
+                "consult a doctor",
+                "consult a pediatrician",
+                "pediatrician, doctor",
+            ]
+        )
+        if not has_disclaimer:
             sanitized = sanitized.rstrip() + " Please remember to consult a licensed physician or doctor before taking or changing any medication."
             flags.append("medical_disclaimer_appended")
 
