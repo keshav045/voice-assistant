@@ -23,17 +23,16 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Create non-root application user and data directory
+# Create non-root application user and data/model directories
 RUN useradd -m -u 1000 appuser && \
-    mkdir -p /app/data && \
+    mkdir -p /app/data /app/models && \
     chown -R appuser:appuser /app
 
-# Copy application source code & bundled offline voice/contact assets
+# Copy application source code & runtime assets
 COPY --chown=appuser:appuser agent/ ./agent/
 COPY --chown=appuser:appuser db/ ./db/
 COPY --chown=appuser:appuser web/ ./web/
 COPY --chown=appuser:appuser rag/ ./rag/
-COPY --chown=appuser:appuser models/ ./models/
 COPY --chown=appuser:appuser tests/ ./tests/
 COPY --chown=appuser:appuser run_server.py ./
 COPY --chown=appuser:appuser run_livekit.py ./

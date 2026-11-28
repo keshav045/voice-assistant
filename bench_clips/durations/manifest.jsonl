@@ -1,4 +1,0 @@
-{"wav_path": "bench_clips/durations/dur_1s.wav", "reference_text": "Synthetic duration probe (1.0s)", "category": "duration_1s", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
-{"wav_path": "bench_clips/durations/dur_2s.wav", "reference_text": "Synthetic duration probe (2.0s)", "category": "duration_2s", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
-{"wav_path": "bench_clips/durations/dur_4s.wav", "reference_text": "Synthetic duration probe (4.0s)", "category": "duration_4s", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
-{"wav_path": "bench_clips/durations/dur_8s.wav", "reference_text": "Synthetic duration probe (8.0s)", "category": "duration_8s", "speaker": "piper_en_US-lessac-medium", "synthetic": true}

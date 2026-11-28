@@ -7,7 +7,11 @@ htmlcov
 .git
 .gitignore
 .env
+.venv
+models
+logs
 *.db
+*.sqlite*
 nexus*.db
 backend/
 *.log

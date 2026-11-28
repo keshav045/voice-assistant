@@ -83,3 +83,12 @@ desktop-companion/screenshots/
 # Offline voice models
 models/
 
+# Local workspace notes & generated evaluation reports
+gemini.md
+GEMINI.md
+history.txt
+golden_report.json
+evals/suite_report.json
+evals/benchmark_report.json
+evals/benchmark_report.md
+
