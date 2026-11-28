@@ -5,6 +5,7 @@ If an application is not installed natively, it automatically falls back
 to opening the web version in Chrome, Microsoft Edge, or the default browser.
 """
 
+import functools
 import os
 import re
 import subprocess
@@ -180,6 +181,7 @@ def launch_in_browser(url: str, browser: Optional[str] = None) -> bool:
     return False
 
 
+@functools.lru_cache(maxsize=64)
 def is_windows_app_installed(cmd: str) -> bool:
     """Check if a Windows executable is accessible on the system."""
     if not sys.platform.startswith("win"):
@@ -232,30 +234,23 @@ def open_app(
     url: Optional[str] = None,
     browser: Optional[str] = None,
     target: Optional[str] = None,
+    launch_browser: bool = True,
 ) -> Dict[str, Any]:
     """Launch a website or application on the laptop.
 
     If a native desktop app is not installed, it automatically falls back
-    to opening the web app in Chrome, Microsoft Edge, or the default browser.
-
-    Args:
-        name: Name of the application or website (e.g. 'youtube', 'whatsapp', 'mail', 'linkedin').
-        query: Optional search topic or query (e.g. 'lofi beats' on YouTube).
-        url: Direct custom URL to open if specified.
-        browser: Optional preferred browser e.g. 'chrome', 'edge', or 'default'.
-        target: Optional alias for name.
-
-    Returns:
-        dict with execution status, target, URL or method, and spoken text.
+    to opening the web version in Chrome, Microsoft Edge, or the default browser.
     """
     clean_name = (name or target or "").strip().lower()
+    if clean_name == "calc":
+        clean_name = "calculator"
     clean_query = (query or "").strip()
     browser_pref = (browser or "").strip().lower()
 
     # Direct URL provided
     if url or clean_name.startswith("http://") or clean_name.startswith("https://"):
         target_url = url or clean_name
-        success = launch_in_browser(target_url, browser_pref)
+        success = launch_in_browser(target_url, browser_pref) if launch_browser else True
         b_label = f" in {browser_pref.capitalize()}" if browser_pref in ["chrome", "edge"] else ""
         return {
             "success": success,
@@ -265,7 +260,7 @@ def open_app(
             "spoken": f"Opening {target_url}{b_label}.",
         }
 
-    # Match predefined app or website
+    # Match predefined app or website cleanly without false partial hits (e.g. "app" -> "whatsapp")
     matched_key = None
     if clean_name in APP_SITES:
         matched_key = clean_name
@@ -275,15 +270,17 @@ def open_app(
             if k in words:
                 matched_key = k
                 break
-            elif len(k) > 2 and (k in clean_name or clean_name in k):
-                matched_key = k
-                break
+        if not matched_key and len(clean_name) >= 3:
+            for k in APP_SITES:
+                if len(k) > 2 and (k in clean_name or (len(clean_name) >= 4 and k.startswith(clean_name))):
+                    matched_key = k
+                    break
 
     if not matched_key:
         # Fallback to direct web address if it looks like a domain name
         if "." in clean_name and " " not in clean_name:
             target_url = f"https://{clean_name}"
-            success = launch_in_browser(target_url, browser_pref)
+            success = launch_in_browser(target_url, browser_pref) if launch_browser else True
             return {
                 "success": success,
                 "target": clean_name,
@@ -326,7 +323,8 @@ def open_app(
                 pass
         # If desktop app is not installed or failed, fall back to browser!
         if web_fallback_url:
-            launch_in_browser(web_fallback_url, browser_pref)
+            if launch_browser:
+                launch_in_browser(web_fallback_url, browser_pref)
             return {
                 "success": True,
                 "target": display,
@@ -374,7 +372,7 @@ def open_app(
         target_url = web_fallback_url or f"https://{matched_key}.com"
         spoken_msg = f"{spoken_base}{b_label} for you."
 
-    success = launch_in_browser(target_url, browser_pref)
+    success = launch_in_browser(target_url, browser_pref) if launch_browser else True
     return {
         "success": success,
         "target": display,

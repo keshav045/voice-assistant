@@ -1,12 +1,17 @@
 """Document Ingestion Pipeline (PDF, Markdown, Text)."""
 
 import os
-from typing import List
-from rag.store import add_doc_chunk
+from typing import List, Optional
+from rag.store import add_doc_chunk, delete_doc_chunks_for_file
 
 
 def chunk_text(text: str, chunk_size: int = 500, overlap: int = 100) -> List[str]:
-    """Split text into overlapping chunks."""
+    """Split text into overlapping chunks safely (guards against overlap >= chunk_size)."""
+    if chunk_size <= 0:
+        raise ValueError("chunk_size must be a positive integer.")
+    safe_overlap = max(0, min(overlap, chunk_size - 1))
+    step = chunk_size - safe_overlap
+
     words = text.split()
     chunks = []
     i = 0
@@ -14,12 +19,12 @@ def chunk_text(text: str, chunk_size: int = 500, overlap: int = 100) -> List[str
         chunk = " ".join(words[i : i + chunk_size])
         if chunk.strip():
             chunks.append(chunk.strip())
-        i += chunk_size - overlap
+        i += step
     return chunks
 
 
-def ingest_file(file_path: str) -> int:
-    """Ingest a text, Markdown, or PDF file into the vector store."""
+def ingest_file(file_path: str, user_id: Optional[str] = None) -> int:
+    """Ingest a text, Markdown, or PDF file into the vector store (replaces prior chunks for same file)."""
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")
 
@@ -41,9 +46,10 @@ def ingest_file(file_path: str) -> int:
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             text = f.read()
 
+    delete_doc_chunks_for_file(filename, user_id=user_id)
     chunks = chunk_text(text)
     for idx, c in enumerate(chunks):
-        add_doc_chunk(file_name=filename, text=c, section=f"Part {idx + 1}")
+        add_doc_chunk(file_name=filename, text=c, section=f"Part {idx + 1}", user_id=user_id)
 
     return len(chunks)
 

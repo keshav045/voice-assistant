@@ -33,28 +33,32 @@ def _tokenize(text: str) -> List[str]:
     return re.findall(r"[a-zA-Z0-9]+", normalized)
 
 
-def compute_embedding(text: str) -> List[float]:
-    """Compute vector embedding using OpenAI or deterministic cross-process fallback."""
-    if OPENAI_API_KEY and not OPENAI_API_KEY.startswith("your-"):
-        try:
-            from openai import OpenAI
-            client = OpenAI(api_key=OPENAI_API_KEY)
-            res = client.embeddings.create(input=text[:8000], model="text-embedding-3-small")
-            return res.data[0].embedding
-        except Exception:
-            pass
-
-    # Deterministic semantic hash embedding fallback (128-dim) using hashlib md5
+def _compute_local_hash_embedding(text: str) -> List[float]:
+    """Deterministic cross-process 128-dim lexical hash embedding."""
     tokens = _tokenize(text)
     dim = 128
     vec = [0.0] * dim
     for i, w in enumerate(tokens):
-        # Calculate cross-process stable hash
         h = int(hashlib.md5(w.encode("utf-8")).hexdigest()[:8], 16) % dim
         weight = 0.2 if w in STOP_WORDS else 1.0
         vec[h] += weight / (1.0 + math.log(i + 1))
     norm = math.sqrt(sum(v * v for v in vec)) or 1.0
     return [v / norm for v in vec]
+
+
+def compute_embedding(text: str) -> List[float]:
+    """Compute vector embedding using OpenAI or deterministic cross-process fallback."""
+    api_key = os.environ.get("OPENAI_API_KEY", OPENAI_API_KEY).strip()
+    if api_key and api_key.startswith("sk-"):
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key)
+            res = client.embeddings.create(input=text[:8000], model="text-embedding-3-small")
+            return res.data[0].embedding
+        except Exception:
+            pass
+
+    return _compute_local_hash_embedding(text)
 
 
 def cosine_similarity(v1: List[float], v2: List[float]) -> float:
@@ -67,32 +71,60 @@ def cosine_similarity(v1: List[float], v2: List[float]) -> float:
     return dot / (norm1 * norm2)
 
 
-def add_doc_chunk(file_name: str, text: str, section: Optional[str] = None) -> str:
+def add_doc_chunk(
+    file_name: str,
+    text: str,
+    section: Optional[str] = None,
+    user_id: Optional[str] = None,
+) -> str:
     """Store a document chunk with embedding in doc_chunks."""
     chunk_id = f"chunk-{uuid.uuid4().hex[:8]}"
     now = datetime.now(timezone.utc).isoformat()
+    eff_uid = (user_id or "guest").strip() or "guest"
     emb = compute_embedding(text)
     emb_json = json.dumps(emb)
 
     with get_db_connection() as conn:
         conn.execute(
             """
-            INSERT INTO doc_chunks (id, file, section, text, embedding, modified_at)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO doc_chunks (id, user_id, file, section, text, embedding, modified_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
-            (chunk_id, file_name, section or "", text, emb_json, now),
+            (chunk_id, eff_uid, file_name, section or "", text, emb_json, now),
         )
         conn.commit()
     return chunk_id
 
 
-def search_doc_chunks(query: str, top_k: int = 3) -> List[Dict[str, Any]]:
-    """Search document chunks by semantic cosine similarity with lexical rerank."""
+def delete_doc_chunks_for_file(file_name: str, user_id: Optional[str] = None) -> int:
+    """Remove existing chunks for a filename before re-ingesting to avoid duplicates."""
+    with get_db_connection() as conn:
+        if user_id:
+            cur = conn.execute("DELETE FROM doc_chunks WHERE file = ? AND user_id = ?", (file_name, user_id))
+        else:
+            cur = conn.execute("DELETE FROM doc_chunks WHERE file = ?", (file_name,))
+        conn.commit()
+        return cur.rowcount
+
+
+def search_doc_chunks(
+    query: str,
+    top_k: int = 3,
+    user_id: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """Search document chunks by semantic cosine similarity with dimension alignment and lexical rerank."""
     query_emb = compute_embedding(query)
+    local_query_emb = _compute_local_hash_embedding(query)
     results = []
 
     with get_db_connection() as conn:
-        cur = conn.execute("SELECT id, file, section, text, embedding, modified_at FROM doc_chunks")
+        if user_id:
+            cur = conn.execute(
+                "SELECT id, file, section, text, embedding, modified_at FROM doc_chunks WHERE user_id = ? OR user_id = 'guest'",
+                (user_id,),
+            )
+        else:
+            cur = conn.execute("SELECT id, file, section, text, embedding, modified_at FROM doc_chunks")
         rows = cur.fetchall()
 
     q_tokens = [t for t in _tokenize(query) if t not in STOP_WORDS]
@@ -101,7 +133,13 @@ def search_doc_chunks(query: str, top_k: int = 3) -> List[Dict[str, Any]]:
         row_dict = dict(row)
         try:
             emb = json.loads(row_dict["embedding"]) if row_dict.get("embedding") else []
-            sim = cosine_similarity(query_emb, emb)
+            if len(emb) == len(query_emb):
+                sim = cosine_similarity(query_emb, emb)
+            elif len(emb) == len(local_query_emb):
+                sim = cosine_similarity(local_query_emb, emb)
+            else:
+                # Re-embed chunk text on-the-fly with active local model if dimensions differ
+                sim = cosine_similarity(local_query_emb, _compute_local_hash_embedding(row_dict["text"]))
 
             # Lexical boost
             text_lower = row_dict["text"].lower()

@@ -72,10 +72,14 @@ desktop.ini
 
 # Logs & testing
 *.log
+logs/
 .pytest_cache/
 .coverage
 htmlcov/
 
 # Companion Screenshots
 desktop-companion/screenshots/
+
+# Offline voice models
+models/
 

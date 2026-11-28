@@ -1,0 +1,15 @@
+{"wav_path": "bench_clips/synthetic/synth_P01.wav", "reference_text": "Open Gmail and check my latest emails.", "category": "clean_english", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
+{"wav_path": "bench_clips/synthetic/synth_P02.wav", "reference_text": "What are the side effects of Dolo 650?", "category": "clean_english", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
+{"wav_path": "bench_clips/synthetic/synth_P03.wav", "reference_text": "Schedule a team sync meeting tomorrow at 4 PM.", "category": "clean_english", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
+{"wav_path": "bench_clips/synthetic/synth_P04.wav", "reference_text": "Open calculator and compute twenty five into twelve.", "category": "indian_english_accent", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
+{"wav_path": "bench_clips/synthetic/synth_P05.wav", "reference_text": "What time is it in New York right now?", "category": "indian_english_accent", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
+{"wav_path": "bench_clips/synthetic/synth_P06.wav", "reference_text": "Calculate 18 percent GST on 1000 rupees.", "category": "numbers_amounts_emails", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
+{"wav_path": "bench_clips/synthetic/synth_P07.wav", "reference_text": "Send an email to rohit at gmail dot com saying review is ready.", "category": "numbers_amounts_emails", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
+{"wav_path": "bench_clips/synthetic/synth_P08.wav", "reference_text": "Add a task to pay 2500 rupees electricity bill by Monday.", "category": "numbers_amounts_emails", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
+{"wav_path": "bench_clips/synthetic/synth_P09.wav", "reference_text": "Open WhatsApp chat with Rahul.", "category": "names", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
+{"wav_path": "bench_clips/synthetic/synth_P10.wav", "reference_text": "Tell me uses of Pantoprazole Pan 40 and Paracetamol.", "category": "names", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
+{"wav_path": "bench_clips/synthetic/synth_P11.wav", "reference_text": "Kal subah mujhe 8 baje remind kar dena.", "category": "hinglish", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
+{"wav_path": "bench_clips/synthetic/synth_P12.wav", "reference_text": "Aaj ka time kya hai aur weather check karo.", "category": "hinglish", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
+{"wav_path": "bench_clips/synthetic/synth_P13.wav", "reference_text": "Search for latest technology news headlines.", "category": "noisy_far_mic", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
+{"wav_path": "bench_clips/synthetic/synth_P14.wav", "reference_text": "Play lofi music on YouTube.", "category": "noisy_far_mic", "speaker": "piper_en_US-lessac-medium", "synthetic": true}
+{"wav_path": "bench_clips/synthetic/synth_P15.wav", "reference_text": "Schedule it for Friday actually make it Saturday 5 PM.", "category": "pauses_corrections", "speaker": "piper_en_US-lessac-medium", "synthetic": true}

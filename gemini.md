@@ -18,43 +18,43 @@ For each script, the following specifications are detailed:
 
 ### 1.1 `run_server.py`
 - **Path**: `run_server.py`
-- **Role**: Launches the central FastAPI REST & WebSocket backend service.
+- **Role**: Launches the central FastAPI REST & WebSocket backend service and serves the Web UI (`web/index.html`).
 - **Execution Command**:
   ```bash
-  backend\.venv\Scripts\python.exe run_server.py
+  .venv\Scripts\python.exe run_server.py
   ```
-- **Inputs**: Reads environment variables from `.env` (`OPENAI_API_KEY`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`).
-- **Outputs**: Binds Uvicorn HTTP server to `http://127.0.0.1:8000`. Serves REST endpoints (`/api/chat`, `/api/livekit/token`, `/api/auth/google/callback`, `/api/history`) and WebSockets (`/ws/voice/{session_id}`).
-- **End-to-End Use Case**: Serves as the primary API gateway for client frontends, orchestrates LLM chat turns, executes tool calling, handles Google OAuth callbacks, and issues LiveKit access tokens.
+- **Inputs**: Reads environment variables from `.env` (`OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_MODEL`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`).
+- **Outputs**: Binds Uvicorn HTTP server to `http://127.0.0.1:8000`. Serves REST endpoints (`/api/chat`, `/api/chat/confirm`, `/api/livekit/token`, `/api/auth/google/callback`, `/api/history`, `/api/stt`, `/api/tts`, `/api/updates/stream`) and WebSockets (`/ws/voice/{session_id}`).
+- **End-to-End Use Case**: Serves as the primary API gateway and native Web UI host, orchestrates LLM chat turns, executes tool calling, handles Google OAuth callbacks, and issues LiveKit access tokens.
 
 ### 1.2 `run_livekit.py`
 - **Path**: `run_livekit.py`
 - **Role**: Starts the real-time LiveKit WebRTC Voice Pipeline Worker.
 - **Execution Command**:
   ```bash
-  backend\.venv\Scripts\python.exe run_livekit.py dev
+  .venv\Scripts\python.exe run_livekit.py dev
   ```
-- **Inputs**: LiveKit Cloud credentials (`LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`) and OpenAI API key (`OPENAI_API_KEY`).
-- **Outputs**: Establishes a persistent worker connection to LiveKit Cloud (`wss://nexus-ai-assistant-awu0v1ts.livekit.cloud`).
-- **End-to-End Use Case**: Subscribes to audio rooms created by web or Streamlit clients, streams bidirectional voice via WebRTC, runs local Silero VAD to detect pauses in speech, feeds transcribed audio to OpenAI, executes registered Python tools, and streams synthetic voice responses back with sub-400ms turnaround.
+- **Inputs**: LiveKit Cloud credentials (`LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`) and LLM settings (`OPENAI_BASE_URL` / `OPENAI_API_KEY`).
+- **Outputs**: Establishes a persistent worker connection to LiveKit Cloud.
+- **End-to-End Use Case**: Subscribes to audio rooms created by the native web frontend (`web/index.html`), streams bidirectional voice via WebRTC, runs local Silero VAD + `faster-whisper` STT + `qwen2.5:1.5b` (with `qwen3:1.7b` fallback) + Piper ONNX / Edge-TTS, and executes registered Python tools in real time.
 
-### 1.3 `streamlit_app.py`
-- **Path**: `streamlit_app.py`
-- **Role**: Production ChatGPT-style executive web interface with integrated LiveKit WebRTC Voice Studio.
+### 1.3 Web Frontend (`web/index.html` & `web/app.js`)
+- **Path**: `web/index.html`, `web/app.js`
+- **Role**: Production executive web interface with integrated LiveKit WebRTC voice controls and Server-Sent Events (SSE) updates, served directly by `run_server.py` on `http://localhost:8000`.
 - **Execution Command**:
   ```bash
-  backend\.venv\Scripts\streamlit.exe run streamlit_app.py --server.port 8501
+  .venv\Scripts\python.exe run_server.py
   ```
-- **Inputs**: User text input via chat capsule, voice audio via embedded LiveKit WebRTC component, model engine selection (Cloud GPT-4o vs Local Ollama), Google 1-Click Login button, and optional email profile settings.
-- **Outputs**: Renders modern dark-mode web application at `http://localhost:8501`. Renders ChatGPT-style conversational history, tool execution cards (Web Search, Math, Medicine Information, Application Opening), real-time WebRTC audio waveform visualizer, and hands-free microphone controls.
-- **End-to-End Use Case**: The primary graphical desktop interface for end-users to interact with the assistant via text and voice, manage their Google OAuth connection, view structured tool results, and review chat history.
+- **Inputs**: User text input via chat capsule, voice audio via LiveKit WebRTC, Google OAuth sign-in, and username/password authentication.
+- **Outputs**: Renders modern web UI at `http://localhost:8000` with conversation history, tool execution cards (Web Search/Live News, Math, Medicine Information, Email Dispatched, App Launch links, HITL confirmation cards), and LiveKit audio telemetry.
+- **End-to-End Use Case**: Exclusive graphical web interface for end-users to interact via text and real-time voice, manage their Google OAuth connection, view structured tool cards, and browse chat history.
 
 ### 1.4 `run_voice.py`
 - **Path**: `run_voice.py`
 - **Role**: Standalone local microphone and speaker audio loop runner.
 - **Execution Command**:
   ```bash
-  backend\.venv\Scripts\python.exe run_voice.py
+  .venv\Scripts\python.exe run_voice.py
   ```
 - **Inputs**: Default system microphone and audio output devices.
 - **Outputs**: Records user speech chunks, posts them to `/api/stt` or local Whisper, routes transcribed text to `/api/chat`, and plays returned MP3 audio through system speakers.
@@ -132,7 +132,7 @@ For each script, the following specifications are detailed:
 - **Role**: Interactive terminal chat interface for developer testing.
 - **Execution Command**:
   ```bash
-  backend\.venv\Scripts\python.exe -m agent.cli
+  .venv\Scripts\python.exe -m agent.cli
   ```
 - **End-to-End Use Case**: Allows developers to test multi-turn conversations and tool calling directly in PowerShell without starting web servers.
 
@@ -253,13 +253,13 @@ For each script, the following specifications are detailed:
 - **Role**: Document ingestion pipeline. Reads text documents, splits them into semantic chunks, generates vector embeddings, and writes to vector store.
 - **Execution Command**:
   ```bash
-  backend\.venv\Scripts\python.exe -m rag.ingest
+  .venv\Scripts\python.exe -m rag.ingest
   ```
 
 ### 5.2 `rag/store.py`
 - **Path**: `rag/store.py`
-- **Role**: In-memory vector store with cosine similarity matching and top-k nearest neighbor retrieval.
-- **End-to-End Use Case**: Powers domain-specific RAG knowledge retrieval for university syllabi, documentation, and reference manuals.
+- **Role**: SQLite-backed vector store with cosine similarity matching and lexical reranking.
+- **End-to-End Use Case**: Powers domain-specific RAG knowledge retrieval for personal notes, documentation, and reference manuals.
 
 ---
 
@@ -272,7 +272,7 @@ The evaluation suite implements a 4-pillar, 35-benchmark testing framework:
 - **Role**: Master evaluation orchestrator. Runs all 35 modular benchmarks and produces a production promotion verdict.
 - **Execution Command**:
   ```bash
-  backend\.venv\Scripts\python.exe -m evals.run_suite
+  .venv\Scripts\python.exe -m evals.run_suite
   ```
 - **Outputs**: Generates `evals/suite_report.json` and prints the pass/fail score table. Requires a 90% minimum pass rate and 0 failed critical tests to approve production deployment.
 
@@ -296,28 +296,32 @@ The evaluation suite implements a 4-pillar, 35-benchmark testing framework:
 - `evals/metric_registry.py`: Threshold definitions and pass criteria.
 - `evals/promote.py`: Enforces production promotion gate rules.
 - `evals/compare.py`: Compares latency and accuracy benchmarks between Cloud GPT-4o and Local Ollama.
+- `evals/benchmark_voice.py`: Hardware gate profiler (`record_hardware_profile`), normalized WER/CER & critical entity scoring, manifest loader, contention/thread/VAD sweep runner, and offline E2E telemetry runner (`python -m evals.benchmark_voice`).
+- `evals/record_voice_clips.py`: Interactive `16 kHz` mono WAV microphone recording helper saving human test clips and `manifest.jsonl` rows (`python -m evals.record_voice_clips`).
 
 ---
 
 ## 7. Pytest Unit Test Matrix (`tests/`)
 
-All 91 unit tests can be executed with a single command:
+All unit and regression tests (128 tests across 12 modules, isolated via `tests/conftest.py`) can be executed with a single command:
 ```bash
-backend\.venv\Scripts\python.exe -m pytest tests/ -v
+.venv\Scripts\python.exe -m pytest -v
 ```
 
 ### 7.1 Test Suites Overview
-- `tests/test_langgraph_safety.py` (8 tests): Validates LangGraph interrupts on irreversible actions (send_email, delete_task), asserts actions never execute before approval, execute exactly once upon 'yes', do not execute on 'no', multi-tool turns (read-only + irreversible), and SQLite checkpointer persistence across restarts.
-- `tests/test_agent.py` (7 tests): Tests agent workflow, approval gating, and tool dispatching.
-- `tests/test_auth_and_history.py` (6 tests): Validates user registration, bcrypt password hashing, token validation, and chat history ordering.
-- `tests/test_calc_and_session.py` (16 tests): Tests all calculator operations (addition, percentages, square roots, division, modulo, negative numbers) and session isolation.
-- `tests/test_email.py` (21 tests): Comprehensive email test matrix covering Google OAuth priority, SMTP fallback, bulk CSV dispatch, and AI composition.
-- `tests/test_launcher.py` (10 tests): Verifies app targets (YouTube, WhatsApp, LinkedIn, Spotify, GitHub, Gmail) and browser search query extraction.
-- `tests/test_livekit.py` (4 tests): Tests LiveKit status endpoints, token generation, and tool binding.
-- `tests/test_medical.py` (7 tests): Validates the new medical search tool across curated lookups, topic filtering (uses, dosage, side effects), empty query handling, and intent detection.
-- `tests/test_voice.py` (4 tests): Tests clean spoken text formatting, silent audio transcription, and push-to-talk stop events.
-- `tests/test_whatsapp.py` (4 tests): Tests contact search, phone number parsing, and WhatsApp Web message URL formation.
-- `tests/verify_all_features.py`: Standalone 24-feature live verification matrix with detailed tabular reporting.
+- `tests/test_bug_fixes_regression.py` (6 tests): Verifies pre-mutation HITL gating (`create_event`, `delete_task`), anonymous OAuth session isolation, cross-user token delete isolation, XSS escaping, voice cleaner symbol preservation, confirmation parser boundaries, pediatric & medication clinical lookup fixes, RAG mixed-dim tolerance, and screening/LiveKit launch guards.
+- `tests/test_langgraph_safety.py`: Validates LangGraph interrupts, real DB side effects across tool categories, and SQLite checkpointer persistence.
+- `tests/test_screening_and_tracing.py`: Validates input/output screening, local SQLite tracing, LangSmith status/callbacks, and persistence health checks.
+- `tests/test_agent.py`: Tests agent workflow, approval gating, and tool dispatching.
+- `tests/test_auth_and_history.py`: Validates user registration, PBKDF2 password hashing, token validation, and chat history ordering.
+- `tests/test_calc_and_session.py`: Tests all calculator operations (addition, percentages, discounts, square roots, division, modulo, negative numbers) and session isolation.
+- `tests/test_email.py`: Comprehensive email test matrix covering Google OAuth priority, SMTP fallback, bulk CSV dispatch, and AI composition.
+- `tests/test_launcher.py`: Verifies app targets and browser search query extraction.
+- `tests/test_livekit.py`: Tests LiveKit status endpoints, token generation, local Piper/Edge TTS, Whisper decoding, and tool binding.
+- `tests/test_medical.py`: Validates medical search across curated lookups, topic filtering, pediatric safety, and intent detection.
+- `tests/test_voice.py`: Tests clean spoken text formatting, silent audio transcription, and push-to-talk stop events.
+- `tests/test_whatsapp.py`: Tests contact search, phone number parsing, and WhatsApp Web message URL formation.
+- `tests/verify_all_features.py`: Standalone live verification matrix with tabular reporting.
 
 ---
 
@@ -325,30 +329,27 @@ backend\.venv\Scripts\python.exe -m pytest tests/ -v
 
 ### 8.1 `web/index.html`
 - **Path**: `web/index.html`
-- **Role**: Executive web interface layout built with clean black and white aesthetics, responsive sidebar, and chat canvas.
+- **Role**: Executive web interface layout built with clean minimalist aesthetics, responsive sidebar, auth/OAuth controls, and chat canvas.
 
 ### 8.2 `web/app.js`
 - **Path**: `web/app.js`
-- **Role**: Client-side JavaScript controller. Manages WebRTC connection to LiveKit Cloud, renders animated audio waveforms during speech, displays action notification toasts, and maintains local chat history.
+- **Role**: Client-side JavaScript controller. Manages WebRTC connection to LiveKit Cloud, SSE updates, rich tool cards (News, Medicine, Email), action links, and local chat history.
 
 ---
 
 ## 9. End-to-End Operational Lifecycle
 
 1. **System Startup**:
-   - `run_server.py` starts on port 8000 (FastAPI backend).
+   - `run_server.py` starts on port 8000 (FastAPI backend + native `web/index.html` UI).
    - `run_livekit.py` connects to LiveKit Cloud WebRTC room.
-   - `streamlit_app.py` starts on port 8501 (Streamlit executive UI).
 
 2. **User Interaction**:
-   - The user opens `http://localhost:8501`.
-   - The user clicks `Login with Google` to connect their Gmail account via 1-click OAuth.
-   - The user clicks `Start LiveKit Voice` and speaks: *"What is Dolo 650 used for?"*.
-   - LiveKit WebRTC captures the audio stream, Silero VAD detects the pause, OpenAI transcribes the speech, and invokes `medical_search(medicine_name="Dolo 650", topic="uses")`.
-   - The medical search engine retrieves the pharmacology profile from the curated clinical database and OpenFDA.
-   - LiveKit streams the verbal answer directly into the user's headphones in sub-400ms.
-   - Streamlit displays a structured Medicine Information card on screen.
-   - The conversational turn is logged into SQLite with `ORDER BY created_at DESC, rowid DESC`.
+   - The user opens `http://localhost:8000`.
+   - The user clicks `Continue with Google` to sign in and connect Gmail via 1-click OAuth.
+   - The user clicks `Connect LiveKit Voice` and speaks: *"What is Dolo 650 used for?"*.
+   - LiveKit WebRTC captures audio, Silero VAD detects the pause, `faster-whisper` transcribes the speech locally, and the agent invokes `medical_search(medicine_name="Dolo 650", topic="uses")`.
+   - Offline Piper ONNX TTS (with Edge-TTS fallback) streams verbal audio to the browser in real time.
+   - The Web UI renders a structured Medicine Information card on screen and logs the turn into SQLite with `ORDER BY created_at DESC, rowid DESC`.
 
 ---
 
@@ -549,3 +550,51 @@ backend\.venv\Scripts\python.exe -m pytest tests/ -v
     5. Comprehensively updated `README.md` with new test badges (110 passed), architecture diagrams, capability sections (Sections 10-13), REST API reference tables, and quickstart documentation.
     6. Added unit tests in `tests/test_screening_and_tracing.py` verifying dynamic `LangChainTracer` callback activation and endpoint status.
   - **What Was Affected**: Expanded unit test suite from 110 to 112 tests (112/112 passed, 100.0%); live trace streaming to LangSmith verified on live turn execution; documentation completely aligned with all new system capabilities; zero emojis across all code and documentation.
+- **Entry 2026-11-27.1**:
+  - **Files Changed**: `.env`, `.env.example`, `.gitignore`, `requirements.txt`, `agent/livekit_worker.py`, `agent/local_voice.py`, `agent/main.py`, `agent/lc_agent.py`, `agent/lc_tools.py`, `agent/prompts.py`, `agent/voice.py`, `agent/tools/__init__.py`, `agent/tools/calc.py`, `agent/tools/email.py`, `agent/tools/search.py`, `rag/store.py`, `web/app.js`, `web/index.html`, `tests/test_calc_and_session.py`, `tests/test_livekit.py`, `README.md`, `DEPLOYMENT.md`, `evals/suite_report.json`, `golden_report.json`, `history.txt`, `GEMINI.md`
+  - **What Was Changed**:
+    1. Integrated 100% offline neural Piper ONNX TTS (`en_US-lessac-medium` under `models/piper/`) into `agent/local_voice.py` (`LocalPiperTTS`, `synthesize_speech_piper_wav`, `synthesize_speech_local_with_format_async`), `agent/livekit_worker.py` (`tts.FallbackAdapter([local_piper, local_edge])`), `agent/main.py` (`/api/tts` WAV + dynamic `format` field), `agent/voice.py`, and `web/app.js`.
+    2. Standardized free local inference on `qwen2.5:1.5b` (primary) and `qwen3:1.7b` (`FALLBACK_LLM_MODEL` with `think=False` in Ollama `extra_body` across `livekit_worker.py`, `main.py`, and `email.py`), and upgraded local STT thread-safe caching in `agent/local_voice.py` (`base.en`, PyAV WAV PCM decoder fixing `metadata_errors`).
+    3. Added real-time SSE/LiveKit news updates (`get_live_news`, `/api/news`, `/api/updates/stream`, `/api/updates/publish`, `/api/metrics/livekit`), LiveKit Agents 1.9.0 `RoomOptions(close_on_disconnect=False)` & disconnect-safe `entrypoint()`, fixed LiveKit `calculator` (`calc.calculator`), `get_current_time` (`search.get_current_time`), and silent browser audio playback (`startAudio()`), and removed unrequested startup banners/news chrome in `web/app.js`.
+    4. Extended percentage/GST parsing in `agent/tools/calc.py`, fixed email recipient extraction and non-empty spoken fallback in `agent/main.py`, installed `tzdata` and updated `rag/store.py` to require `sk-` keys before cloud embedding calls, and switched DDGS search backend to `duckduckgo,brave`.
+  - **What Was Affected**: Unit test suite expanded to 120 tests (120/120 passed); Master Evaluation Suite 35/35 passed (100.0%, Production Promotion Gate APPROVED); selective golden tests passed (calculator 6/6, get_current_time 4/4, medical_search 5/5, routing 7/8); zero emojis across codebase and documentation.
+- **Entry 2026-11-28.1**:
+  - **Files Changed**: `pytest.ini`, `tests/conftest.py`, `db/schema.sql`, `db/models.py`, `agent/persistence.py`, `agent/main.py`, `agent/livekit_worker.py`, `agent/lc_tools.py`, `agent/lc_agent.py`, `agent/confirm.py`, `agent/safety.py`, `agent/screening.py`, `agent/voice.py`, `agent/local_voice.py`, `agent/tools/__init__.py`, `agent/tools/tasks.py`, `agent/tools/calendar.py`, `agent/tools/search.py`, `agent/tools/medical.py`, `agent/tools/launcher.py`, `agent/tools/whatsapp.py`, `agent/tools/email.py`, `agent/tools/calc.py`, `agent/tools/memory_tools.py`, `agent/tools/docs.py`, `rag/store.py`, `rag/ingest.py`, `web/app.js`, `evals/eval_leakage.py`, `evals/eval_scope.py`, `evals/eval_application.py`, `run_golden_tests.py`, `dom_inspect.py`, `Dockerfile`, `docker-compose.yml`, `tests/test_langgraph_safety.py`, `tests/test_bug_fixes_regression.py`, `tests/golden/run_golden_tests (1).py` (Removed), `gemini.md`, `history.txt`
+  - **What Was Changed**:
+    1. Resolved all 23 pipeline bug groups end-to-end across FastAPI orchestration, LangGraph, LiveKit WebRTC, SQLite, RAG, evals, Docker, and the native Web UI.
+    2. Pre-Mutation Human-In-The-Loop & Security: Updated `agent/main.py` to stage `create_event` (`dry_run=True` validation first) and `delete_task` (`db_find_task` validation first) into `_PENDING_CONFIRMATIONS` prior to any mutation and wired `POST /api/chat/confirm` plus follow-up `"yes"`/`"no"` turns; integrated `screen_input` and `screen_output` into primary `process_user_turn()` and LiveKit worker; closed anonymous `/api/auth/me` auto-login leak, `db_get_user_oauth` / `db_delete_user_oauth` cross-user leaks, and reflected XSS in `/api/auth/google/callback`; added strict `event.origin` verification on OAuth `postMessage` in `web/app.js`; removed fake `recipient@example.com` email fallback and unchecked PyAutoGUI clipboard/hotkey firing in `agent/tools/whatsapp.py`.
+    3. LangGraph, Tools, & Voice Fixes: Fixed all `user_id` wrapper signatures, `search_impl.get_current_time` import, and pediatric `user_query` ContextVar propagation in `agent/lc_tools.py` and `agent/livekit_worker.py`; expanded `LIVEKIT_TOOLS` and replaced LiveKit module globals with `contextvars` `LiveKitSessionState`; fixed `_maybe_launch_app_from_speech` launch-verb + word-boundary guards and eliminated double/triple browser tab opens across LiveKit and `web/app.js`; migrated calendar to SQLite `calendar_events` with real conflict-aware `find_free_slot` and datetime range validation; fixed `web_search` `max_results`, parallel search execution, cached `is_windows_app_installed`, discount parsing in `calculator`, `Pan 40` medication matching in `medical_search`, `html.escape` and `token_expiry` caching in `email.py`, word-boundary matching in `agent/confirm.py`, symbol/underscore preservation in `voice.py` / `main.py`, and thread-safe TTS cache locking plus re-raised `EdgeChunkedStream` errors in `local_voice.py`.
+    4. Performance, DB Hygiene & Eval/Test Integrity: Added event-loop-keyed `AsyncOpenAI` pooling with explicit timeouts, single-query CTE `db_list_chat_sessions`, non-blocking `asyncio.to_thread()` wrapping around synchronous tools and LangGraph turns, compact prompts + single-step spoken fast returns on Ollama, `pytest.ini` discovery + `tests/conftest.py` isolated temp SQLite/checkpoints, purged accumulated test pollution from `voice_assistant.db`, fixed hardcoded `True` evals in `eval_leakage`/`eval_scope`/`eval_application`, updated `web/app.js` medicine card fields (`medicine`, `dosage_guidelines`) and `NEWS_UPDATE` SSE handler, and added regression tests in `tests/test_bug_fixes_regression.py`.
+  - **What Was Affected**: Eliminated database pollution during test runs, fixed runtime tool crashes and security leaks, improved response latency and reliability across Web/LiveKit/LangGraph paths, and verified regression, evaluation, and golden benchmarks with zero emojis.
+- **Entry 2026-11-28.2**:
+  - **Files Changed**: `agent/voice_telemetry.py`, `agent/local_voice.py`, `agent/voice.py`, `agent/livekit_worker.py`, `agent/main.py`, `web/app.js`, `.env.example`, `evals/benchmark_voice.py`, `tests/test_livekit.py`, `GEMINI.md`, `history.txt`
+  - **What Was Changed**: Evaluated `Nexus_Voice_Upgrade_Plan_v2.pdf` against verified hardware (`Tier C`: 7.34 GB RAM, NVIDIA RTX 3050 present without `cublas64_12.dll` CUDA runtime) and installed dependencies (`livekit-agents 1.9.0`, `faster-whisper 1.2.1`, `piper-tts 1.8.0`, no `turn-detector` or `sherpa-onnx`), applying only beneficial upgrades:
+    1. Per-Turn Telemetry (`agent/voice_telemetry.py`, `agent/livekit_worker.py`, `agent/main.py`, `web/app.js`): Added monotonic `TurnTimer` correlated by `speech_id`/`turn_id`, eliminating cross-turn latency summation across `EOUMetrics`/`STTMetrics`/`LLMMetrics`/`TTSMetrics`, writing optional JSONL logs (`VOICE_TELEMETRY_LOG`), and adding P50/P95 percentiles to `/api/metrics/livekit`.
+    2. Env-Driven STT & Privacy Hygiene (`agent/local_voice.py`, `agent/voice.py`, `agent/livekit_worker.py`, `.env.example`): Added `WHISPER_MODEL_SIZE`, `STT_LANGUAGE`, `WHISPER_BEAM_SIZE`, `STT_DEVICE`, `STT_COMPUTE_TYPE`, `STT_INITIAL_PROMPT` (removing hardcoded personal names from default prompt), `STRICT_LOCAL_MODE` (blocks networked Edge-TTS/cloud STT/TTS fallbacks when enabled), and env-tunable VAD/endpointing thresholds while keeping all verified defaults unchanged (`base.en`, `en`, `beam=1`, `cpu`/`int8`).
+    3. Reproducible Voice Benchmark (`evals/benchmark_voice.py`): Added Step 0 hardware gate recorder, normalized WER/CER calculators, and offline STT/Piper P50/P95 benchmark CLI. Kept `base.en` CPU INT8 over `tiny.en` based on real entity accuracy comparison (`tiny.en` mis-transcribed `"18% GST on 1000 rupees"` as `"GSD on 1000 rubies"`, whereas `base.en` was exact). Left `turn-detector`, CUDA default, `sherpa-onnx`, and Hindi TTS replies disabled until compatible models/runtimes are present and benchmarked.
+  - **What Was Affected**: Eliminated cross-turn telemetry drift, added clean env profile switches and strict local mode, benchmarked `base.en` vs `tiny.en` on Tier C hardware, and expanded unit coverage to 127 tests with zero emojis.
+- **Entry 2026-11-28.3**:
+  - **Files Changed**: `agent/local_voice.py`, `agent/voice_telemetry.py`, `evals/benchmark_voice.py`, `evals/record_voice_clips.py`, `bench_clips/prompts.json`, `bench_clips/synthetic/*`, `bench_results/*`, `REPORT.md`, `tests/test_livekit.py`, `GEMINI.md`, `history.txt`
+  - **What Was Changed**: Created branch `voice-latency-diagnosis` (zero commits to `main`) and ran controlled evidence-only voice latency diagnostics without changing defaults:
+    1. Added `WHISPER_CPU_THREADS` / `WHISPER_VAD_FILTER` env/flag hooks in `agent/local_voice.py` (defaults untouched), Windows resource snapshot (`read_system_resource_snapshot`) and `endpoint_ms`/`stt_final_ms` fields in `agent/voice_telemetry.py`, plus manifest loading, RTF, cold vs warm P50/P95 split, critical entity scoring, and scripted E2E Silero->Whisper->Ollama->Piper telemetry in `evals/benchmark_voice.py`.
+    2. Added prompt script `bench_clips/prompts.json` and human recording helper `evals/record_voice_clips.py`, generated 15 labeled synthetic clips (`synthetic: true`), and recorded raw Task 1–6 evidence under `./bench_results/` plus comprehensive engineering report `./REPORT.md`.
+    3. Added unit test coverage (`test_voice_diagnosis_tools_entities_manifest_and_recorder`) in `tests/test_livekit.py`.
+  - **What Was Affected**: Identified Ollama RAM/commit pressure (`+27.1%` CPU STT slowdown when idle) and `base.en` CPU decode (`1626.6 ms` P50, `~46.5%` of E2E TTFA) as primary bottlenecks; expanded test suite to 128 tests with zero emojis and all defaults unchanged.
+
+- **Entry 2026-11-28.4**:
+  - **Files Changed**: `agent/local_voice.py`, `agent/livekit_worker.py`, `agent/voice_telemetry.py`, `evals/benchmark_voice.py`, `.env.example`, `bench_clips/heldout_prompts.json`, `bench_clips/durations/*`, `bench_clips/heldout_synthetic/*`, `bench_results/*`, `REPORT_v2.md`, `tests/test_livekit.py`, `GEMINI.md`, `history.txt`
+  - **What Was Changed**: Executed Phase 2 evidence-only voice latency experiments (Tasks 0-7) on branch `voice-latency-diagnosis` while preserving all production defaults:
+    1. Rescored saved Phase 1 transcripts with the final entity scorer (`bench_results/task0_rescored_summary.json`), added category breakdowns and Hinglish exclusion sensitivity, and documented Phase 1 `REPORT.md` errata.
+    2. Prepared opt-in GPU enablement guard `_register_cuda_dll_paths()` in `agent/local_voice.py` (guarded by `STT_DEVICE=cuda` with CPU default/fallback intact) and documented exact `.venv` PyPI wheel sizes (`~1,290.1 MB`) without installing pending approval; marked CUDA Task 1b/1c GPU runs `NOT RUN`.
+    3. Ran CPU duration scaling (`1, 2, 4, 8 s` synthetic clips), interleaved A/B/A/B threads (`4` vs `6`) and `vad_filter` (`on` vs `off`) comparisons, synthetic Silero `min_silence` endpoint sweep (`0.65`, `0.50`, `0.40`), memory top-10 + Ollama idle capture, and isolated held-out prompt leakage test (`bench_clips/heldout_prompts.json`).
+    4. Audited `livekit_worker.py` + `livekit.agents.tts.StreamAdapter` sentence-by-sentence streaming vs `benchmark_voice.py` harness differences, added `ram_available_gb`, `commit_used_gb`, and `ram_used_pct` to `TurnTimer.snapshot()` in `agent/voice_telemetry.py`, and executed a 22-turn E2E trace (`#1, #12` cold LLM).
+    5. Added opt-in startup hooks `PREWARM_OLLAMA` and `PREWARM_STT_DECODE` (default `"false"`) via `prewarm_ollama()` (`agent/livekit_worker.py`) and `prewarm_stt_decode()` (`agent/local_voice.py`), verified before/after first-turn latency, expanded tests in `tests/test_livekit.py`, and authored `REPORT_v2.md`.
+  - **What Was Affected**: Documented Task 0-7 evidence, confirmed zero significant median delta for `threads` (`4` vs `6`) and `vad_filter` (`on` vs `off`), confirmed zero prompt leakage on held-out clips, demonstrated opt-in prewarm cold first-turn speedup, and maintained zero emoji count and untouched defaults.
+
+- **Entry 2026-11-28.5**:
+  - **Files Changed**: `agent/local_voice.py`, `agent/livekit_worker.py`, `.env.example`, `tests/test_livekit.py`, `GEMINI.md`, `history.txt`
+  - **What Was Changed**: Diagnosed live LiveKit session STT errors (prompt-triggered `"Paracetamol"` loop, compression-ratio loops, low-logprob gibberish, and immediate speaker echo barge-ins) and applied targeted fixes:
+    1. Added `_extract_valid_whisper_text()` and `_is_repetitive_hallucination()` in `agent/local_voice.py` to reject segments exceeding `compression_ratio > 2.2`, falling below confidence bounds (`avg_logprob < -0.98`, or `< -0.88` with `no_speech_prob > 0.25`), or containing repetitive token loops, plus gentle gain normalization for weak microphone signals (`0.015 <= peak < 0.35`, capped at `4.0x`) and stricter noise-floor rejection.
+    2. Disabled implicit injection of `_DEFAULT_STT_PROMPT` in `_stt_initial_prompt()` unless `STT_INITIAL_PROMPT` is explicitly configured in `.env`, preventing prompt-seeded word loops on unclear audio.
+    3. Added env-configurable `AEC_WARMUP_DURATION` (`1.5` s default instead of `0.0` s) and `ALLOW_INTERRUPTIONS` in `agent/livekit_worker.py` and documented both in `.env.example`, plus regression tests in `tests/test_livekit.py`.
+  - **What Was Affected**: Eliminated low-confidence Whisper hallucinations and repetitive loops from reaching the agent while preserving `base.en`/`en`/`beam=1`/`cpu`/`int8`/`turn_detection="vad"` defaults.

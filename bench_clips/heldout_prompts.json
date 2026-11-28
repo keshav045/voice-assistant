@@ -1,0 +1,14 @@
+[
+  {"id": "H01", "category": "clean_english", "text": "Set an alarm for quarter past seven tomorrow morning."},
+  {"id": "H02", "category": "clean_english", "text": "Search the web for latest electric vehicle battery breakthroughs."},
+  {"id": "H03", "category": "clean_english", "text": "Create a shopping reminder to buy milk, eggs, and brown bread."},
+  {"id": "H04", "category": "clean_english", "text": "What is the current local time in Tokyo and London?"},
+  {"id": "H05", "category": "numbers_amounts", "text": "Divide four thousand eight hundred fifty by twelve."},
+  {"id": "H06", "category": "scheduling", "text": "Book a dental checkup next Wednesday afternoon at three thirty."},
+  {"id": "H07", "category": "email_work", "text": "Summarize the unread message from the human resources department."},
+  {"id": "H08", "category": "media", "text": "Start Spotify and play acoustic guitar instrumentals."},
+  {"id": "H09", "category": "numbers_amounts", "text": "Convert seventy five miles per hour into kilometers per hour."},
+  {"id": "H10", "category": "scheduling", "text": "Find a free forty five minute window on Thursday."},
+  {"id": "H11", "category": "tasks", "text": "Delete the completed laundry errand from my list."},
+  {"id": "H12", "category": "medical", "text": "Look up drug warnings and side effects for Amoxicillin."}
+]

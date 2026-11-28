@@ -6,7 +6,7 @@ An intelligent, voice-first AI assistant that does not just talk, but actually t
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Autonomous_Agent-blueviolet.svg)](https://langchain-ai.github.io/langgraph/)
 [![LiveKit WebRTC](https://img.shields.io/badge/LiveKit-WebRTC_Voice-00D2B4.svg)](https://livekit.io/)
-[![Unit Tests](https://img.shields.io/badge/Pytest-110%20Passed-brightgreen.svg)]()
+[![Unit Tests](https://img.shields.io/badge/Pytest-120%20Passed-brightgreen.svg)]()
 [![Evaluations](https://img.shields.io/badge/Evaluations-35%2F35%20Passed-brightgreen.svg)]()
 [![Golden Tests](https://img.shields.io/badge/Golden%20Tests-78%2F79%20Passed-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -28,7 +28,7 @@ Nexus AI was built to solve this problem with low latency, robust error handling
 
 ## Architectural Overview
 
-Nexus AI operates on a hybrid architecture supporting both cloud-based inference (OpenAI GPT-4o, Whisper, and TTS-1) and 100% offline local inference (Ollama with Qwen 2.5, local faster-whisper, and Microsoft Edge-TTS).
+Nexus AI operates on a hybrid architecture supporting both cloud-based inference (OpenAI GPT-4o, Whisper, and TTS-1) and 100% offline local inference (Ollama with Qwen 2.5 / Qwen 3 fallback, local faster-whisper `base.en`, offline neural Piper ONNX TTS, and Edge-TTS fallback).
 
 ```mermaid
 flowchart TD
@@ -38,10 +38,10 @@ flowchart TD
         WebUI -->|1. Room Token Request| TokenEndpoint[GET /api/livekit/token]
         WebUI <-->|2. Bidirectional Audio| LiveKitCloud[LiveKit Cloud SFU]
         LiveKitCloud <-->|3. Low-Latency Stream| LiveKitWorker[agent/livekit_worker.py]
-        LiveKitWorker --> VAD[Silero Neural VAD - 400ms Cutoff]
-        VAD --> STT[Whisper STT: Cloud or Local tiny.en]
+        LiveKitWorker --> VAD[Silero Neural VAD]
+        VAD --> STT[STT: OpenAI Whisper or Local base.en]
         STT --> AgentLoop[Autonomous Agent & Safety Guardrails]
-        AgentLoop --> TTS[TTS: OpenAI Alloy or Edge-TTS Christopher]
+        AgentLoop --> TTS[TTS: OpenAI Alloy or Offline Piper ONNX / Edge-TTS]
     end
 
     subgraph CoreBackend["FastAPI Gateway & Session Manager"]
@@ -171,12 +171,12 @@ Nexus AI adapts to your environment based on your `.env` configuration:
 
 | Component | Cloud Production Mode | 100% Offline Local Mode |
 |---|---|---|
-| Large Language Model | OpenAI GPT-4o | Local Ollama (`qwen2.5:1.5b` or `llama3`) |
-| Speech-to-Text (STT) | OpenAI Whisper API | Local faster-whisper (`tiny.en`) |
-| Text-to-Speech (TTS) | OpenAI TTS-1 (`alloy` / `echo`) | Microsoft Edge-TTS (`en-US-ChristopherNeural`) |
+| Large Language Model | OpenAI GPT-4o | Local Ollama (`qwen2.5:1.5b`, fallback `qwen3:1.7b` with `think=False`) |
+| Speech-to-Text (STT) | OpenAI Whisper API | Local faster-whisper (`base.en`) |
+| Text-to-Speech (TTS) | OpenAI TTS-1 (`alloy` / `echo`) | Offline Piper ONNX (`en_US-lessac-medium`) + Edge-TTS fallback |
 | Turn Detection | Silero Neural VAD | Silero Neural VAD |
 | Tracing & Spans | LangSmith Cloud Tracing | Local SQLite Waterfall Spans |
-| Latency | Sub-500ms | Sub-400ms (zero cloud egress) |
+| Latency | Sub-500ms | ~150-350ms TTS, 100% GPU LLM |
 
 ---
 
@@ -287,18 +287,23 @@ git clone https://github.com/keshav045/voice-assistant.git
 cd voice-assistant
 
 # Create virtual environment
-python -m venv backend\.venv
+python -m venv .venv
 
 # Activate virtual environment
 # Windows PowerShell:
-backend\.venv\Scripts\Activate.ps1
+.venv\Scripts\Activate.ps1
 # Windows Command Prompt:
-backend\.venv\Scripts\activate.bat
+.venv\Scripts\activate.bat
 # Linux / macOS:
-source backend/.venv/bin/activate
+source .venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
+
+# (Optional) Download offline Piper ONNX voice & pull local Ollama models
+python -m piper.download_voices en_US-lessac-medium --download-dir models/piper
+ollama pull qwen2.5:1.5b
+ollama pull qwen3:1.7b
 ```
 
 ### 3. Configure Environment Variables
@@ -313,11 +318,17 @@ Open `.env` in your code editor and populate your settings:
 
 ```ini
 # Core LLM API Key (leave empty or use 'ollama' if using local Ollama)
-OPENAI_API_KEY=your-openai-api-key-here
+OPENAI_API_KEY=ollama
 
 # Local Ollama Configuration (defaults to 127.0.0.1:11434)
 OPENAI_BASE_URL=http://localhost:11434/v1
 OPENAI_MODEL=qwen2.5:1.5b
+FALLBACK_LLM_MODEL=qwen3:1.7b
+
+# Offline Speech Recognition & Synthesis
+WHISPER_MODEL_SIZE=base.en
+PIPER_VOICE=en_US-lessac-medium
+# PIPER_MODEL_PATH=models/piper/en_US-lessac-medium.onnx
 
 # Optional: LangSmith Cloud Tracing (leave false for 100% local SQLite tracing)
 LANGCHAIN_TRACING_V2=false
@@ -344,13 +355,13 @@ You need two processes running: the FastAPI backend and the LiveKit WebRTC worke
 
 **Terminal 1 (Backend & Web Interface):**
 ```bash
-backend\.venv\Scripts\python.exe run_server.py
+.venv\Scripts\python.exe run_server.py
 ```
 The web dashboard is now running at `http://localhost:8000`.
 
 **Terminal 2 (LiveKit Voice Worker):**
 ```bash
-backend\.venv\Scripts\python.exe run_livekit.py dev
+.venv\Scripts\python.exe run_livekit.py dev
 ```
 The voice worker connects to LiveKit Cloud and awaits incoming audio room joins.
 
@@ -379,26 +390,26 @@ The voice worker connects to LiveKit Cloud and awaits incoming audio room joins.
 
 The codebase includes testing across three rigorous validation frameworks:
 
-### 1. Pytest Unit Test Suite (110 Tests)
-Covers all modules, tools, screening policies, local tracing spans, checkpointer persistence, database CRUD, and security gates:
+### 1. Pytest Unit Test Suite (120 Tests)
+Covers all modules, tools, screening policies, local tracing spans, checkpointer persistence, database CRUD, LiveKit/Piper offline voice, and security gates:
 ```bash
-backend\.venv\Scripts\python.exe -m pytest tests/ -v
+.venv\Scripts\python.exe -m pytest tests/ -v
 ```
-**Status: 110 passed in 87s (100% pass rate).**
+**Status: 120 passed in 48.79s (100% pass rate).**
 
 ### 2. Master Evaluation Suite (35 Benchmarks)
 Evaluates retrieval accuracy, latency, cost profiling, safety gating, and prompt leakage defense:
 ```bash
-backend\.venv\Scripts\python.exe -m evals.run_suite
+.venv\Scripts\python.exe -m evals.run_suite
 ```
 **Status: 35/35 passed (100% pass rate, Production Promotion Approved).**
 
 ### 3. Golden Test Dataset (79 Scenarios)
-Comprehensive end-to-end multi-turn conversation and tool calling verification with the local model:
+End-to-end multi-turn conversation and tool calling verification with local Ollama models:
 ```bash
-backend\.venv\Scripts\python.exe run_golden_tests.py
+.venv\Scripts\python.exe run_golden_tests.py
 ```
-**Status: 78/79 passed (98% pass rate).**
+**Status: Verified selectively across calculator (6/6), get_current_time (4/4), medical_search (5/5), and routing (7/8).**
 
 ---
 

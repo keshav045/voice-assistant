@@ -1,0 +1,110 @@
+{
+  "overlap_check": "PASS (0 shared tokens)",
+  "heldout_manifest": "bench_clips\\heldout_synthetic\\manifest.jsonl",
+  "results": [
+    {
+      "dataset": "original_15",
+      "synthetic": true,
+      "model": "base.en",
+      "prompt": "prompt_on",
+      "clips": 15,
+      "wer": 0.2382,
+      "cer": 0.1009,
+      "entity_accuracy": 0.8333,
+      "entities": "25/30",
+      "warm_p50_ms": 1339.5,
+      "warm_p95_ms": 1472.4
+    },
+    {
+      "dataset": "original_15",
+      "synthetic": true,
+      "model": "base.en",
+      "prompt": "prompt_off",
+      "clips": 15,
+      "wer": 0.2765,
+      "cer": 0.1083,
+      "entity_accuracy": 0.7667,
+      "entities": "23/30",
+      "warm_p50_ms": 1266.6,
+      "warm_p95_ms": 1522.9
+    },
+    {
+      "dataset": "original_15",
+      "synthetic": true,
+      "model": "tiny.en",
+      "prompt": "prompt_on",
+      "clips": 15,
+      "wer": 0.2875,
+      "cer": 0.1131,
+      "entity_accuracy": 0.8,
+      "entities": "24/30",
+      "warm_p50_ms": 660.2,
+      "warm_p95_ms": 767.6
+    },
+    {
+      "dataset": "original_15",
+      "synthetic": true,
+      "model": "tiny.en",
+      "prompt": "prompt_off",
+      "clips": 15,
+      "wer": 0.3186,
+      "cer": 0.1284,
+      "entity_accuracy": 0.7,
+      "entities": "21/30",
+      "warm_p50_ms": 675.7,
+      "warm_p95_ms": 755.3
+    },
+    {
+      "dataset": "heldout_12",
+      "synthetic": true,
+      "model": "base.en",
+      "prompt": "prompt_on",
+      "clips": 12,
+      "wer": 0.1421,
+      "cer": 0.1265,
+      "entity_accuracy": 0.3333,
+      "entities": "4/12",
+      "warm_p50_ms": 1335.0,
+      "warm_p95_ms": 1455.7
+    },
+    {
+      "dataset": "heldout_12",
+      "synthetic": true,
+      "model": "base.en",
+      "prompt": "prompt_off",
+      "clips": 12,
+      "wer": 0.1421,
+      "cer": 0.1265,
+      "entity_accuracy": 0.3333,
+      "entities": "4/12",
+      "warm_p50_ms": 1312.8,
+      "warm_p95_ms": 1466.5
+    },
+    {
+      "dataset": "heldout_12",
+      "synthetic": true,
+      "model": "tiny.en",
+      "prompt": "prompt_on",
+      "clips": 12,
+      "wer": 0.1495,
+      "cer": 0.1277,
+      "entity_accuracy": 0.3333,
+      "entities": "4/12",
+      "warm_p50_ms": 671.0,
+      "warm_p95_ms": 733.5
+    },
+    {
+      "dataset": "heldout_12",
+      "synthetic": true,
+      "model": "tiny.en",
+      "prompt": "prompt_off",
+      "clips": 12,
+      "wer": 0.1495,
+      "cer": 0.126,
+      "entity_accuracy": 0.4167,
+      "entities": "5/12",
+      "warm_p50_ms": 820.9,
+      "warm_p95_ms": 1115.2
+    }
+  ]
+}

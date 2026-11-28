@@ -73,18 +73,9 @@ def send_whatsapp_message(
     message: Optional[str] = None,
     phone: Optional[str] = None,
     auto_send: bool = True,
+    launch_browser: bool = True,
 ) -> Dict[str, Any]:
-    """Open WhatsApp, search for the contact in the list, open their chat, and send message.
-
-    Args:
-        contact_name: Name of the contact to find in WhatsApp (e.g., 'Krish', 'Mom', 'Alex').
-        message: The message text to send (e.g., 'Hiiii').
-        phone: Optional direct phone number if known.
-        auto_send: Whether to automatically send the message (True) or just stage it (False).
-
-    Returns:
-        dict with execution details and spoken response text.
-    """
+    """Open WhatsApp, search for the contact in the list, open their chat, and send message."""
     clean_name = (contact_name or "").strip()
     clean_msg = (message or "").strip()
 
@@ -101,7 +92,8 @@ def send_whatsapp_message(
         encoded_msg = urllib.parse.quote_plus(clean_msg) if clean_msg else ""
         url = f"https://web.whatsapp.com/send?phone={clean_phone}" + (f"&text={encoded_msg}" if encoded_msg else "")
         try:
-            webbrowser.open_new_tab(url)
+            if launch_browser:
+                webbrowser.open_new_tab(url)
             spoken = f"Opening chat with {clean_name or clean_phone} on WhatsApp"
             if clean_msg:
                 spoken += f" with message '{clean_msg}' ready."
@@ -117,17 +109,23 @@ def send_whatsapp_message(
         except Exception as e:
             return {"success": False, "error": str(e), "spoken": "Could not launch WhatsApp."}
 
-    # Case B: Search contact name in the list via WhatsApp Web automation
+    # Case B: Search contact name in the list via WhatsApp Web
     whatsapp_url = "https://web.whatsapp.com"
     try:
-        # Launch WhatsApp Web in browser
-        webbrowser.open_new_tab(whatsapp_url)
+        if launch_browser:
+            webbrowser.open_new_tab(whatsapp_url)
 
-        if AUTOMATION_AVAILABLE:
-            # Trigger background keyboard navigation: search contact -> open chat -> send message
+        desktop_automation_allowed = (
+            AUTOMATION_AVAILABLE
+            and auto_send
+            and bool(clean_msg)
+            and "PYTEST_CURRENT_TEST" not in os.environ
+            and os.environ.get("NEXUS_DISABLE_DESKTOP_SIDE_EFFECTS") != "1"
+        )
+        if desktop_automation_allowed:
             t = threading.Thread(
                 target=_automate_whatsapp_search_and_send,
-                args=(clean_name, clean_msg if auto_send else None),
+                args=(clean_name, clean_msg),
                 daemon=True,
             )
             t.start()
@@ -142,7 +140,7 @@ def send_whatsapp_message(
             "contact": clean_name,
             "url": whatsapp_url,
             "message": clean_msg,
-            "action": "search_and_send",
+            "action": "search_and_send" if clean_msg else "open_chat",
             "spoken": spoken_text,
         }
 

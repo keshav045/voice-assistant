@@ -164,46 +164,49 @@ def _query_openfda(medicine_name: str) -> Optional[Dict[str, Any]]:
         return None
 
     terms = clean_q.split()
-    search_term = terms[0]
+    candidates = [clean_q]
+    if len(terms) > 1:
+        candidates.append(terms[0])
 
-    fda_url = (
-        f"https://api.fda.gov/drug/label.json?search="
-        f'(openfda.brand_name:"{urllib.parse.quote(search_term)}"+'
-        f'openfda.generic_name:"{urllib.parse.quote(search_term)}")&limit=1'
-    )
-
-    try:
-        req = urllib.request.Request(
-            fda_url,
-            headers={"User-Agent": "AIAssistant/1.0 (MedicalSearch)"},
+    for search_term in candidates:
+        fda_url = (
+            f"https://api.fda.gov/drug/label.json?search="
+            f'(openfda.brand_name:"{urllib.parse.quote(search_term)}"+'
+            f'openfda.generic_name:"{urllib.parse.quote(search_term)}")&limit=1'
         )
-        with urllib.request.urlopen(req, timeout=3.5) as response:
-            if response.status == 200:
-                data = json.loads(response.read().decode("utf-8"))
-                results = data.get("results", [])
-                if results:
-                    rec = results[0]
-                    openfda = rec.get("openfda", {})
-                    generic = (openfda.get("generic_name") or [""])[0].title()
-                    brand = (openfda.get("brand_name") or [""])[0].title()
 
-                    purpose = " ".join(rec.get("purpose", []))[:250].strip()
-                    indications = " ".join(rec.get("indications_and_usage", []))[:350].strip()
-                    warnings = " ".join(rec.get("warnings", []))[:350].strip()
-                    dosage = " ".join(rec.get("dosage_and_administration", []))[:300].strip()
+        try:
+            req = urllib.request.Request(
+                fda_url,
+                headers={"User-Agent": "AIAssistant/1.0 (MedicalSearch)"},
+            )
+            with urllib.request.urlopen(req, timeout=3.5) as response:
+                if response.status == 200:
+                    data = json.loads(response.read().decode("utf-8"))
+                    results = data.get("results", [])
+                    if results:
+                        rec = results[0]
+                        openfda = rec.get("openfda", {})
+                        generic = (openfda.get("generic_name") or [""])[0].title()
+                        brand = (openfda.get("brand_name") or [""])[0].title()
 
-                    clean_text = lambda s: re.sub(r"\s+", " ", re.sub(r"^[A-Z\s]+:", "", s)).strip()
+                        purpose = " ".join(rec.get("purpose", []))[:250].strip()
+                        indications = " ".join(rec.get("indications_and_usage", []))[:350].strip()
+                        warnings = " ".join(rec.get("warnings", []))[:350].strip()
+                        dosage = " ".join(rec.get("dosage_and_administration", []))[:300].strip()
 
-                    return {
-                        "generic_name": generic or medicine_name.title(),
-                        "brand_names": [brand] if brand else [],
-                        "uses": clean_text(indications or purpose) or "Used as directed by a healthcare professional.",
-                        "dosage_guidelines": clean_text(dosage) or "Take as indicated on the prescription label.",
-                        "side_effects": clean_text(rec.get("adverse_reactions", ["Consult package insert for side effects."])[0])[:250],
-                        "precautions": clean_text(warnings) or "Read all warnings before use.",
-                    }
-    except Exception as e:
-        logger.debug(f"OpenFDA lookup error for '{medicine_name}': {e}")
+                        clean_text = lambda s: re.sub(r"\s+", " ", re.sub(r"^[A-Z\s]+:", "", s)).strip()
+
+                        return {
+                            "generic_name": generic or medicine_name.title(),
+                            "brand_names": [brand] if brand else [],
+                            "uses": clean_text(indications or purpose) or "Used as directed by a healthcare professional.",
+                            "dosage_guidelines": clean_text(dosage) or "Take as indicated on the prescription label.",
+                            "side_effects": clean_text(rec.get("adverse_reactions", ["Consult package insert for side effects."])[0])[:250],
+                            "precautions": clean_text(warnings) or "Read all warnings before use.",
+                        }
+        except Exception as e:
+            logger.debug(f"OpenFDA lookup error for '{search_term}': {e}")
 
     return None
 
@@ -260,20 +263,45 @@ def medical_search(medicine_name: str, topic: str = "all", user_query: Optional[
     raw_query = medicine_name.strip()
     norm_q = raw_query.lower()
 
-    # Step 1: Check curated high-confidence clinical database
+    # Step 1: Check curated high-confidence clinical database with exact/word-boundary priority
     matched_key = None
     if norm_q in CURATED_MEDICINE_DB:
         matched_key = norm_q
     else:
-        # Check alias / brand matching
+        # 1a. Exact brand match (e.g. "Pan 40", "Dolo 650")
         for key, entry in CURATED_MEDICINE_DB.items():
-            if norm_q in key or key in norm_q:
-                matched_key = key
-                break
             brands_lower = [b.lower() for b in entry.get("brand_names", [])]
-            if any(norm_q in b or b in norm_q for b in brands_lower):
+            if any(norm_q == re.sub(r"\s*\(.*?\)", "", b).strip() for b in brands_lower):
                 matched_key = key
                 break
+
+        # 1b. Whole-word / boundary match across keys and brands (longest match wins)
+        if not matched_key:
+            q_pat = re.compile(rf"\b{re.escape(norm_q)}\b")
+            candidates: List[tuple[int, str]] = []
+            for key, entry in CURATED_MEDICINE_DB.items():
+                if q_pat.search(key) or re.search(rf"\b{re.escape(key)}\b", norm_q):
+                    candidates.append((len(key) + 100, key))
+                    continue
+                for b in entry.get("brand_names", []):
+                    b_clean = re.sub(r"\s*\(.*?\)", "", b).strip().lower()
+                    if q_pat.search(b_clean) or (len(b_clean) >= 3 and re.search(rf"\b{re.escape(b_clean)}\b", norm_q)):
+                        candidates.append((len(b_clean), key))
+                        break
+            if candidates:
+                candidates.sort(reverse=True)
+                matched_key = candidates[0][1]
+
+        # 1c. Conservative substring fallback only for queries >= 4 chars
+        if not matched_key and len(norm_q) >= 4:
+            for key, entry in CURATED_MEDICINE_DB.items():
+                if norm_q in key or key in norm_q:
+                    matched_key = key
+                    break
+                brands_lower = [b.lower() for b in entry.get("brand_names", [])]
+                if any(norm_q in b or b in norm_q for b in brands_lower):
+                    matched_key = key
+                    break
 
     record: Optional[Dict[str, Any]] = None
     if matched_key:
@@ -322,17 +350,17 @@ def medical_search(medicine_name: str, topic: str = "all", user_query: Optional[
         spoken_text = (
             f"{generic_name} is a {drug_class}.{brand_str} "
             f"It is primarily used for {uses} "
-            "Please remember to consult a healthcare provider for personalized medical advice."
+            "Always consult a licensed doctor or physician for personalized medical advice."
         )
     elif topic_clean in ["dosage", "dose", "how to take", "how much"]:
         spoken_text = (
             f"Regarding dosage for {generic_name}: {dosage} "
-            "Always follow the exact prescription given by your physician."
+            "Always follow the exact prescription given by your doctor."
         )
     elif topic_clean in ["side_effect", "side_effects", "adverse", "reactions"]:
         spoken_text = (
             f"Potential side effects of {generic_name} include: {side_effects} "
-            "If you experience any severe or persistent symptoms, seek medical attention immediately."
+            "Consult a doctor, or seek immediate medical attention if severe symptoms occur."
         )
     elif topic_clean in ["precaution", "precautions", "warnings", "warning"]:
         spoken_text = (

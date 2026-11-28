@@ -46,8 +46,8 @@ def clean_spoken_text(text: str) -> str:
     clean = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", clean)
     clean = re.sub(r"https?://\S+", "", clean)
     clean = re.sub(r"[-*]\s+", "", clean)
-    # Remove emojis and special symbols (preserve standard punctuation: .,!?'":-)
-    clean = re.sub(r"[^\w\s.,!?'\":-]", "", clean)
+    # Remove emojis and stray artifacts while preserving spoken math/currency symbols (+, =, %, $, /)
+    clean = re.sub(r"[^\w\s.,!?'\":\-+=%$/()&]", "", clean)
     # Normalize spaces
     clean = re.sub(r"\s+", " ", clean).strip()
     return clean
@@ -161,29 +161,45 @@ def transcribe_audio(audio_data, samplerate: int = DEFAULT_SAMPLERATE) -> str:
     buf.name = "input_speech.wav"
     buf.seek(0)
 
-    api_key = os.environ.get("OPENAI_API_KEY", "")
-    if not api_key or api_key.startswith("your-"):
-        logger.warning("No valid OpenAI API key found for Whisper.")
-        return ""
+    try:
+        from agent.local_voice import _stt_language, is_strict_local_mode
+        strict_local = is_strict_local_mode()
+        stt_lang = _stt_language()
+    except Exception:
+        strict_local = False
+        stt_lang = "en"
+
+    api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+    if strict_local or not api_key or not api_key.startswith("sk-"):
+        try:
+            from agent.local_voice import transcribe_audio_local
+            return transcribe_audio_local(buf.getvalue())
+        except Exception as e:
+            logger.warning(f"Local Whisper fallback error: {e}")
+            return ""
 
     try:
         client = OpenAI(api_key=api_key)
-        transcription = client.audio.transcriptions.create(
-            model="whisper-1",
-            file=buf,
-            language="en"
-        )
+        tr_kwargs = {"model": "whisper-1", "file": buf}
+        if stt_lang:
+            tr_kwargs["language"] = stt_lang
+        transcription = client.audio.transcriptions.create(**tr_kwargs)
         return transcription.text.strip()
     except Exception as e:
-        logger.error(f"Whisper transcription error: {e}")
-        return ""
+        logger.warning(f"OpenAI Whisper error ({e}); falling back to local Whisper.")
+        try:
+            from agent.local_voice import transcribe_audio_local
+            return transcribe_audio_local(buf.getvalue())
+        except Exception as local_err:
+            logger.error(f"Local Whisper fallback error: {local_err}")
+            return ""
 
 
 def speak_text(text: str, voice: str = "alloy", use_openai: bool = True) -> None:
     """Speak text aloud through speaker/headphones.
     
-    Uses OpenAI high-fidelity TTS-1 with PCM direct playback, or falls back to
-    Windows native speech synthesis.
+    Uses OpenAI high-fidelity TTS-1 with PCM direct playback, local offline Piper TTS,
+    or falls back to Windows native speech synthesis.
     """
     clean = clean_spoken_text(text)
     if not clean:
@@ -193,8 +209,14 @@ def speak_text(text: str, voice: str = "alloy", use_openai: bool = True) -> None
         logger.info(f"[Spoken]: {clean}")
         return
 
-    api_key = os.environ.get("OPENAI_API_KEY", "")
-    if use_openai and api_key and not api_key.startswith("your-"):
+    try:
+        from agent.local_voice import is_strict_local_mode
+        strict_local = is_strict_local_mode()
+    except Exception:
+        strict_local = False
+
+    api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+    if not strict_local and use_openai and api_key.startswith("sk-"):
         try:
             client = OpenAI(api_key=api_key)
             response = client.audio.speech.create(
@@ -209,7 +231,23 @@ def speak_text(text: str, voice: str = "alloy", use_openai: bool = True) -> None
             sd.wait()
             return
         except Exception as e:
-            logger.warning(f"OpenAI TTS playback failed: {e}. Falling back to Windows native speech.")
+            logger.warning(f"OpenAI TTS playback failed: {e}. Trying local Piper TTS.")
+
+    # Local offline Piper ONNX playback
+    try:
+        from agent.local_voice import _get_piper_voice
+        piper_voice = _get_piper_voice()
+        if piper_voice is not None:
+            chunks = list(piper_voice.synthesize(clean))
+            if chunks:
+                pcm_bytes = b"".join(c.audio_int16_bytes for c in chunks if c.audio_int16_bytes)
+                if pcm_bytes:
+                    audio_array = np.frombuffer(pcm_bytes, dtype=np.int16)
+                    sd.play(audio_array, samplerate=chunks[0].sample_rate)
+                    sd.wait()
+                    return
+    except Exception as e:
+        logger.warning(f"Local Piper TTS playback failed: {e}. Falling back to Windows native speech.")
 
     # Fallback: Windows Speech Synthesis (.NET System.Speech / SAPI)
     try:

@@ -6,6 +6,7 @@ for human-in-the-loop approval before executing irreversible actions.
 
 from __future__ import annotations
 
+import contextvars
 import logging
 from typing import Any, Dict, List, Optional
 from langchain_core.tools import tool
@@ -27,8 +28,33 @@ from agent.tools import (
 
 logger = logging.getLogger("nexus.lc_tools")
 
+_CURRENT_USER_ID: contextvars.ContextVar[str] = contextvars.ContextVar("lg_user_id", default="guest")
+_CURRENT_USER_QUERY: contextvars.ContextVar[str] = contextvars.ContextVar("lg_user_query", default="")
+
+
+def _resolve_uid(explicit_uid: Optional[str]) -> str:
+    clean = (explicit_uid or "").strip()
+    if clean and clean != "guest":
+        return clean
+    return _CURRENT_USER_ID.get("guest") or "guest"
+
 
 # --- Read-Only Tools (No Interrupt / Safe to Repeat) ---
+
+@tool
+def get_live_news(topic: str = "top", max_results: int = 5) -> str:
+    """Fetch real-time breaking news and category headlines with publication timestamps and sources.
+
+    Args:
+        topic: Category ('top', 'world', 'india', 'technology', 'business', 'sports', 'science', 'health') or custom topic.
+        max_results: Maximum number of news stories to retrieve (default 5).
+    """
+    try:
+        res = search_impl.get_live_news(topic=topic, max_results=max_results)
+        return res.get("spoken") or str(res)
+    except Exception as e:
+        return f"Error fetching live news: {e}"
+
 
 @tool
 def search_web(query: str, max_results: int = 5) -> str:
@@ -49,6 +75,12 @@ def search_web(query: str, max_results: int = 5) -> str:
 
 
 @tool
+def web_search(query: str, max_results: int = 5) -> str:
+    """Search the web for real-time information, latest news headlines, live cricket scores, and facts."""
+    return search_web.func(query=query, max_results=max_results)
+
+
+@tool
 def calculator(expression: str) -> str:
     """Safely calculate mathematical equations, percentages, square roots, powers, or arithmetic expressions.
 
@@ -63,7 +95,7 @@ def calculator(expression: str) -> str:
 
 
 @tool
-def medical_search(medicine_name: str, topic: str = "all") -> str:
+def medical_search(medicine_name: str, topic: str = "all", user_query: str = "") -> str:
     """Look up comprehensive, verified medical information about any medicine, drug, brand, or salt.
 
     Provides therapeutic indications, dosage guidelines, side effects, precautions, and drug interactions.
@@ -71,12 +103,14 @@ def medical_search(medicine_name: str, topic: str = "all") -> str:
     Args:
         medicine_name: Name of the medicine, brand, or salt (e.g. 'Paracetamol', 'Dolo 650', 'Metformin').
         topic: Specific focus: 'all', 'uses', 'dosage', 'side_effects', 'precautions', or 'interactions'.
+        user_query: Optional full user question for contextual safety (e.g. pediatric age checks).
     """
     clean_m = (medicine_name or "").strip()
     if not clean_m or clean_m.lower() in {"hello", "hi", "none"}:
         return "Please name the medicine or pharmaceutical salt you would like information on."
     try:
-        res = medical_impl.medical_search(medicine_name=clean_m, topic=topic)
+        eff_query = (user_query or _CURRENT_USER_QUERY.get("") or "").strip() or None
+        res = medical_impl.medical_search(medicine_name=clean_m, topic=topic, user_query=eff_query)
         return res.get("spoken") or str(res.get("summary") or res)
     except Exception as e:
         return f"Error looking up medicine: {e}"
@@ -112,19 +146,13 @@ def run_python_code(code: str) -> str:
 
 
 @tool
-def add_task(title: str, priority: str = "normal", user_id: str = "guest") -> str:
-    """Add a new task or to-do item to the user's task list.
-
-    Args:
-        title: Short description or title of the task.
-        priority: Task priority level ('low', 'normal', 'high').
-        user_id: Bound user identifier.
-    """
+def add_task(title: str, priority: str = "medium", user_id: str = "guest") -> str:
+    """Add a new task or to-do item to the user's task list."""
     clean_t = (title or "").strip()
     if not clean_t:
         return "Task title cannot be blank."
     try:
-        res = tasks_impl.add_task(title=clean_t, priority=priority, user_id=user_id)
+        res = tasks_impl.add_task(title=clean_t, priority=priority, user_id=_resolve_uid(user_id))
         return res.get("spoken") or f"Task '{clean_t}' added."
     except Exception as e:
         return f"Error adding task: {e}"
@@ -132,14 +160,10 @@ def add_task(title: str, priority: str = "normal", user_id: str = "guest") -> st
 
 @tool
 def list_tasks(status: str = "all", user_id: str = "guest") -> str:
-    """List pending, completed, or all tasks on the user's task list.
-
-    Args:
-        status: Filter tasks by 'pending', 'completed', or 'all'.
-        user_id: Bound user identifier.
-    """
+    """List pending, completed, or all tasks on the user's task list."""
     try:
-        res = tasks_impl.list_tasks(status=status, user_id=user_id)
+        eff_status = None if str(status).lower().strip() == "all" else status
+        res = tasks_impl.list_tasks(status=eff_status, user_id=_resolve_uid(user_id))
         return res.get("spoken") or str(res.get("tasks", []))
     except Exception as e:
         return f"Error listing tasks: {e}"
@@ -147,14 +171,9 @@ def list_tasks(status: str = "all", user_id: str = "guest") -> str:
 
 @tool
 def complete_task(task_id: str, user_id: str = "guest") -> str:
-    """Mark a task on the task list as completed.
-
-    Args:
-        task_id: Identifier or title of the task to complete.
-        user_id: Bound user identifier.
-    """
+    """Mark a task on the task list as completed."""
     try:
-        res = tasks_impl.complete_task(task_id=task_id, user_id=user_id)
+        res = tasks_impl.complete_task(task_id=task_id, user_id=_resolve_uid(user_id))
         return res.get("spoken") or f"Task '{task_id}' marked as complete."
     except Exception as e:
         return f"Error completing task: {e}"
@@ -162,14 +181,9 @@ def complete_task(task_id: str, user_id: str = "guest") -> str:
 
 @tool
 def list_events(date: str = "today", user_id: str = "guest") -> str:
-    """List calendar events scheduled on a specific date.
-
-    Args:
-        date: The date to inspect (e.g. 'today', 'tomorrow', or 'YYYY-MM-DD').
-        user_id: Bound user identifier.
-    """
+    """List calendar events scheduled on a specific date."""
     try:
-        res = calendar_impl.list_events(date=date, user_id=user_id)
+        res = calendar_impl.list_events(date=date, user_id=_resolve_uid(user_id))
         return res.get("spoken") or str(res.get("events", []))
     except Exception as e:
         return f"Error listing calendar events: {e}"
@@ -177,15 +191,9 @@ def list_events(date: str = "today", user_id: str = "guest") -> str:
 
 @tool
 def find_free_slot(duration_minutes: int = 30, window: str = "tomorrow", user_id: str = "guest") -> str:
-    """Find available free time slots on the user's calendar.
-
-    Args:
-        duration_minutes: Required meeting duration in minutes (default 30).
-        window: Search timeframe (e.g. 'today', 'tomorrow').
-        user_id: Bound user identifier.
-    """
+    """Find available free time slots on the user's calendar."""
     try:
-        res = calendar_impl.find_free_slot(duration_minutes=duration_minutes, window=window, user_id=user_id)
+        res = calendar_impl.find_free_slot(duration_minutes=duration_minutes, window=window, user_id=_resolve_uid(user_id))
         return res.get("spoken") or "No free slot found."
     except Exception as e:
         return f"Error finding free calendar slot: {e}"
@@ -193,14 +201,9 @@ def find_free_slot(duration_minutes: int = 30, window: str = "tomorrow", user_id
 
 @tool
 def remember(fact: str, user_id: str = "guest") -> str:
-    """Save a user fact or preference into long-term semantic memory.
-
-    Args:
-        fact: Fact or preference text to store.
-        user_id: Bound user identifier.
-    """
+    """Save a user fact or preference into long-term semantic memory."""
     try:
-        res = memory_tools_impl.remember(fact=fact, user_id=user_id)
+        res = memory_tools_impl.remember(fact=fact, user_id=_resolve_uid(user_id))
         return res.get("spoken") or f"Remembered: {fact}"
     except Exception as e:
         return f"Error remembering fact: {e}"
@@ -208,14 +211,9 @@ def remember(fact: str, user_id: str = "guest") -> str:
 
 @tool
 def forget(fact: str, user_id: str = "guest") -> str:
-    """Remove a fact or preference from long-term memory.
-
-    Args:
-        fact: Fact keyword or statement to remove.
-        user_id: Bound user identifier.
-    """
+    """Remove a fact or preference from long-term memory."""
     try:
-        res = memory_tools_impl.forget(fact=fact, user_id=user_id)
+        res = memory_tools_impl.forget(fact=fact, user_id=_resolve_uid(user_id))
         return res.get("spoken") or f"Forgot: {fact}"
     except Exception as e:
         return f"Error forgetting fact: {e}"
@@ -223,32 +221,52 @@ def forget(fact: str, user_id: str = "guest") -> str:
 
 @tool
 def search_my_docs(query: str, user_id: str = "guest") -> str:
-    """Search personal local notes and document text files.
-
-    Args:
-        query: Keyword or question to query within indexed local files.
-        user_id: Bound user identifier.
-    """
+    """Search personal local notes and document text files."""
     try:
-        res = docs_impl.search_my_docs(query=query, user_id=user_id)
-        return res.get("spoken") or str(res.get("results") or "No matching documents found.")
+        res = docs_impl.search_my_docs(query=query, user_id=_resolve_uid(user_id))
+        return res.get("spoken") or str(res.get("chunks") or "No matching documents found.")
     except Exception as e:
         return f"Error searching documents: {e}"
 
 
 @tool
 def get_current_time(timezone: str = "Asia/Kolkata") -> str:
-    """Get the current time, date, day of week, and timezone.
-
-    Args:
-        timezone: IANA timezone identifier (default 'Asia/Kolkata').
-    """
+    """Get the current time, date, day of week, and timezone."""
     try:
-        from agent.main import get_current_time as gct
-        res = gct(timezone=timezone)
-        return res.get("spoken") or f"Current time is {res.get('time')} on {res.get('date')}."
+        res = search_impl.get_current_time(timezone_str=timezone)
+        return res.get("spoken") or f"Current time is {res.get('iso')} ({res.get('timezone')})."
     except Exception as e:
         return f"Error getting current time: {e}"
+
+
+@tool
+def search_emails(query: str = "", max_results: int = 5) -> str:
+    """Search inbox emails by keyword or sender name."""
+    try:
+        res = email_impl.search_email(query=query, max_results=max_results)
+        return res.get("spoken") or "No matching emails found."
+    except Exception as e:
+        return f"Error searching emails: {e}"
+
+
+@tool
+def summarize_email(id: str = "") -> str:
+    """Provide a concise summary of a specific email by ID or sender keyword."""
+    try:
+        res = email_impl.summarize_email(id=id or None)
+        return res.get("spoken") or "Could not find email to summarize."
+    except Exception as e:
+        return f"Error summarizing email: {e}"
+
+
+@tool
+def draft_reply(id: str = "", instructions: str = "", points: str = "") -> str:
+    """Create a draft email reply without sending it."""
+    try:
+        res = email_impl.draft_reply(id=id or None, instructions=instructions or None, points=points or None)
+        return res.get("spoken") or "Draft created."
+    except Exception as e:
+        return f"Error drafting reply: {e}"
 
 
 @tool
@@ -311,7 +329,7 @@ def send_email(
         subject=subject,
         recipient_name=recipient_name,
         sender_name=sender_name,
-        user_id=user_id,
+        user_id=_resolve_uid(user_id),
     )
     return res.get("spoken") or f"Email sent to {clean_to}."
 
@@ -334,8 +352,11 @@ def delete_task(task_id: str, user_id: str = "guest") -> str:
     if clean_app not in {"yes", "true", "approved", "confirm", "confirmed", "delete", "proceed"}:
         return "User declined. The task was not deleted."
 
-    res = tasks_impl.delete_task(task_id=task_id, user_id=user_id)
-    return res.get("spoken") or f"Task '{task_id}' deleted."
+    try:
+        res = tasks_impl.delete_task(task_id=task_id, user_id=_resolve_uid(user_id))
+        return res.get("spoken") or f"Task '{task_id}' deleted."
+    except Exception as e:
+        return f"Error deleting task: {e}"
 
 
 @tool
@@ -366,12 +387,17 @@ def create_event(
     if clean_app not in {"yes", "true", "approved", "confirm", "confirmed", "schedule", "proceed"}:
         return "User declined. The event was not scheduled."
 
-    res = calendar_impl.create_event(title=title, start=start, end=end, attendees=attendees, user_id=user_id)
-    return res.get("spoken") or f"Event '{title}' scheduled for {start}."
+    try:
+        res = calendar_impl.create_event(title=title, start=start, end=end, attendees=attendees, user_id=_resolve_uid(user_id))
+        return res.get("spoken") or f"Event '{title}' scheduled for {start}."
+    except Exception as e:
+        return f"Error creating event: {e}"
 
 
 LANGGRAPH_TOOLS = [
+    get_live_news,
     search_web,
+    web_search,
     calculator,
     medical_search,
     open_app,
@@ -381,6 +407,9 @@ LANGGRAPH_TOOLS = [
     complete_task,
     delete_task,
     send_email,
+    search_emails,
+    summarize_email,
+    draft_reply,
     create_event,
     list_events,
     find_free_slot,

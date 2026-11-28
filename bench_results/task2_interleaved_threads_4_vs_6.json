@@ -1,0 +1,104 @@
+{
+  "order": [
+    "A(threads_4)",
+    "B(threads_6)",
+    "A(threads_4)",
+    "B(threads_6)"
+  ],
+  "blocks": [
+    {
+      "step": 1,
+      "arm": "A",
+      "label": "threads_4",
+      "cold_load_ms": 1250.9,
+      "cold_stt_ms": 1339.0,
+      "warm_p50_ms": 1068.9,
+      "warm_p95_ms": 1450.1,
+      "warm_min_ms": 898.1,
+      "warm_max_ms": 1526.7,
+      "rtf_p50": 0.3689,
+      "wer": 0.2382,
+      "entity_accuracy": 0.8333,
+      "cpu_pct": 42.6,
+      "peak_rss_mb": 545.5
+    },
+    {
+      "step": 2,
+      "arm": "B",
+      "label": "threads_6",
+      "cold_load_ms": 739.0,
+      "cold_stt_ms": 1104.0,
+      "warm_p50_ms": 1148.4,
+      "warm_p95_ms": 1717.8,
+      "warm_min_ms": 869.8,
+      "warm_max_ms": 2406.2,
+      "rtf_p50": 0.4139,
+      "wer": 0.2382,
+      "entity_accuracy": 0.8333,
+      "cpu_pct": 56.1,
+      "peak_rss_mb": 545.5
+    },
+    {
+      "step": 3,
+      "arm": "A",
+      "label": "threads_4",
+      "cold_load_ms": 741.3,
+      "cold_stt_ms": 1686.3,
+      "warm_p50_ms": 1138.2,
+      "warm_p95_ms": 1802.2,
+      "warm_min_ms": 920.9,
+      "warm_max_ms": 2522.0,
+      "rtf_p50": 0.403,
+      "wer": 0.2382,
+      "entity_accuracy": 0.8333,
+      "cpu_pct": 61.0,
+      "peak_rss_mb": 545.5
+    },
+    {
+      "step": 4,
+      "arm": "B",
+      "label": "threads_6",
+      "cold_load_ms": 647.4,
+      "cold_stt_ms": 1026.6,
+      "warm_p50_ms": 1317.8,
+      "warm_p95_ms": 1791.9,
+      "warm_min_ms": 947.2,
+      "warm_max_ms": 2821.4,
+      "rtf_p50": 0.4436,
+      "wer": 0.2382,
+      "entity_accuracy": 0.8333,
+      "cpu_pct": 73.4,
+      "peak_rss_mb": 545.5
+    }
+  ],
+  "summary": {
+    "threads_4": {
+      "count": 150,
+      "median_ms": 1111.9,
+      "p95_ms": 1571.7,
+      "min_ms": 898.1,
+      "max_ms": 2522.0,
+      "block_medians": [
+        1068.9,
+        1138.2
+      ],
+      "wer": 0.2382,
+      "entity_accuracy": 0.8333
+    },
+    "threads_6": {
+      "count": 150,
+      "median_ms": 1207.0,
+      "p95_ms": 1825.0,
+      "min_ms": 869.8,
+      "max_ms": 2821.4,
+      "block_medians": [
+        1148.4,
+        1317.8
+      ],
+      "wer": 0.2382,
+      "entity_accuracy": 0.8333
+    },
+    "median_delta_pct": 8.55,
+    "verdict": "no significant difference (delta 8.55% < 10% and median inside opposing min-max range)"
+  }
+}

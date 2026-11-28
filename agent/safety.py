@@ -10,11 +10,11 @@ Per PDF implementation plan:
 import re
 from typing import Any, Dict, List, Set
 
-# Write / mutating tools that require explicit user confirmation
+# Write / mutating tools that require explicit user confirmation (unified with confirm.GATED_TOOLS)
 WRITE_TOOLS: Set[str] = {
     "create_event",
     "send_email",
-    "complete_task",
+    "delete_task",
 }
 
 # Suspicious instruction phrases that may appear in parsed text / search results

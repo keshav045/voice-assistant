@@ -96,13 +96,30 @@ def calculator(expression: str) -> Dict[str, Any]:
     import re
     raw = re.sub(r"^(what\s+is\s+|calculate\s+)", "", raw, flags=re.IGNORECASE).strip()
     raw = re.sub(r"[?.]+$", "", raw).strip()
+    raw = re.sub(r"[$₹]", "", raw)
+    raw = re.sub(r"(?<=\d),(?=\d{3}\b)", "", raw)
 
-    # "X percent of Y", "X percent Y", or "X% of Y" -> "((X/100) * Y)"
+    # "X% off Y" or "X percent discount on Y" -> "(Y * (1 - (X/100)))"
     raw = re.sub(
-        r"(\d+(?:\.\d+)?)\s*(?:percent\s*(?:of\s*)?|%\s*of\s*)(\(?\d+(?:\.\d+)?\)?)",
+        r"(\d+(?:\.\d+)?)\s*(?:%|percent)\s+(?:off|discount(?:\s+on)?)\s+(?:of\s+|on\s+)?(\(?\d+(?:\.\d+)?\)?)",
+        r"(\2 * (1 - (\1/100)))",
+        raw,
+        flags=re.IGNORECASE,
+    )
+
+    # "X percent [word] of/on Y" or "X% [word] of/on Y" -> "((X/100) * Y)"
+    raw = re.sub(
+        r"(\d+(?:\.\d+)?)\s*(?:percent(?:\s+[a-zA-Z]+){0,2}\s*(?:of|on)?\s*|%(?:\s+[a-zA-Z]+){0,2}\s*(?:of|on)\s+)(\(?\d+(?:\.\d+)?\)?)",
         r"((\1/100) * \2)",
         raw,
         flags=re.IGNORECASE,
+    )
+
+    # Standalone percentage token like "18%" (e.g. "1250 * 18%" or "18% * 1250") without touching modulo "10 % 3"
+    raw = re.sub(
+        r"(\d+(?:\.\d+)?)\s*%(?=\s*(?:[+\-*/)]|$))",
+        r"(\1/100)",
+        raw,
     )
 
     # "square root of X" -> "sqrt(X)"

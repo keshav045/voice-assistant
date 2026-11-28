@@ -3,7 +3,7 @@
 import re
 from typing import Any, Dict, Optional
 
-GATED_TOOLS = {"create_event", "send_email", "delete_task", "delete_calendar_event"}
+GATED_TOOLS = {"create_event", "send_email", "delete_task"}
 
 AFFIRMATIVE_WORDS = ["yes", "yeah", "yep", "sure", "confirm", "confirmed", "proceed", "do it", "go ahead", "send it", "book it", "please"]
 NEGATIVE_WORDS = ["no", "nope", "cancel", "cancelled", "don't", "stop", "nevermind", "abort", "wait", "do not"]
@@ -44,19 +44,22 @@ def format_read_back(tool_name: str, args: Dict[str, Any]) -> str:
 
 def is_confirmed(user_speech: str) -> Optional[bool]:
     """Parse user's spoken response to check for affirmative or negative confirmation.
-    Negative signals take strict priority over affirmative keywords.
+    Uses word-boundary matching so substrings inside words never trigger false positives/negatives.
+    Negative signals take priority over affirmative keywords.
     """
-    cleaned = user_speech.lower().strip()
-    words = set(re.findall(r"\b\w+\b", cleaned))
+    cleaned = (user_speech or "").lower().strip()
+    if not cleaned:
+        return None
 
-    # Check negative signals first
+    # Neutralize idiomatic non-refusal phrases before checking negative words
+    normalized = re.sub(r"\b(?:no\s+problem|no\s+worries|not\s+a\s+problem)\b", " ", cleaned)
+
     for neg in NEGATIVE_WORDS:
-        if neg in cleaned or neg in words:
+        if re.search(rf"\b{re.escape(neg)}\b", normalized):
             return False
 
-    # Check affirmative signals
     for aff in AFFIRMATIVE_WORDS:
-        if aff in cleaned or aff in words:
+        if re.search(rf"\b{re.escape(aff)}\b", normalized):
             return True
 
     return None
